@@ -54,7 +54,8 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
 
     # Export results
     list(bootfitg = bootfit$g, bootfitb = bootfit$latencyfit)
-  } # Close if loop
+    } # Close foreach loop
+  } # close if bracket
 
   # Combine results from bootstraps into matrices
   g_boot <- matrix(rep(0, nboot * ngamma), nrow = nboot)
@@ -71,3 +72,4 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
   g_sd <- sqrt(g_var)
   b_sd <- sqrt(b_var)
   varout <- list(g_var=g_var, b_var=b_var, g_sd=g_sd, b_sd=b_sd)
+} # close function
