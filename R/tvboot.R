@@ -1,13 +1,13 @@
-tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X, Z, gnames, bnames, offsetvar, g, beta, model, link, emmax, eps, firthlogit, firthcox, survobj, n, parallel = T){
-  # Create Progress Bar
+tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
+                   Z, gnames, bnames, offsetvar, g, beta, model, link, emmax,
+                   eps, firthlogit, firthcox, survobj, n, parallel) {
+
+  # Progress Bar
     #bootpb <- progress_bar$new(
     #  format = "Bootstrap progress [:bar] :percent, :elapsed elapsed, approximately :eta remaining",
     #  total = nboot, clear = F, width= 100)
 
   # Format data for bootstrap function
-    #iter <- matrix(rep(0, nboot), ncol = 1)
-    #g_boot <- matrix(rep(0, nboot * ngamma), nrow = nboot)
-    #b_boot <- matrix(rep(0, nboot * (nbeta)), nrow = nboot)
     if (survtype=="right") {
       tempdata <- cbind(Time, Status, X, Z)
     }
@@ -18,7 +18,6 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
     data0 <- subset(tempdata, Status == 0)
     n1 <- nrow(data1)
     n0 <- nrow(data0)
-    #i <- 1
 
   #bootpb$tick(0)
   #Sys.sleep(3)
@@ -45,23 +44,17 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
       } # close counting loop
 
       #tryCatch(
-        bootfit <- tvem(Start=bootstart, Stop=bootstop, Status=bootstatus, Time=boottime, X=bootX, Z=bootZ, offsetvar=offsetvar, g=g, beta=beta, model=model, link=link, emmax=emmax, eps=eps, firthlogit=firthlogit, firthcox=firthcox, survobj=bootsurv, survtype=survtype)#,
+        bootfit <- tvem(Start=bootstart, Stop=bootstop, Status=bootstatus,
+                        Time=boottime, X=bootX, Z=bootZ, offsetvar=offsetvar,
+                        g=g, beta=beta, model=model, link=link, emmax=emmax,
+                        eps=eps, firthlogit=firthlogit, firthcox=firthcox,
+                        survobj=bootsurv, survtype=survtype)#,
       #  error = function(e) e
       #)
 
+    # Export results
     list(bootfitg = bootfit$g, bootfitb = bootfit$latencyfit)
-    #g_boot <- bootfit$g
-    #b_boot <- bootfit$latencyfit
-
-    #if (bootfit$tau < eps & !inherits(bootfit,"error")) {
-    #  i <- i + 1
-    #  bootpb$tick()
-    #  Sys.sleep(1/100)
-    #}
-    #browser()
-  } # close foreach loop
-} #close if
-  #browser()
+  } # Close if loop
 
   # Combine results from bootstraps into matrices
   g_boot <- matrix(rep(0, nboot * ngamma), nrow = nboot)
@@ -69,7 +62,7 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
   for (i in 1:nboot) {
     g_boot[i,] <- bootres[[i]]$bootfitg
     b_boot[i,] <- bootres[[i]]$bootfitb
-  }
+  } # close matrix loop
 
   # Calculate variance and standard errors
   cat("Variance estimation completed, wrapping up...\n")
@@ -78,4 +71,3 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
   g_sd <- sqrt(g_var)
   b_sd <- sqrt(b_var)
   varout <- list(g_var=g_var, b_var=b_var, g_sd=g_sd, b_sd=b_sd)
-}
