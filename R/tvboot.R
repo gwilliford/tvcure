@@ -6,6 +6,9 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
     #bootpb <- progress_bar$new(
     #  format = "Bootstrap progress [:bar] :percent, :elapsed elapsed, approximately :eta remaining",
     #  total = nboot, clear = F, width= 100)
+    pb <- txtProgressBar(max = nboot, style = 3)
+    progress <- function(n) setTxtProgressBar(pb, n)
+    opts <- list(progress = progress)
 
   # Format data for bootstrap function
     if (survtype=="right") {
@@ -23,7 +26,7 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
   #Sys.sleep(3)
 
   if (parallel == T) {
-    bootres <- foreach(i = 1:nboot, .packages = c("survival")) %dopar% {
+    bootres <- foreach(i = 1:nboot, .packages = c("survival"), .options.snow = opts, .errorhandling = 'remove') %dopar% {
       set.seed(i)
       id1 <- sample(1:n1, n1, replace = T)
       id0 <- sample(1:n0, n0, replace = T)
