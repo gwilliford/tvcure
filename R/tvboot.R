@@ -3,9 +3,6 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
                    eps, firthlogit, firthcox, survobj, n, parallel) {
 
   # Progress Bar
-    #bootpb <- progress_bar$new(
-    #  format = "Bootstrap progress [:bar] :percent, :elapsed elapsed, approximately :eta remaining",
-    #  total = nboot, clear = F, width= 100)
     pb <- txtProgressBar(max = nboot, style = 3)
     progress <- function(n) setTxtProgressBar(pb, n)
     opts <- list(progress = progress)
@@ -22,11 +19,9 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
     n1 <- nrow(data1)
     n0 <- nrow(data0)
 
-  #bootpb$tick(0)
-  #Sys.sleep(3)
-
+  # Sample and Estimate
   if (parallel == T) {
-    bootres <- foreach(i = 1:nboot, .packages = c("survival"), .options.snow = opts, .errorhandling = 'remove') %dopar% {
+    bootres <- foreach(i = 1:nboot, .packages = c("survival","logistf"), .options.snow = opts, .errorhandling = 'remove') %dopar% {
       set.seed(i)
       id1 <- sample(1:n1, n1, replace = T)
       id0 <- sample(1:n0, n0, replace = T)
@@ -46,17 +41,14 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
         boottime <- bootstop
       } # close counting loop
 
-      #tryCatch(
-        bootfit <- tvem(Start=bootstart, Stop=bootstop, Status=bootstatus,
-                        Time=boottime, X=bootX, Z=bootZ, offsetvar=offsetvar,
-                        g=g, beta=beta, model=model, link=link, emmax=emmax,
-                        eps=eps, firthlogit=firthlogit, firthcox=firthcox,
-                        survobj=bootsurv, survtype=survtype)#,
-      #  error = function(e) e
-      #)
+      bootfit <- tvem(Start=bootstart, Stop=bootstop, Status=bootstatus,
+                      Time=boottime, X=bootX, Z=bootZ, offsetvar=offsetvar,
+                      g=g, beta=beta, model=model, link=link, emmax=emmax,
+                      eps=eps, firthlogit=firthlogit, firthcox=firthcox,
+                      survobj=bootsurv, survtype=survtype)#, error = function(e) NULL)
 
-    # Export results
-    list(bootfitg = bootfit$g, bootfitb = bootfit$latencyfit)
+      # Export results
+      list(bootfitg = bootfit$g, bootfitb = bootfit$latencyfit)
     } # Close foreach loop
   } # close if bracket
 

@@ -20,6 +20,10 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data, 
     }
     Y <- model.extract(mf, "response")
     X <- model.matrix(attr(mf, "terms"), mf)
+    if (parallel == T) {
+        clstatus <- getDoParRegistered()
+        if (clstatus == F) stop("Please register a cluster object to use parallel functionality.")
+    }
     if (!inherits(Y, "Surv"))
       stop("Response must be a survival object")
     survtype <- attr(Y,"type")
@@ -76,30 +80,32 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data, 
 
   # Bootstrap standard errors --------------------------------------------------
     if (var) {
-      varout <- tvboot(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X, Z, gnames, bnames, offsetvar, g, beta, model, link, emmax, eps, firthlogit, firthcox, survobj, n, parallel)
-    }
+      varout <- tvboot(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status,
+                       X, Z, gnames, bnames, offsetvar, g, beta, model, link, emmax,
+                       eps, firthlogit, firthcox, survobj, n, parallel)
+    } # close bootstrap bracket
 
-  #####Final fit details
-      fit <- list()
-      class(fit) <- c("tvcure")
-      fit$incidence_fit <- incidence_fit
-      fit$g <- g
-      fit$beta <- beta
-      if (var) {
-        fit$g_var <- varout$g_var
-        fit$g_sd <- varout$g_sd
-        fit$g_zvalue <- fit$g/fit$g_sd
-        fit$g_pvalue <- (1 - pnorm(abs(fit$g_zvalue))) * 2
-        fit$b_var <- varout$b_var
-        fit$b_sd <- varout$b_sd
-        fit$b_zvalue <- fit$beta/fit$b_sd
-        fit$b_pvalue <- (1 - pnorm(abs(fit$b_zvalue))) * 2
-      }
-      cat("tvcure finished running at ");print(Sys.time())
-      fit$call <- call
-      fit$gnames <- gnames
-      fit$bnames <- bnames
-      fit$s <- s
-      if (ncol(Y)==2) fit$Time <- Time
-      fit
+  # Final fit details
+    fit <- list()
+    class(fit) <- c("tvcure")
+    fit$incidence_fit <- incidence_fit
+    fit$g <- g
+    fit$beta <- beta
+    if (var) {
+      fit$g_var <- varout$g_var
+      fit$g_sd <- varout$g_sd
+      fit$g_zvalue <- fit$g/fit$g_sd
+      fit$g_pvalue <- (1 - pnorm(abs(fit$g_zvalue))) * 2
+      fit$b_var <- varout$b_var
+      fit$b_sd <- varout$b_sd
+      fit$b_zvalue <- fit$beta/fit$b_sd
+      fit$b_pvalue <- (1 - pnorm(abs(fit$b_zvalue))) * 2
+    }
+    cat("tvcure finished running at ");print(Sys.time())
+    fit$call <- call
+    fit$gnames <- gnames
+    fit$bnames <- bnames
+    fit$s <- s
+    if (ncol(Y)==2) fit$Time <- Time
+    fit
 }
