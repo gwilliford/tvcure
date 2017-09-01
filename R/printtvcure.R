@@ -1,4 +1,4 @@
-printtvcure <- function (x, ...) {
+printtvcure <- function (x, var, ...) {
   if (!is.null(cl <- x$call)) {
     cat("Call:\\n")
     dput(cl)
@@ -8,9 +8,9 @@ printtvcure <- function (x, ...) {
     gamma <- array(x$gamma, c(length(x$gamma), 4))
     rownames(gamma) <- x$gnames
     colnames(gamma) <- c("Estimate", "Std.Error", "Z value", "Pr(>|Z|)")
-    b[, 2] <- x$g_sd
-    b[, 3] <- x$g_zvalue
-    b[, 4] <- x$g_pvalue
+    gamma[, 2] <- x$g_sd
+    gamma[, 3] <- x$g_zvalue
+    gamma[, 4] <- x$g_pvalue
   }
   if (!var) {
     gamma <- array(x$gamma, c(length(x$gamma), 1))
