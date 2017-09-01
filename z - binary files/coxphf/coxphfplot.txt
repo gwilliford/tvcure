@@ -1,0 +1,95 @@
+> coxphf::coxphfplot
+function (formula = attr(data, "formula"), data = sys.parent(), 
+    profile, pitch = 0.05, limits, alpha = 0.05, maxit = 50, 
+    maxhs = 5, epsilon = 1e-06, maxstep = 2.5, firth = TRUE, 
+    penalty = 0.5, adapt = NULL, legend = "center", ...) 
+{
+    fit <- coxphf(formula = formula, data = data, alpha = alpha, 
+        maxit = maxit, maxhs = maxhs, epsilon = epsilon, maxstep = maxstep, 
+        firth = firth, pl = TRUE, penalty = penalty, adapt = adapt)
+    coefs <- coef(fit)
+    covs <- fit$var
+    n <- nrow(data)
+    obj <- decomposeSurv(formula, data, sort = TRUE)
+    NTDE <- obj$NTDE
+    mmm <- cbind(obj$mm1, obj$timedata)
+    cov.name <- obj$covnames
+    k <- ncol(obj$mm1)
+    ones <- matrix(1, n, k + NTDE)
+    sd1 <- apply(as.matrix(obj$mm1), 2, sd)
+    sd2 <- apply(as.matrix(obj$timedata), 2, sd)
+    Z.sd <- c(sd1, sd2 * sd1[obj$timeind])
+    obj$mm1 <- scale(obj$mm1, FALSE, sd1)
+    obj$timedata <- scale(obj$timedata, FALSE, sd2)
+    mmm <- cbind(obj$mm1, obj$timedata)
+    CARDS <- cbind(obj$mm1, obj$resp, ones, obj$timedata)
+    PARMS <- c(n, k, firth, maxit, maxhs, maxstep, epsilon, 1, 
+        1e-04, 0, 0, 0, 0, NTDE, penalty)
+    formula2 <- as.formula(paste(as.character(formula)[2], as.character(profile)[2], 
+        sep = "~"))
+    obj2 <- decomposeSurv(formula2, data, sort = TRUE)
+    cov.name2 <- obj2$covnames
+    pos <- match(cov.name2, cov.name)
+    std.pos <- diag(fit$var)[pos]^0.5
+    if (missing(limits)) {
+        lim.pl <- (c(log(fit$ci.lower[pos]), log(fit$ci.upper[pos])) - 
+            coef(fit)[pos])/std.pos
+        limits <- c(min(qnorm(alpha/2), lim.pl[1]) - 0.5, max(qnorm(1 - 
+            alpha/2), lim.pl[2]) + 0.5)
+    }
+    limits <- c(floor(limits[1]/pitch) * pitch, ceiling(limits[2]/pitch) * 
+        pitch)
+    knots <- seq(limits[1], limits[2], pitch)
+    iflag <- rep(1, k + NTDE)
+    if (!is.null(adapt)) 
+        iflag <- adapt
+    iflag[pos] <- 0
+    offset <- rep(0, k + NTDE)
+    nn <- length(knots)
+    res <- matrix(knots, nn, 3)
+    dimnames(res) <- list(1:nn, c("std", cov.name2, "log-likelihood"))
+    for (i in 1:nn) {
+        res[i, 2] <- coefs[pos] + covs[pos, pos]^0.5 * knots[i]
+        offset[pos] <- res[i, 2] * Z.sd[pos]
+        IOARRAY <- rbind(iflag, offset, matrix(0, 1 + k + NTDE, 
+            k + NTDE))
+        value <- .Fortran("firthcox", CARDS, outpar = PARMS, 
+            outtab = IOARRAY, PACKAGE = "coxphf")
+        if (value$outpar[8]) 
+            warning("Error in routine FIRTHCOX; parms8 <> 0")
+        res[i, 3] <- value$outpar[11]
+    }
+    my.par <- act.par <- par()
+    my.par$mai[3] <- 1.65 * act.par$mai[3]
+    par(mai = my.par$mai)
+    ind <- (1:nn)[round(4 * res[, 1]) == round(4 * res[, 1], 
+        10)]
+    if (length(ind) == 0) 
+        ind <- 1:nn
+    pp <- max(res[, 3]) - 0.5 * res[, 1]^2
+    plot(res[, -1], type = "l", xlab = paste("BETA of", cov.name2))
+    points(res[res[, 1] == 0, 2], max(res[, 3]))
+    segments(min(res[, 2]), max(res[, 3]) - 0.5 * qchisq(1 - 
+        alpha, 1), max(res[, 2]), max(res[, 3]) - 0.5 * qchisq(1 - 
+        alpha, 1), lty = 3)
+    yy <- par("usr")[4] - (par("usr")[4] - par("usr")[3]) * c(0.9, 
+        0.95)
+    segments(coef(fit)[pos] - qnorm(alpha/2) * std.pos, yy[1], 
+        coef(fit)[pos] - qnorm(1 - alpha/2) * std.pos, yy[1], 
+        lty = 6)
+    segments(log(fit$ci.lower[pos]), yy[2], log(fit$ci.upper[pos]), 
+        yy[2], lty = 8)
+    axis(side = 3, at = res[ind, 2], labels = res[ind, 1])
+    mtext("distance from maximum in standard deviations", side = 3, 
+        line = 3)
+    if (legend != "") 
+        legend(legend, legend = c("Profile penalized likelihood", 
+            paste(100 * (1 - alpha), "% - reference line", sep = ""), 
+            "Maximum of Likelihood", "Wald - confidence interval", 
+            "Profile penalized likelihood CI"), lty = c(1, 3, 
+            -1, 6, 8), pch = c(-1, -1, 1, -1, -1), bty = "n", 
+            ...)
+    par(mai = act.par$mai)
+    title("Profile likelihood")
+    invisible(res)
+}

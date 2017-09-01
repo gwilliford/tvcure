@@ -1,0 +1,20 @@
+Package: tvcure
+Type: Package
+Title: Estimate Semiparametric Cure Models with Time-Varying Data
+Version: 0.0.0.9000
+Author: person("George","Williford",email="williford@uga.edu",role=c("aut","cre"))
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Imports: survival,
+    coxphf,
+    logistf
+Suggests: testthat
+Depends: survival,
+    logistf,
+    snow,
+    doSNOW,
+    foreach
+RoxygenNote: 6.0.1
