@@ -1,4 +1,4 @@
-predicttvcure <- function (object, newX, newZ, model = c("ph", "aft"), ...) {
+predict_tvcure <- function (object, newX, newZ, model = c("ph", "aft"), ...) {
   call <- match.call()
   if (!inherits(object, "tvcure"))
     stop("Object must be results of tvcure")
