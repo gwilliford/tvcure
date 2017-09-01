@@ -1,5 +1,9 @@
-tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data, na.action = na.omit, link = "logit", var = TRUE, firthlogit = FALSE, firthcox = FALSE, emmax = 50, eps = 1e-07, nboot = 100, parallel = T){
-  # Data set up ------------------------------------
+tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
+                   na.action = na.omit, link = "logit", var = T, firthlogit = F,
+                   firthcox = FALSE, emmax = 50, eps = 1e-07, nboot = 100,
+                   parallel = T){
+
+  # Data set up ----------------------------------------------------------------
     call <- match.call()
     model <- match.arg(model)
     cat("tvcure started at ");print(Sys.time());cat("Estimating coefficients...\n")
@@ -22,7 +26,8 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data, 
     X <- model.matrix(attr(mf, "terms"), mf)
     if (parallel == T) {
         clstatus <- getDoParRegistered()
-        if (clstatus == F) stop("Please register a cluster object to use parallel functionality.")
+        if (clstatus == F) stop("Please register a cluster
+                                object to use parallel functionality.")
     }
     if (!inherits(Y, "Surv"))
       stop("Response must be a survival object")
@@ -49,63 +54,66 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data, 
       bnames <- colnames(X)
       nbeta <- ncol(X)
     }
-#browser()
-# Initial values -------------------------------------------------------------
-    w <- Status
-    w[w==0]<-.001
-    if (firthlogit) {
-      g <- logistf(w~Z[,-1])$coef
+
+# Obtain initial estimates------------------------------------------------------
+  w <- Status
+  w[w==0]<-.001
+  if (firthlogit) {
+    g <- logistf(w~Z[,-1])$coef
+  } else {
+    g <- eval(parse(text = paste("glm", "(", "w~Z[,-1]", ",
+                                 family = quasibinomial(link='", link, "'", ")",
+                                 ")", sep = "")))$coef
+  }
+  if (model == "ph") {
+    if (firthcox) {
+      beta <- coxphf(survobj ~ X[, -1] + offset(log(w)), pl=F)$coefficients
     } else {
-      g <- eval(parse(text = paste("glm", "(", "w~Z[,-1]", ",family = quasibinomial(link='", link, "'", ")", ")", sep = "")))$coef
+      beta <- coxph(survobj ~ X[, -1] + offset(log(w)), subset = w!=0,
+                    method = "breslow")$coef
     }
-    cat("Initial logit estimates obtained...\n")
-    if (model == "ph") {
-      if (firthcox) {
-        beta <- coxphf(survobj ~ X[, -1] + offset(log(w)), pl=F)$coefficients
-      } else {
-        beta <- coxph(survobj ~ X[, -1] + offset(log(w)), subset = w!=0, method = "breslow")$coef
-      }
-    }
-    cat("Initial cox estimates obtained, beginning em algorithm...\n")
-    if (model == "aft")
-      beta <- survreg(survobj ~ X[, -1])$coef
+  }
+  if (model == "aft")
+    beta <- survreg(survobj ~ X[, -1])$coef
+  cat("Initial cox estimates obtained, beginning em algorithm...\n")
 
-  # Call to EM function -------------------------------------------------------
-    emfit <- tvem(Time, Start, Stop, Status, X, Z, offsetvar, g, beta, model, link, emmax, eps, firthlogit, firthcox, survobj, survtype)
-    g <- emfit$g
-    beta <- emfit$latencyfit
-    s <- emfit$Survival
-    incidence_fit <- emfit$emfit
-    cat("Coefficient estimation complete, estimating variance...\n")
+# Call to EM function -------------------------------------------------------
+  emfit <- tvem(Time, Start, Stop, Status, X, Z, offsetvar, g, beta, model,
+                link, emmax, eps, firthlogit, firthcox, survobj, survtype)
+  g <- emfit$g
+  beta <- emfit$latencyfit
+  s <- emfit$Survival
+  incidence_fit <- emfit$emfit
+  cat("Coefficient estimation complete, estimating variance...\n")
 
-  # Bootstrap standard errors --------------------------------------------------
-    if (var) {
-      varout <- tvboot(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status,
-                       X, Z, gnames, bnames, offsetvar, g, beta, model, link, emmax,
-                       eps, firthlogit, firthcox, survobj, n, parallel)
-    } # close bootstrap bracket
+# Bootstrap standard errors --------------------------------------------------
+  if (var) {
+    varout <- tvboot(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status,
+                     X, Z, gnames, bnames, offsetvar, g, beta, model, link, emmax,
+                     eps, firthlogit, firthcox, survobj, n, parallel)
+  } # close bootstrap bracket
 
-  # Final fit details
-    fit <- list()
-    class(fit) <- c("tvcure")
-    fit$incidence_fit <- incidence_fit
-    fit$g <- g
-    fit$beta <- beta
-    if (var) {
-      fit$g_var <- varout$g_var
-      fit$g_sd <- varout$g_sd
-      fit$g_zvalue <- fit$g/fit$g_sd
-      fit$g_pvalue <- (1 - pnorm(abs(fit$g_zvalue))) * 2
-      fit$b_var <- varout$b_var
-      fit$b_sd <- varout$b_sd
-      fit$b_zvalue <- fit$beta/fit$b_sd
-      fit$b_pvalue <- (1 - pnorm(abs(fit$b_zvalue))) * 2
-    }
-    cat("tvcure finished running at ");print(Sys.time())
-    fit$call <- call
-    fit$gnames <- gnames
-    fit$bnames <- bnames
-    fit$s <- s
-    if (ncol(Y)==2) fit$Time <- Time
-    fit
+# Final fit details
+  fit <- list()
+  class(fit) <- c("tvcure")
+  fit$incidence_fit <- incidence_fit
+  fit$g <- g
+  fit$beta <- beta
+  if (var) {
+    fit$g_var <- varout$g_var
+    fit$g_sd <- varout$g_sd
+    fit$g_zvalue <- fit$g/fit$g_sd
+    fit$g_pvalue <- (1 - pnorm(abs(fit$g_zvalue))) * 2
+    fit$b_var <- varout$b_var
+    fit$b_sd <- varout$b_sd
+    fit$b_zvalue <- fit$beta/fit$b_sd
+    fit$b_pvalue <- (1 - pnorm(abs(fit$b_zvalue))) * 2
+  }
+  cat("tvcure finished running at ");print(Sys.time())
+  fit$call <- call
+  fit$gnames <- gnames
+  fit$bnames <- bnames
+  fit$s <- s
+  if (ncol(Y)==2) fit$Time <- Time
+  fit
 }
