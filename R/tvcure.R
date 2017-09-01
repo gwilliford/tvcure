@@ -59,9 +59,9 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
   w <- Status
   w[w==0]<-.001
   if (firthlogit) {
-    g <- logistf(w~Z[,-1])$coef
+    gamma <- logistf(w~Z[,-1])$coef
   } else {
-    g <- eval(parse(text = paste("glm", "(", "w~Z[,-1]", ",
+    gamma <- eval(parse(text = paste("glm", "(", "w~Z[,-1]", ",
                                  family = quasibinomial(link='", link, "'", ")",
                                  ")", sep = "")))$coef
   }
@@ -78,9 +78,9 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
   cat("Initial cox estimates obtained, beginning em algorithm...\n")
 
 # Call to EM function -------------------------------------------------------
-  emfit <- tvem(Time, Start, Stop, Status, X, Z, offsetvar, g, beta, model,
+  emfit <- tvem(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
                 link, emmax, eps, firthlogit, firthcox, survobj, survtype)
-  g <- emfit$g
+  gamma <- emfit$gamma
   beta <- emfit$latencyfit
   s <- emfit$Survival
   incidence_fit <- emfit$emfit
@@ -89,7 +89,7 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
 # Bootstrap standard errors --------------------------------------------------
   if (var) {
     varout <- tvboot(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status,
-                     X, Z, gnames, bnames, offsetvar, g, beta, model, link, emmax,
+                     X, Z, gnames, bnames, offsetvar, gamma, beta, model, link, emmax,
                      eps, firthlogit, firthcox, survobj, n, parallel)
   } # close bootstrap bracket
 
@@ -97,12 +97,12 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
   fit <- list()
   class(fit) <- c("tvcure")
   fit$incidence_fit <- incidence_fit
-  fit$g <- g
+  fit$gamma <- gamma
   fit$beta <- beta
   if (var) {
     fit$g_var <- varout$g_var
     fit$g_sd <- varout$g_sd
-    fit$g_zvalue <- fit$g/fit$g_sd
+    fit$g_zvalue <- fit$gamma/fit$g_sd
     fit$g_pvalue <- (1 - pnorm(abs(fit$g_zvalue))) * 2
     fit$b_var <- varout$b_var
     fit$b_sd <- varout$b_sd
@@ -114,6 +114,8 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
   fit$gnames <- gnames
   fit$bnames <- bnames
   fit$s <- s
-  if (ncol(Y)==2) fit$Time <- Time
+  if (survtype == "right") fit$Time <- Time
+  if (suvrtype == "counting") fit$Stop <- Time
   fit
+  printtvcure(fit, var)
 }

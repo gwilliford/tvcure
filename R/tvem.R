@@ -1,4 +1,4 @@
-tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, g, beta, model, link, emmax, eps, firthlogit, firthcox, survobj, survtype){
+tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model, link, emmax, eps, firthlogit, firthcox, survobj, survtype){
   w <- Status
   n <- length(Status)
   if (model == "ph")
@@ -13,7 +13,7 @@ tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, g, beta, model, lin
   i <- 1
 #browser()
   while (convergence > eps & i < emmax) {
-    uncureprob <- matrix(exp((g) %*% t(Z))/(1 + exp((g) %*% t(Z))), ncol = 1)
+    uncureprob <- matrix(exp((gamma) %*% t(Z))/(1 + exp((gamma) %*% t(Z))), ncol = 1)
     if (model == "ph") {
       survival <- drop(s^(exp((beta) %*% t(X[, -1]))))
     }
@@ -56,13 +56,13 @@ tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, g, beta, model, lin
     }
     if (!inherits(coxit,"error")){
       update_beta <- coxit$coefficients
-      convergence <- sum(c(update_cureg - g, update_beta - beta)^2) + sum((s - update_s)^2)
-      g <- update_cureg
+      convergence <- sum(c(update_cureg - gamma, update_beta - beta)^2) + sum((s - update_s)^2)
+      gamma <- update_cureg
       beta <- update_beta
       s <- update_s
-      uncureprob <- matrix(exp((g) %*% t(Z))/(1 + exp((g) %*% t(Z))), ncol = 1)
+      uncureprob <- matrix(exp((gamma) %*% t(Z))/(1 + exp((gamma) %*% t(Z))), ncol = 1)
       i<-i+1
     }
   }
-  em <- list(incidence_fit = incidence_fit, g = g, latencyfit = beta, Survival = s, Uncureprob = uncureprob, tau = convergence)
+  em <- list(incidence_fit = incidence_fit, gamma = gamma, latencyfit = beta, Survival = s, Uncureprob = uncureprob, tau = convergence)
 }
