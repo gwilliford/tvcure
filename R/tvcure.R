@@ -118,5 +118,5 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
   if (survtype == "counting") fit$Stop <- Time
   fit$model <- model
   fit
-  printtvcure(fit, var)
+  print_tvcure(fit, var)
 }
