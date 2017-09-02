@@ -1,3 +1,19 @@
+#' Estimate cure models.
+#'
+#' @param formula
+#' @param cureform
+#' @param offset
+#' @param model
+#' @param data
+#' @param na.action
+#' @param link
+#' @param var
+#' @param firthlogit
+#' @param firthcox
+#' @param emmax
+#' @param eps
+#' @param nboot
+#' @param parallel
 tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
                    na.action = na.omit, link = "logit", var = T, firthlogit = F,
                    firthcox = FALSE, emmax = 50, eps = 1e-07, nboot = 100,
