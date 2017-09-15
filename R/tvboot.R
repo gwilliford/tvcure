@@ -25,35 +25,38 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
     }
 
   # Sample and Estimate
-  bootres <- foreach(i = 1:nboot,.packages = c('survival','logistf'), .options.snow = opts, .errorhandling = 'remove') %dopar% {
-    set.seed(i)
-    id1 <- sample(1:n1, n1, replace = T)
-    id0 <- sample(1:n0, n0, replace = T)
-    bootdata <- rbind(data1[id1, ], data0[id0, ])
-    bootZ <- bootdata[, gnames]
-    bootX <- as.matrix(cbind(rep(1, n), bootdata[, bnames]))
-    if (survtype=="right") {
-      bootsurv <- Surv(bootdata[, 1], bootdata[, 2])
-      boottime <- bootdata[, 1]
-      bootstatus <- bootdata[, 2]
-    }
-    if (survtype=="counting") {
-      bootsurv <- Surv(bootdata[, 1], bootdata[, 2], bootdata[, 3])
-      bootstart <- bootdata[, 1]
-      bootstop <- bootdata[, 2]
-      bootstatus <- bootdata[, 3]
-      boottime <- bootstop
-    }
+  bootres <- foreach(i = 1:nboot,.packages = c('survival','logistf'),
+                     .options.snow = opts, .errorhandling = 'remove') %dopar% {
+    for(i in 1:10){
+      try({
+      id1 <- sample(1:n1, n1, replace = T)
+      id0 <- sample(1:n0, n0, replace = T)
+      bootdata <- rbind(data1[id1, ], data0[id0, ])
+      bootZ <- bootdata[, gnames]
+      bootX <- as.matrix(cbind(rep(1, n), bootdata[, bnames]))
+      if (survtype=="right") {
+        bootsurv <- Surv(bootdata[, 1], bootdata[, 2])
+        boottime <- bootdata[, 1]
+        bootstatus <- bootdata[, 2]
+      }
+      if (survtype=="counting") {
+        bootsurv <- Surv(bootdata[, 1], bootdata[, 2], bootdata[, 3])
+        bootstart <- bootdata[, 1]
+        bootstop <- bootdata[, 2]
+        bootstatus <- bootdata[, 3]
+        boottime <- bootstop
+      }
 
-    bootfit <- tvem(Start=bootstart, Stop=bootstop, Status=bootstatus,
-                    Time=boottime, X=bootX, Z=bootZ, offsetvar=offsetvar,
-                    gamma=gamma, beta=beta, model=model, link=link, emmax=emmax,
-                    eps=eps, firthlogit=firthlogit, firthcox=firthcox,
-                    survobj=bootsurv, survtype=survtype)#, error = function(e) NULL)
-
-    # Export results
+      bootfit <- tvem(Start=bootstart, Stop=bootstop, Status=bootstatus,
+                      Time=boottime, X=bootX, Z=bootZ, offsetvar=offsetvar,
+                      gamma=gamma, beta=beta, model=model, link=link, emmax=emmax,
+                      eps=eps, firthlogit=firthlogit, firthcox=firthcox,
+                      survobj=bootsurv, survtype=survtype)#, error = function(e) NULL)
+      break
+      }, silent = F) #close try function
+    } # close for loop
     list(bootfitg = bootfit$gamma, bootfitb = bootfit$latencyfit)
-  }
+  } # close foreach loop
 
   # Combine results from bootstraps into matrices
   g_boot <- matrix(rep(0, nboot * ngamma), nrow = nboot)
@@ -61,13 +64,12 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
   for (i in 1:nboot) {
     g_boot[i,] <- bootres[[i]]$bootfitg
     b_boot[i,] <- bootres[[i]]$bootfitb
-  } # close matrix loop
+  }
 
   # Calculate variance and standard errors
-  cat("Variance estimation completed, wrapping up...\n")
   g_var <- apply(g_boot, 2, var)
   b_var <- apply(b_boot, 2, var)
   g_sd <- sqrt(g_var)
   b_sd <- sqrt(b_var)
   varout <- list(g_var=g_var, b_var=b_var, g_sd=g_sd, b_sd=b_sd)
-} # close function
+}
