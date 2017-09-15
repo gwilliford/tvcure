@@ -133,7 +133,6 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
     fit$b_sd <- varout$b_sd
     fit$b_zvalue <- fit$beta/fit$b_sd
     fit$b_pvalue <- (1 - pnorm(abs(fit$b_zvalue))) * 2
-    fit$bootcomp <- varout$bootfit
   }
   cat("tvcure finished running at "); print(Sys.time())
   fit$call <- call
