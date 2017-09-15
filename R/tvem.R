@@ -11,6 +11,7 @@ tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
     s <- tvsurv(error, Status, X, beta, w, model)$survival
   }
   convergence <- 1000
+  i <- 1
   while (convergence > eps & i < emmax) {
     uncureprob <- matrix(exp((gamma) %*% t(Z))/(1 + exp((gamma) %*% t(Z))),
                          ncol = 1)
@@ -53,11 +54,11 @@ tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
         if (firthcox) {
           update_beta <- coxphf(survobj ~ X[,-1] + offset(log(w)),pl=F)$coefficients
         } else {
-          tryCatch(
+          #tryCatch(
             coxit <- coxph(survobj ~ X[, -1] + offset(log(w)), subset = w != 0,
-                           method = "breslow"),
-            error = function(e) e
-          )
+                           method = "breslow")
+            #,error = function(e) e
+          #)
         }
       }
       update_s <- tvsurv(Time, Status, X, beta, w, model)$survival
@@ -70,8 +71,18 @@ tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
     }
     if (!inherits(coxit,"error")){
       update_beta <- coxit$coefficients
-      convergence <- sum(c(update_cureg - gamma, update_beta - beta)^2) +
-        sum((s - update_s)^2)
+      convergence <- sum(c(update_cureg - gamma, update_beta - beta)^2)
+                     + sum((s - update_s)^2)
+      # if (is.na(convergence)) {
+      #   if (is.na(update_cureg)) {
+      #     stop("Infinite coefficient. EM algorithm failed to converge.")
+      #   }
+      #   if (is.na(update_cureb)) {
+      #     stop("Infinite coefficient. EM algorithm failed to converge.")
+      #   }
+      # }
+      #if (i >= 53) browser()
+      if (is.infinite(convergence)) stop("EM algorithm failed to converge.")
       gamma <- update_cureg
       beta <- update_beta
       s <- update_s
@@ -81,5 +92,5 @@ tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
     }
   }
   em <- list(incidence_fit = incidence_fit, gamma = gamma, latencyfit = beta,
-             Survival = s, Uncureprob = uncureprob, tau = convergence)
+             Survival = s, Uncureprob = uncureprob, tau = convergence, emrun = i)
 }
