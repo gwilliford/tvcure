@@ -66,10 +66,19 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
     b_boot[i,] <- bootres[[i]]$bootfitb
   }
 
+  # Create vcov matrix
+  vcovg <- cov(g_boot)
+  colnames(vcovg) <- gnames
+  rownames(vcovg) <- gnames
+  vcovb <- cov(b_boot)
+  colnames(vcovb) <- bnames
+  rownames(vcovb) <- bnames
+
   # Calculate variance and standard errors
   g_var <- apply(g_boot, 2, var)
   b_var <- apply(b_boot, 2, var)
   g_sd <- sqrt(g_var)
   b_sd <- sqrt(b_var)
-  varout <- list(g_var=g_var, b_var=b_var, g_sd=g_sd, b_sd=b_sd)
+  varout <- list(g_var = g_var, b_var = b_var, g_sd = g_sd, b_sd = b_sd,
+                 vcovg = vcovg, vcovb = vcovb)
 }
