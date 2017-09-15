@@ -7,16 +7,16 @@
 #' @param data
 #' @param na.action
 #' @param link
-#' @param var
+#' @param var If
 #' @param firthlogit
 #' @param firthcox
-#' @param emmax
+#' @param emmax Specifies the maximum number of iterations for the EM algorithm.
 #' @param eps
-#' @param nboot
-#' @param parallel
+#' @param nboot Specifies the number of bootstrap samples to draw.
+#' @param parallel If true, bootstraps will be run in parallel and a progress bar displaying the number of completed boostraps will be displayed. This requires the user to set up a \link{snow} object and register it using the \link{doSNOW} package (see example below).
 tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
                    na.action = na.omit, link = "logit", var = T, firthlogit = F,
-                   firthcox = FALSE, emmax = 50, eps = 1e-07, nboot = 100,
+                   firthcox = FALSE, emmax = 1000, eps = 1e-07, nboot = 100,
                    parallel = T){
 
   # Data set up ----------------------------------------------------------------
@@ -42,8 +42,11 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
     X <- model.matrix(attr(mf, "terms"), mf)
     if (parallel == T) {
         clstatus <- getDoParRegistered()
-        if (clstatus == F) stop("Please register a cluster
-                                object to use parallel functionality.")
+        if (clstatus == T) {
+          if (getDoParName()=="doSEQ") stop("Please register a snow cluster
+                                object to use parallel functionality or set parallel = F.")
+        } else stop("Please register a snow cluster
+                                object to use parallel functionality or set parallel = F.")
     }
     if (!inherits(Y, "Surv"))
       stop("Response must be a survival object")
@@ -91,11 +94,15 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
   }
   if (model == "aft")
     beta <- survreg(survobj ~ X[, -1])$coef
-  cat("Initial cox estimates obtained, beginning em algorithm...\n")
+  cat("Initial estimates obtained, beginning em algorithm...\n")
 
 # Call to EM function -------------------------------------------------------
   emfit <- tvem(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
                 link, emmax, eps, firthlogit, firthcox, survobj, survtype)
+  emrun <- emfit$emrun
+  if (emrun == emmax) {
+    warning("Maximum number of EM iterations reached. Model may not have converged.")
+  }
   gamma <- emfit$gamma
   beta <- emfit$latencyfit
   s <- emfit$Survival
@@ -107,7 +114,7 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
     varout <- tvboot(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status,
                      X, Z, gnames, bnames, offsetvar, gamma, beta, model, link, emmax,
                      eps, firthlogit, firthcox, survobj, n, parallel)
-  } # close bootstrap bracket
+  }
 
 # Final fit details
   fit <- list()
@@ -116,6 +123,8 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
   fit$gamma <- gamma
   fit$beta <- beta
   if (var) {
+    fit$vcovg <- varout$vcovg
+    fit$vcovb <- varout$vcovb
     fit$g_var <- varout$g_var
     fit$g_sd <- varout$g_sd
     fit$g_zvalue <- fit$gamma/fit$g_sd
@@ -124,8 +133,9 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
     fit$b_sd <- varout$b_sd
     fit$b_zvalue <- fit$beta/fit$b_sd
     fit$b_pvalue <- (1 - pnorm(abs(fit$b_zvalue))) * 2
+    fit$bootcomp <- varout$bootfit
   }
-  cat("tvcure finished running at ");print(Sys.time())
+  cat("tvcure finished running at "); print(Sys.time())
   fit$call <- call
   fit$gnames <- gnames
   fit$bnames <- bnames
@@ -133,6 +143,9 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
   if (survtype == "right") fit$Time <- Time
   if (survtype == "counting") fit$Stop <- Time
   fit$model <- model
+  fit$nboot <- nboot
+  fit$emmax <- emmax
+  fit$emrun <- emrun
   fit
   print_tvcure(fit, var)
 }
