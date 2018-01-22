@@ -5,12 +5,23 @@ library(tvcure)
 gates <- read.dta13("C:/Users/gwill/Dropbox/Dissertation/tvcure/Data Sets/AOWYDataGates2016Replication.dta")
 gates <- plyr::rename(gates, replace = c("_st" = "st", "_d"="event","_t"="stop","_t0"="start"))
 
-cl <- makeCluster(3, "SOCK")
+
+cox <- coxph(Surv(start, stop, event) ~ constraining + dispersive +
+                         inclusive + growth + democ_aclp_gwf + lnpop + lngdpcap
+                       + cen_elf + prox_pschange_10 + missing +
+                         prior_conflict_intensity + duration + pk_dum,
+                       data = gates);cox
+cox.a <- coxsimLinear(cox, "lngdpcap", qi = "Marginal Effect")
+
+cox.a <- coxsimInteract(cox, "cen_elf", "lngdpcap", qi = "Marginal Effect", X2 = 4:10)
+simGG(cox.a)
+
+cl <- makeCluster(4, "SOCK")
 registerDoSNOW(cl)
 
 gates.tvsurv <- tvcure(Surv(start, stop, event) ~ constraining + dispersive +
                          inclusive + growth + democ_aclp_gwf + lnpop + lngdpcap
-                       + cen_elf + prox_pschange_10 + interregnum + missing +
+                       + cen_elf + prox_pschange_10 + missing +
                          prior_conflict_intensity + duration + pk_dum,
                        cureform = ~ constraining + dispersive + inclusive + growth
                        + democ_aclp_gwf + lnpop + lngdpcap + cen_elf +

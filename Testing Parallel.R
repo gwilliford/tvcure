@@ -2,36 +2,95 @@ library(snow)
 library(foreach)
 library(doParallel)
 library(doSNOW)
+library(tvcure)
+library(smcure)
+data(e1684)
 
-cl <- makeCluster(3, "SOCK")
-registerDoParallel(cl)
+# Run sequentially
+pd <- tvcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE,cureform = ~ TRT + SEX + AGE, data = e1684, model = "ph", parallel = F)
+
+# Test if no parallel object registered - should throw error
+pd <- tvcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE,cureform = ~ TRT + SEX + AGE, data = e1684, model = "ph")
+
+# Run in parallel
+cl <- snow::makeCluster(4, "SOCK")
+doSNOW::registerDoSNOW(cl)
+pd <- tvcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE,cureform = ~ TRT + SEX + AGE, data = e1684, model = "ph", nboot = 20)
+
+# Logit
+pd_logit <- tvcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE,
+                   cureform = ~ TRT + SEX + AGE,
+                   data = e1684,
+                   model = "ph",
+                   emmax = 1000,
+                   nboot = 10000)
+pd_logit2 <- tvcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE,
+                   cureform = ~ TRT + SEX + AGE,
+                   data = e1684,
+                   model = "ph",
+                   emmax = 1000,
+                   nboot = 10000)
+pd_logit3 <- tvcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE,
+                   cureform = ~ TRT + SEX + AGE,
+                   data = e1684,
+                   model = "ph",
+                   emmax = 1000,
+                   nboot = 10000)
+cbind(pd_logit$b_pvalue, pd_logit2$b_pvalue, pd_logit3$b_pvalue)
+cbind(pd_logit$g_pvalue, pd_logit2$g_pvalue, pd_logit3$g_pvalue)
+pd_probit <- tvcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE,
+                   cureform = ~ TRT + SEX + AGE,
+                   data = e1684,
+                   model = "ph",
+                   emmax = 1000,
+                   link = "probit",
+                   nboot = 10000)
+pd_probit2 <- tvcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE,
+                   cureform = ~ TRT + SEX + AGE,
+                   data = e1684,
+                   model = "ph",
+                   emmax = 1000,
+                   link = "probit",
+                   nboot = 10000)
+pd_probit3 <- tvcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE,
+                   cureform = ~ TRT + SEX + AGE,
+                   data = e1684,
+                   model = "ph",
+                   emmax = 1000,
+                   link = "probit",
+                   nboot = 10000)
+cbind(pd_probit$b_pvalue, pd_probit2$b_pvalue, pd_probit3$b_pvalue)
+cbind(pd_probit$g_pvalue, pd_probit2$g_pvalue, pd_probit3$g_pvalue)
+saveRDS(pd_logit,"pd_logit.RDS")
+saveRDS(pd_logit2,"pd_logit2.RDS")
+saveRDS(pd_logit3,"pd_logit3.RDS")
+saveRDS(pd_probit,"pd_probit.RDS")
+saveRDS(pd_probit2,"pd_probit2.RDS")
+saveRDS(pd_probit3,"pd_probit3.RDS")
 
 
-pd <- tvcure(Surv(FAILTIME,FAILCENS)~TRT+SEX+AGE,cureform=~TRT+SEX+AGE,data=e1684,model="ph", parallel = F)
 
-library(smcure); data(e1684)
-cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
-pd <- tvcure(Surv(FAILTIME,FAILCENS)~TRT+SEX+AGE,cureform=~TRT+SEX+AGE,data=e1684,model="ph")
-pd.bases <- basesurv_tvcure(pd)
-pd.pred <- predict_tvcure(pd2,
-            newX = cbind(SEX = c(1, 0, 1), TRT = c(0, 0, 1), c(0.579, 0.579, 30)),
-            newZ = cbind(SEX = c(1, 0, 1), TRT = c(0, 0, 1), c(0.579, 0.579, 30)),
-            model="ph",
-            main = "Predicted Survival Curves for Three Individuals"
+
+# Probit
+pd_probit4 <- tvcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE,
+                   cureform = ~ TRT + SEX + AGE,
+                   data = e1684,
+                   model = "ph",
+                   emmax = 1000,
+                   nboot = 100,
+                   link = "probit")
+
+
+# Predict baseline survival function plot it
+plot_basesurv_tvcure(pd)
+
+# Test predict and plottinf function
+pd.pred1 <- predict_tvcure(pd,
+               newX = cbind(SEX = c(1), TRT = c(0), c(0.579)),
+               newZ = cbind(SEX = c(1), TRT = c(0), c(0.579)),
+               model="ph",
 )
-
-pd.pred <- predict_tvcure(pd2,
-              newX = cbind(SEX = c(1, 0, 1), TRT = c(0, 0, 1), c(0.579, 0.579, 30)),
-              newZ = cbind(SEX = c(1, 0, 1), TRT = c(0, 0, 1), c(0.579, 0.579, 30)),
-              model="ph",
-              main = "Predicted Survival Curves for Three Individuals"
-              )
-par(mfrow=c(1,2))
-plot_tvcure(pd.pred, model = "ph", lwd = 3, basesurv = T, ylim=c(0, 1))
-plot_tvcure(pd.pred, model = "ph", lwd = 3, basesurv = F, ylim=c(0, 1))
-plot_tvcure(pd.pred)
-plot_tvcure(pd.pred, model = "ph")
-legend('topright',legend = c("1","2","3"))
+plot_predict_tvcure(pd.pred1, model = "ph", lwd = 2, basesurv = T, ylim=c(0, 1))
 
 pd.pred <- predict_tvcure(pd2, model = "ph")
 pred <- pd.pred$prediction

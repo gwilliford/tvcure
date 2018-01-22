@@ -1,8 +1,13 @@
+setwd("C:/Users/gwill/Dropbox/Dissertation/tvcure/Data Sets")
 library(readstata13)
 library(plyr)
 
 walter<-read.dta13("AOWYReplicationWalter2014.dta")
 walter<-rename(walter, replace = c("_st" = "st", "_d"="event","_t"="stop","_t0"="start"))
+
+# m1 <- coxph(Surv(start,stop,event)~ethfrac+lgdpl+lmtnest+instabl+ncontig+terr+comprehensive+intensityln+unpko , data=walter)
+# m2 <- coxph(Surv(start,stop,event)~ethfrac+lgdpl+lmtnest+instabl+ncontig+terr+comprehensive+intensityln+unpko + lgdpl*vhpartl1, data=walter)
+
 
 m1 <- tvcure(Surv(start,stop,event)~ethfrac+lgdpl+lmtnest+instabl+ncontig+terr+comprehensive+intensityln+unpko,cureform=~ethfrac+relfrac+lgdpl+lpopl+lmtnest+instabl+ncontig+victory+terr+comprehensive+intensityln+unpko,emmax=10000,data=walter,nboot=10, firthlogit=T)
 
