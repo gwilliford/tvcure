@@ -21,22 +21,22 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
 
   # Preliminaries and error checking--------------------------------------------
     # If parallel is true, ensure that snow cluster is registered
-    if (parallel == T) {
-      clstatus <- getDoParRegistered()
-      if (clstatus == T) {
-        if (getDoParName()=="doSEQ") stop("Please register a snow cluster
-                              object to use parallel functionality or set parallel = F.")
-      } else stop("Please register a snow cluster
-                              object to use parallel functionality or set parallel = F.")
-    }
+    # if (parallel == T) {
+    #   clstatus <- getDoParRegistered()
+    #   if (clstatus == T) {
+    #     if (getDoParName()=="doSEQ") stop("Please register a snow cluster
+    #                           object to use parallel functionality or set parallel = F.")
+    #   } else stop("Please register a snow cluster
+    #                           object to use parallel functionality or set parallel = F.")
+    # }
 
   # Data set up ----------------------------------------------------------------
     call <- match.call()
     model <- match.arg(model)
     # Pull variables from data
-    xvars <- all.vars(formula,)
+    xvars <- all.vars(formula)
     zvars <- all.vars(cureform)
-    # Combine variables and apply missing data options
+    # Create data frame and apply missing data function
     avars <- unique(c(xvars,zvars))
     data <- na.action(data[,c(avars)])
     nobs <- nrow(data)
@@ -44,8 +44,9 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
     mf <- model.frame(formula, data)
     X <- model.matrix(attr(mf, "terms"), mf)
     # Create z matrix
-    Z <- as.matrix(cbind(rep(1, n), data[, xvars]))
-    colnames(Z) <- c("(Intercept)", xvars)
+    mf2 <- model.frame(cureform, data)
+    Z <- model.matrix(attr(mf2, "terms"), mf2)
+    #colnames(Z) <- c("(Intercept)", xvars)
     # Set up offset variables
     if (!is.null(offset)) {
       offsetvar <- all.vars(offset)
@@ -58,20 +59,17 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
     if (!inherits(Y, "Surv"))
       stop("Response must be a survival object")
     survtype <- attr(Y,"type")
-    if (survtype) != c("right", "counting")
-      stop("tvcure only accepts survival objects of type \"right\" or \"counting\"")
-    if (survtype=="right"){
+    if (survtype == "right"){
       Time <- Y[, 1]
       Status <- Y[, 2]
       survobj <- Surv(Time, Status)
-    }
-    if (survtype=="counting"){
+    } else if (survtype == "counting") {
       Start <- Y[, 1]
       Stop <- Y[, 2]
       Status <- Y[, 3]
       Time <- Stop
       survobj <- Surv(Start, Stop, Status)
-    }
+    } else stop("tvcure only accepts survival objects of type \"right\" or \"counting\"")
     gnames <- colnames(Z)
     ngamma <- ncol(Z)
     if (model == "ph") {
@@ -84,7 +82,7 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
     }
     cat("tvcure started at ");print(Sys.time());cat("Estimating coefficients...\n")
 
-# Obtain initial estimates------------------------------------------------------
+  # Obtain initial estimates------------------------------------------------------
   w <- Status
   w[w==0]<-.001
   if (firthlogit) {
@@ -115,16 +113,16 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
   }
   gamma <- emfit$gamma
   beta <- emfit$latencyfit
-  s <- emfit$Survival
+  Survival <- emfit$Survival
   incidence_fit <- emfit$emfit
   cat("Coefficient estimation complete, estimating variance...\n")
 
 # Bootstrap standard errors --------------------------------------------------
-  if (var) {
-    varout <- tvboot(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status,
-                     X, Z, gnames, bnames, offsetvar, gamma, beta, model, link, emmax,
-                     eps, firthlogit, firthcox, survobj, n, parallel)
-  }
+  # if (var) {
+  #   varout <- tvboot(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status,
+  #                    X, Z, gnames, bnames, offsetvar, gamma, beta, model, link, emmax,
+  #                    eps, firthlogit, firthcox, survobj, n, parallel)
+  # }
 
 # Final fit details
   fit <- list()
@@ -132,29 +130,30 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
   fit$incidence_fit <- incidence_fit
   fit$gamma <- gamma
   fit$beta <- beta
-  if (var) {
-    fit$vcovg <- varout$vcovg
-    fit$vcovb <- varout$vcovb
-    fit$g_var <- varout$g_var
-    fit$g_sd <- varout$g_sd
-    fit$g_zvalue <- fit$gamma/fit$g_sd
-    fit$g_pvalue <- (1 - pnorm(abs(fit$g_zvalue))) * 2
-    fit$b_var <- varout$b_var
-    fit$b_sd <- varout$b_sd
-    fit$b_zvalue <- fit$beta/fit$b_sd
-    fit$b_pvalue <- (1 - pnorm(abs(fit$b_zvalue))) * 2
-  }
+  # if (var) {
+  #   fit$vcovg <- varout$vcovg
+  #   fit$vcovb <- varout$vcovb
+  #   fit$g_var <- varout$g_var
+  #   fit$g_sd <- varout$g_sd
+  #   fit$g_zvalue <- fit$gamma/fit$g_sd
+  #   fit$g_pvalue <- (1 - pnorm(abs(fit$g_zvalue))) * 2
+  #   fit$b_var <- varout$b_var
+  #   fit$b_sd <- varout$b_sd
+  #   fit$b_zvalue <- fit$beta/fit$b_sd
+  #   fit$b_pvalue <- (1 - pnorm(abs(fit$b_zvalue))) * 2
+  # }
   cat("tvcure finished running at "); print(Sys.time())
   fit$call <- call
   fit$gnames <- gnames
   fit$bnames <- bnames
-  fit$s <- s
+  fit$Survival <- Survival
   if (survtype == "right") fit$Time <- Time
   if (survtype == "counting") fit$Stop <- Time
   fit$model <- model
+  fit$nobs  <- nobs
   fit$nboot <- nboot
   fit$emmax <- emmax
   fit$emrun <- emrun
   fit
-  print_tvcure(fit, var)
+  print_tvcure(fit, var = F)
 }
