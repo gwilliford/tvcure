@@ -19,42 +19,51 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
                    firthcox = FALSE, emmax = 1000, eps = 1e-07, nboot = 100,
                    parallel = T){
 
+  # Preliminaries and error checking--------------------------------------------
+    # If parallel is true, ensure that snow cluster is registered
+    if (parallel == T) {
+      clstatus <- getDoParRegistered()
+      if (clstatus == T) {
+        if (getDoParName()=="doSEQ") stop("Please register a snow cluster
+                              object to use parallel functionality or set parallel = F.")
+      } else stop("Please register a snow cluster
+                              object to use parallel functionality or set parallel = F.")
+    }
+
   # Data set up ----------------------------------------------------------------
     call <- match.call()
     model <- match.arg(model)
-    cat("tvcure started at ");print(Sys.time());cat("Estimating coefficients...\n")
-    #data <- na.omit(data)
-    lvars <- all.vars(formula,)
-    cvars <- all.vars(cureform)
-    avars <- unique(c(lvars,cvars))
+    # Pull variables from data
+    xvars <- all.vars(formula,)
+    zvars <- all.vars(cureform)
+    # Combine variables and apply missing data options
+    avars <- unique(c(xvars,zvars))
     data <- na.action(data[,c(avars)])
-    n <- dim(data)[1]
+    nobs <- nrow(data)
+    # Create X matrix
     mf <- model.frame(formula, data)
-    Z <- as.matrix(cbind(rep(1, n), data[, cvars]))
-    colnames(Z) <- c("(Intercept)", cvars)
+    X <- model.matrix(attr(mf, "terms"), mf)
+    # Create z matrix
+    Z <- as.matrix(cbind(rep(1, n), data[, xvars]))
+    colnames(Z) <- c("(Intercept)", xvars)
+    # Set up offset variables
     if (!is.null(offset)) {
       offsetvar <- all.vars(offset)
       offsetvar <- data[, offsetvar]
     } else {
       offsetvar <- NULL
     }
+    # Format dependent variable
     Y <- model.extract(mf, "response")
-    X <- model.matrix(attr(mf, "terms"), mf)
-    if (parallel == T) {
-        clstatus <- getDoParRegistered()
-        if (clstatus == T) {
-          if (getDoParName()=="doSEQ") stop("Please register a snow cluster
-                                object to use parallel functionality or set parallel = F.")
-        } else stop("Please register a snow cluster
-                                object to use parallel functionality or set parallel = F.")
-    }
     if (!inherits(Y, "Surv"))
       stop("Response must be a survival object")
     survtype <- attr(Y,"type")
+    if (survtype) != c("right", "counting")
+      stop("tvcure only accepts survival objects of type \"right\" or \"counting\"")
     if (survtype=="right"){
       Time <- Y[, 1]
       Status <- Y[, 2]
-      survobj <- Surv(Time,Status)
+      survobj <- Surv(Time, Status)
     }
     if (survtype=="counting"){
       Start <- Y[, 1]
@@ -73,6 +82,7 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
       bnames <- colnames(X)
       nbeta <- ncol(X)
     }
+    cat("tvcure started at ");print(Sys.time());cat("Estimating coefficients...\n")
 
 # Obtain initial estimates------------------------------------------------------
   w <- Status
