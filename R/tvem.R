@@ -61,13 +61,15 @@ tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
           #)
         }
       }
-      update_s <- tvsurv(Time, Status, X, beta, w, model)$survival
+      update_a <- tvsurv(Time, Status, X, beta, w, model)
+      update_s <- update_a$survival
     }
     if (model == "aft") {
       update_beta <- optim(rep(0, ncol(X)), smrank, Time = Time, X = X, n = n,
                            w = w, Status = Status, method = "Nelder-Mead",
                            control = list(reltol = 1e-04, maxit = 500))$par
-      update_s <- tvsurv(error, Status, X, beta, w, model)$survival
+      update_a <- tvsurv(error, Status, X, beta, w, model)
+      update_s <- update_a$survival
     }
     if (!inherits(coxit,"error")){
       update_beta <- coxit$coefficients
@@ -86,11 +88,12 @@ tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
       gamma <- update_cureg
       beta <- update_beta
       s <- update_s
+      basehaz <- update_a$basehaz
       uncureprob <- matrix(exp((gamma) %*% t(Z))/(1 + exp((gamma) %*% t(Z))),
                            ncol = 1)
       i<-i+1
     }
   }
   em <- list(incidence_fit = incidence_fit, gamma = gamma, latencyfit = beta,
-             Survival = s, Uncureprob = uncureprob, tau = convergence, emrun = i)
+             Survival = s, Basehaz = basehaz, Uncureprob = uncureprob, tau = convergence, emrun = i)
 }
