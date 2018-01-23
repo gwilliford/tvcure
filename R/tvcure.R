@@ -21,14 +21,14 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
 
   # Preliminaries and error checking--------------------------------------------
     # If parallel is true, ensure that snow cluster is registered
-    # if (parallel == T) {
-    #   clstatus <- getDoParRegistered()
-    #   if (clstatus == T) {
-    #     if (getDoParName()=="doSEQ") stop("Please register a snow cluster
-    #                           object to use parallel functionality or set parallel = F.")
-    #   } else stop("Please register a snow cluster
-    #                           object to use parallel functionality or set parallel = F.")
-    # }
+    if (parallel == T) {
+      clstatus <- getDoParRegistered()
+      if (clstatus == T) {
+        if (getDoParName()=="doSEQ") stop("Please register a snow cluster
+                              object to use parallel functionality or set parallel = F.")
+      } else stop("Please register a snow cluster
+                              object to use parallel functionality or set parallel = F.")
+    }
 
   # Data set up ----------------------------------------------------------------
     call <- match.call()
@@ -84,12 +84,12 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
 
   # Obtain initial estimates------------------------------------------------------
   w <- Status
-  w[w==0]<-.001
+  #w[w==0]<-.001
   if (firthlogit) {
-    gamma <- logistf(w~Z[,-1])$coef
+    gamma <- logistf(w ~ Z[, -1])$coef
   } else {
-    gamma <- eval(parse(text = paste("glm", "(", "w~Z[,-1]", ",
-                                 family = quasibinomial(link='", link, "'", ")",
+    gamma <- eval(parse(text = paste("glm", "(", "w ~ Z[, -1]", ",
+                                 family = quasibinomial(link = '", link, "'", ")",
                                  ")", sep = "")))$coef
   }
   if (model == "ph") {
@@ -114,15 +114,16 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
   gamma <- emfit$gamma
   beta <- emfit$latencyfit
   Survival <- emfit$Survival
+  Basehaz  <- emfit$Basehaz
   incidence_fit <- emfit$emfit
   cat("Coefficient estimation complete, estimating variance...\n")
 
 # Bootstrap standard errors --------------------------------------------------
-  # if (var) {
-  #   varout <- tvboot(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status,
-  #                    X, Z, gnames, bnames, offsetvar, gamma, beta, model, link, emmax,
-  #                    eps, firthlogit, firthcox, survobj, n, parallel)
-  # }
+if (var) {
+  varout <- tvboot(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status,
+                   X, Z, gnames, bnames, offsetvar, gamma, beta, model, link, emmax,
+                   eps, firthlogit, firthcox, survobj, nobs, parallel)
+}
 
 # Final fit details
   fit <- list()
@@ -130,23 +131,24 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
   fit$incidence_fit <- incidence_fit
   fit$gamma <- gamma
   fit$beta <- beta
-  # if (var) {
-  #   fit$vcovg <- varout$vcovg
-  #   fit$vcovb <- varout$vcovb
-  #   fit$g_var <- varout$g_var
-  #   fit$g_sd <- varout$g_sd
-  #   fit$g_zvalue <- fit$gamma/fit$g_sd
-  #   fit$g_pvalue <- (1 - pnorm(abs(fit$g_zvalue))) * 2
-  #   fit$b_var <- varout$b_var
-  #   fit$b_sd <- varout$b_sd
-  #   fit$b_zvalue <- fit$beta/fit$b_sd
-  #   fit$b_pvalue <- (1 - pnorm(abs(fit$b_zvalue))) * 2
-  # }
+  if (var) {
+    fit$vcovg <- varout$vcovg
+    fit$vcovb <- varout$vcovb
+    fit$g_var <- varout$g_var
+    fit$g_sd <- varout$g_sd
+    fit$g_zvalue <- fit$gamma/fit$g_sd
+    fit$g_pvalue <- (1 - pnorm(abs(fit$g_zvalue))) * 2
+    fit$b_var <- varout$b_var
+    fit$b_sd <- varout$b_sd
+    fit$b_zvalue <- fit$beta/fit$b_sd
+    fit$b_pvalue <- (1 - pnorm(abs(fit$b_zvalue))) * 2
+  }
   cat("tvcure finished running at "); print(Sys.time())
   fit$call <- call
   fit$gnames <- gnames
   fit$bnames <- bnames
   fit$Survival <- Survival
+  fit$Basehaz  <- Basehaz
   if (survtype == "right") fit$Time <- Time
   if (survtype == "counting") fit$Stop <- Time
   fit$model <- model
@@ -155,5 +157,5 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
   fit$emmax <- emmax
   fit$emrun <- emrun
   fit
-  print_tvcure(fit, var = F)
+  print_tvcure(fit, var)
 }
