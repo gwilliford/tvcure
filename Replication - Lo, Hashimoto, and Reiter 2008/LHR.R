@@ -3,6 +3,9 @@ library(readstata13)
 library(plyr)
 library(dplyr)
 library(coxphf)
+cl <- makeCluster(3, "SOCK")
+registerDoSNOW(cl)
+options(scipen = 999)
 
 # Load data
 lhr<-read.dta13("C:/Users/gwill/Dropbox/Methods Notes/Survival Analysis/Cure Models Paper/Replication - LHR 2008/lhrIOOct08replication.dta")
@@ -13,18 +16,16 @@ lhr$event<-lhr[,"_d"]
 #lhr<-na.omit(lhr)
 
 # Set up parallel processing
-cl <- makeCluster(3, "SOCK")
-registerDoSNOW(cl)
 
 # Models
-tvcure.full.standard <- tvcure(Surv(start, stop, event) ~ archigosFIRC + capchange +
-                        battletide + thirdpartycfire + index + onedem5 + twodem5
-                      + tie + lndeaths + cfhist + stakes + contiguity,
-                      cureform = ~ archigosFIRC + capchange
+tvcure.full.standard <- tvcure(Surv(start, stop, event) ~ archigosFIRC,
+                      cureform = ~ archigosFIRC, data = lhr,
+                      model = "ph", link = "probit", nboot = 1000)
+
+                      + capchange
                       + battletide + thirdpartycfire + index + onedem5 + twodem5
                       + tie + lndeaths + cfhist + stakes + contiguity,
-                      data = lhr,
-                      model = "ph")
+
 tvcure.full.flogit <- tvcure(Surv(start, stop, event) ~ archigosFIRC + capchange +
                         battletide + thirdpartycfire + index + onedem5 + twodem5
                       + tie + lndeaths + cfhist + stakes + contiguity,
