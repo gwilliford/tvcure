@@ -1,6 +1,8 @@
+# Todo - fix all the cases where X = 1
 tvvar <- function(X, Z, beta, gamma, nbeta, ngamma, Time, Status, Basehaz, nobs) {
-  xb <- as.matrix(X[, -1]) %*% beta
-  zg <- Z %*% gamma  #expxb <- exp(xb)
+  X <- X[, -1]
+  xb <- as.matrix(X) %*% beta
+  zg <- as.matrix(Z) %*% gamma  #expxb <- exp(xb)
   expxb <- exp(xb)
   expzg <- exp(zg)
   phi <- (1 - Status) * exp(-Basehaz * expxb + xb + zg) / (1 + exp(-Basehaz * expxb + zg)^2)
@@ -35,8 +37,12 @@ tvvar <- function(X, Z, beta, gamma, nbeta, ngamma, Time, Status, Basehaz, nobs)
 	a2 <- matrix(nrow = nobs, ncol = nbeta)
 	for (k in 1:nobs) {
 		for (j in 1:nbeta) {
-				a2[k, j] <- (1/nobs) * sum((phi * Basehaz - psi) * expxb * as.numeric(Time > Time[k]) * X[, j])
-		}
+		  if (nbeta == 1) {
+		    a2[k, j] <- (1/nobs) * sum((phi * Basehaz - psi) * expxb * as.numeric(Time > Time[k]) * X)
+		  } else {
+				a2[k, j] <- (1/nobs) * sum((phi * Basehaz - psi) * expxb * as.numeric(Time > Time[k]) * as.matrix(X[, j]))
+		  }
+	  }
 	}
 
 	# a3
@@ -59,7 +65,11 @@ tvvar <- function(X, Z, beta, gamma, nbeta, ngamma, Time, Status, Basehaz, nobs)
 	b2 <- matrix(nrow = nbeta, ncol = nbeta)
 	for (k in 1:nbeta) {
 	  for (j in 1:nbeta) {
-	    b2[k, j] <- (1/nobs) * sum((psi - phi * Basehaz) * Basehaz * expxb * X[, k] * X[, j])
+	    if (nbeta == 1) {
+	      b2[k, j] <- (1/nobs) * sum((psi - phi * Basehaz) * Basehaz * expxb * X * X)
+	    } else {
+	      b2[k, j] <- (1/nobs) * sum((psi - phi * Basehaz) * Basehaz * expxb * as.matrix(X[, k]) * as.matrix(X[, j]))
+	    }
   	}
 	}
 
@@ -67,7 +77,11 @@ tvvar <- function(X, Z, beta, gamma, nbeta, ngamma, Time, Status, Basehaz, nobs)
 	b3 <- matrix(nrow = nbeta, ncol = ngamma)
 	for (k in 1:nbeta) {
 	  for (j in 1:ngamma) {
-	    b3[k, j] <- (1/nobs) * sum(phi * Basehaz * X[, k] * Z[, j])
+	    if (nbeta == 1) {
+	      b3[k, j] <- (1/nobs) * sum(phi * Basehaz * X * Z[, j])
+	    } else {
+	      b3[k, j] <- (1/nobs) * sum(phi * Basehaz * as.matrix(X[, k]) * Z[, j])
+	    }
 	  }
 	}
 
@@ -82,7 +96,7 @@ tvvar <- function(X, Z, beta, gamma, nbeta, ngamma, Time, Status, Basehaz, nobs)
   }
   D <- diag(dvec)
 
-  browser()
+  #browser()
   # Sigma matrices
   Sigmab <- solve((b2 - t(a2) %*% D %*% solve(a1) %*% a2) -
     (b3 - t(a2) %*% D %*% solve(a1) %*% a3) %*%
@@ -101,5 +115,5 @@ tvvar <- function(X, Z, beta, gamma, nbeta, ngamma, Time, Status, Basehaz, nobs)
 # 		}
 # 	}
   list(ordBasehaz = ordBasehaz)
-  browser()
+  #browser()
 }

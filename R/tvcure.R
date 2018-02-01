@@ -24,7 +24,7 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
     if (parallel == T) {
       clstatus <- getDoParRegistered()
       if (clstatus == T) {
-        if (getDoParName()=="doSEQ") stop("Please register a snow cluster
+        if (getDoParName() == "doSEQ") stop("Please register a snow cluster
                               object to use parallel functionality or set parallel = F.")
       } else stop("Please register a snow cluster
                               object to use parallel functionality or set parallel = F.")
@@ -80,7 +80,7 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
       bnames <- colnames(X)
       nbeta <- ncol(X)
     }
-    cat("tvcure started at ");print(Sys.time());cat("Estimating coefficients...\n")
+    cat("tvcure started at "); print(Sys.time());cat("Estimating coefficients...\n")
 
   # Obtain initial estimates------------------------------------------------------
   w <- Status
@@ -118,6 +118,11 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
   incidence_fit <- emfit$emfit
   cat("Coefficient estimation complete, estimating variance...\n")
 
+# Fang et al. standard errors
+  # create xb and zg matrices
+  #browser()
+  #varfit <- tvvar(X = X, Z = Z, beta = beta, gamma = gamma, nbeta = nbeta, ngamma = ngamma, Time = Time, Status = Status, Basehaz = Basehaz, nobs = nobs)
+
 # Bootstrap standard errors --------------------------------------------------
 if (var) {
   varout <- tvboot(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status,
@@ -148,7 +153,8 @@ if (var) {
   fit$gnames <- gnames
   fit$bnames <- bnames
   fit$Survival <- Survival
-  fit$Basehaz  <- Basehaz
+  fit$BaseHaz  <- Basehaz
+  #fit$ordBaseHaz <- varfit$ordBasehaz
   if (survtype == "right") fit$Time <- Time
   if (survtype == "counting") fit$Stop <- Time
   fit$model <- model
@@ -156,6 +162,9 @@ if (var) {
   fit$nboot <- nboot
   fit$emmax <- emmax
   fit$emrun <- emrun
+  #fit$a1      <- a1
+	#fit$a1temp1 <- attemp1
+	#fit$a1temp2 <- a1temp2
   fit
   print_tvcure(fit, var)
 }

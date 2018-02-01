@@ -14,12 +14,14 @@ tvsurv <- function(Time, Status, X, beta, w, model) {
     lambda[i] <- temp1/temp
   }
   HHazard <- numeric()
+  #basehaz <- numeric()
   for (i in 1:length(Time)) {
     HHazard[i] <- sum(as.numeric(Time[i] >= death_point) * lambda)
-    if (Time[i] > max(death_point))
-      HHazard[i] <- Inf
-    if (Time[i] < min(death_point))
-      HHazard[i] <- 0
+     #basehaz[i] <- sum(as.numeric(Time[i] >= death_point) * lambda)
+     if (Time[i] > max(death_point))
+       HHazard[i] <- Inf
+     if (Time[i] < min(death_point))
+       HHazard[i] <- 0
   }
   survival <- exp(-HHazard)
   list(survival = survival, basehaz = HHazard)
