@@ -14,7 +14,6 @@
 #' @param eps
 #' @param nboot Specifies the number of bootstrap samples to draw.
 #' @param parallel If true, bootstraps will be run in parallel and a progress bar displaying the number of completed boostraps will be displayed. This requires the user to set up a \link{snow} object and register it using the \link{doSNOW} package (see example below).
-tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
                    na.action = na.omit, link = "logit", var = T, firthlogit = F,
                    firthcox = FALSE, emmax = 1000, eps = 1e-07, nboot = 100,
                    parallel = T){
@@ -156,7 +155,7 @@ if (var) {
   fit$BaseHaz  <- Basehaz
   #fit$ordBaseHaz <- varfit$ordBasehaz
   if (survtype == "right") fit$Time <- Time
-  if (survtype == "counting") fit$Stop <- Time
+  if (survtype == "counting") fit$Time <- Stop
   fit$model <- model
   fit$nobs  <- nobs
   fit$nboot <- nboot
