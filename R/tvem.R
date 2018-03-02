@@ -29,7 +29,7 @@ tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
                                                ")",sep="")))
     } else {
       incidence_fit <- eval(parse(text = paste("glm", "(", "w~Z[,-1]",",
-                            family = quasibinomial(link='", link, "'",
+                            family = binomial(link='", link, "'",
                                                ")", ")", sep = "")))
     }
 
@@ -37,7 +37,7 @@ tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
     update_cureg <- incidence_fit$coef
     if (!is.null(offsetvar))
       update_cureg <- as.numeric(eval(parse(text = paste("glm","(", "w~Z[,-1]
-                       +offset(offsetvar)",",family = quasibinomial(link='",
+                       +offset(offsetvar)",",family = binomial(link='",
                       link, "'", ")", ")", sep = "")))$coef)
 
     # Update cox
