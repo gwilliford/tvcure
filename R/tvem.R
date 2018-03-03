@@ -13,10 +13,12 @@ tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
   convergence <- 1000
   i <- 1
   while (convergence > eps & i < emmax) {
-    if (link == "logit")
+    if (link == "logit") {
       uncureprob <- matrix(exp((gamma) %*% t(Z))/(1 + exp((gamma) %*% t(Z))), ncol = 1) #matrix(glmres$fitted.values,
-    if (link == "probit")
-      uncureprob <- pnorm(gamma %*% t(Z))
+    }
+    if (link == "probit") {
+      uncureprob <- matrix(pnorm(gamma %*% t(Z)), ncol = 1)
+    }
     # if (model == "ph") {
       survival <- drop(s^(exp((beta) %*% t(X[, -1]))))
     # }
@@ -94,7 +96,7 @@ tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
       if (link == "logit")
         uncureprob <- matrix(exp((gamma) %*% t(Z))/(1 + exp((gamma) %*% t(Z))), ncol = 1)#matrix(incidence_fit$fitted.values,
       if (link == "probit")
-        uncureprob <- pnorm(gamma %*% t(Z))
+        uncureprob <- matrix(pnorm(gamma %*% t(Z)), ncol = 1)
       i <- i + 1
     }
   }
