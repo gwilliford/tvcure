@@ -66,6 +66,7 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
     b_boot[i,] <- bootres[[i]]$bootfitb
   }
 
+
   # Create vcov matrix
   vcovg <- cov(g_boot)
   colnames(vcovg) <- gnames

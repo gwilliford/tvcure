@@ -2,8 +2,8 @@
 #'
 #' @param model Model returned from tvcure function.
 #' @param newX Values for covariates in hazard formula (X).
-#' @param nexZ Values for covariates in glm formula (Z).
-predict_tvcure <- function(model, newX, newZ...) {
+#' @param nexZ Values for covariates in glm formula (Z). This matrix should not include a constant.
+predict_tvcure <- function(model, newX, newZ, ...) {
   call <- match.call()
   if (!inherits(model, "tvcure"))
     stop("Model must be a tvcure object")
@@ -19,17 +19,17 @@ predict_tvcure <- function(model, newX, newZ...) {
   t = array(0, dim = c(n, nrow(newX)))
   spop = array(0, dim = c(n, nrow(newX)))
   #if (model == "ph") {
-    ebetaX = exp(model$beta %*% t(newX))
-    for (i in 1:nrow(newZ)) {
-      scure[, i] = s0^ebetaX[i]
+  ebetaX = exp(model$beta %*% t(newX))
+  for (i in 1:nrow(newZ)) {
+    scure[, i] = s0 ^ ebetaX[i]
+  }
+  for (i in 1:n) {
+    for (j in 1:nrow(newX)) {
+      spop[i, j] = uncureprob[j] * scure[i, j] + (1 - uncureprob[j])
     }
-    for (i in 1:n) {
-      for (j in 1:nrow(newX)) {
-        spop[i, j] = uncureprob[j] * scure[i, j] + (1 - uncureprob[j])
-      }
-    }
-    prd = cbind(spop, Time = model$Time)
-    sur = cbind(s0, Time = model$Time)
+  }
+  prd = cbind(spop, Time = model$Time)
+  sur = cbind(s0, Time = model$Time)
   #}
   # if (model == "aft") {
   #   newX = cbind(1, newX)
