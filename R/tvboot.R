@@ -80,5 +80,5 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
   g_sd <- sqrt(g_var)
   b_sd <- sqrt(b_var)
   varout <- list(g_var = g_var, b_var = b_var, g_sd = g_sd, b_sd = b_sd,
-                 vcovg = vcovg, vcovb = vcovb)
+                 vcovg = vcovg, vcovb = vcovb, bootcomp = length(bootres))
 }
