@@ -61,11 +61,10 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
   # Combine results from bootstraps into matrices
   g_boot <- matrix(rep(0, nboot * ngamma), nrow = nboot)
   b_boot <- matrix(rep(0, nboot * (nbeta)), nrow = nboot)
-  for (i in 1:nboot) {
+  for (i in 1:length(bootres)) {
     g_boot[i,] <- bootres[[i]]$bootfitg
     b_boot[i,] <- bootres[[i]]$bootfitb
   }
-
 
   # Create vcov matrix
   vcovg <- cov(g_boot)

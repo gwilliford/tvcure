@@ -14,6 +14,7 @@
 #' @param eps
 #' @param nboot Specifies the number of bootstrap samples to draw.
 #' @param parallel If true, bootstraps will be run in parallel and a progress bar displaying the number of completed boostraps will be displayed. This requires the user to set up a \link{snow} object and register it using the \link{doSNOW} package (see example below).
+tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
                    na.action = na.omit, link = "logit", var = T, firthlogit = F,
                    firthcox = FALSE, emmax = 1000, eps = 1e-07, nboot = 100,
                    parallel = T){
@@ -57,7 +58,7 @@
     Y <- model.extract(mf, "response")
     if (!inherits(Y, "Surv"))
       stop("Response must be a survival object")
-    survtype <- attr(Y,"type")
+    survtype <- attr(Y, "type")
     if (survtype == "right"){
       Time <- Y[, 1]
       Status <- Y[, 2]
@@ -75,10 +76,10 @@
       bnames <- colnames(X)[-1]
       nbeta <- ncol(X) - 1
     }
-    if (model == "aft") {
-      bnames <- colnames(X)
-      nbeta <- ncol(X)
-    }
+    # if (model == "aft") {
+    #   bnames <- colnames(X)
+    #   nbeta <- ncol(X)
+    # }
     cat("tvcure started at "); print(Sys.time());cat("Estimating coefficients...\n")
 
   # Obtain initial estimates------------------------------------------------------
@@ -88,19 +89,19 @@
     gamma <- logistf(w ~ Z[, -1])$coef
   } else {
     gamma <- eval(parse(text = paste("glm", "(", "w ~ Z[, -1]", ",
-                                 family = quasibinomial(link = '", link, "'", ")",
-                                 ")", sep = "")))$coef
+                             family = quasibinomial(link = '", link, "'", ")",
+                               ")", sep = "")))$coef
   }
   if (model == "ph") {
-    if (firthcox) {
-      beta <- coxphf(survobj ~ X[, -1] + offset(log(w)), pl=F)$coefficients
-    } else {
+    # if (firthcox) {
+    #   beta <- coxphf(survobj ~ X[, -1] + offset(log(w)), pl = F)$coefficients
+    # } else {
       beta <- coxph(survobj ~ X[, -1] + offset(log(w)), subset = w!=0,
                     method = "breslow")$coef
-    }
+    # }
   }
-  if (model == "aft")
-    beta <- survreg(survobj ~ X[, -1])$coef
+  # if (model == "aft")
+  #   beta <- survreg(survobj ~ X[, -1])$coef
   cat("Initial estimates obtained, beginning em algorithm...\n")
 
 # Call to EM function -------------------------------------------------------
@@ -157,6 +158,7 @@ if (var) {
   if (survtype == "right") fit$Time <- Time
   if (survtype == "counting") fit$Time <- Stop
   fit$model <- model
+  fit$link  <- link
   fit$nobs  <- nobs
   fit$nboot <- nboot
   fit$emmax <- emmax
