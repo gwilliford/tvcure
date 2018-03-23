@@ -159,13 +159,15 @@ if (var) {
   if (survtype == "counting") fit$Time <- Stop
   fit$model <- model
   fit$link  <- link
+  fit$nfail <- sum(Status)
   fit$nobs  <- nobs
   fit$nboot <- nboot
+  fit$bootcomp <- varout$bootcomp
   fit$emmax <- emmax
   fit$emrun <- emrun
   #fit$a1      <- a1
 	#fit$a1temp1 <- attemp1
 	#fit$a1temp2 <- a1temp2
   fit
-  print_tvcure(fit, var)
+  #print_tvcure(fit, var)
 }
