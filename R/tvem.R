@@ -1,5 +1,5 @@
 tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
-                 link, emmax, eps, firthlogit, firthcox, survobj, survtype){
+                 link, emmax, eps, brglm, firthcox, survobj, survtype){
   w <- Status
   n <- length(Status)
   # if (model == "ph")
@@ -28,21 +28,31 @@ tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
     # }
     w <- Status + (1 - Status) * (uncureprob * survival)/((1 -
         uncureprob) + uncureprob * survival)
-    # if (firthlogit) {
-    #   incidence_fit <- eval(parse(text = paste("logistf","(", "w~Z[,-1]",
-    #                                            ")",sep="")))
-    # } else {
-      incidence_fit <- eval(parse(text = paste("glm", "(", "w ~ Z[, -1]", ",
-                            family = quasibinomial(link='", link, "'",
-                                               ")", ")", sep = "")))
-    # }
+    if (brglm) {
+      if (is.null(offsetvar)) {
+        incidence_fit <- eval(parse(text = paste("glm","(", "w~Z[,-1]",
+                                                ")",sep="")))
+      } else {
+        incidence_fit <- as.numeric(eval(parse(text = paste("glm","(", "w~Z[,-1]
+                                    + offset(offsetvar)",",family =
+                                    quasibinomial(link='",
+                                    link, "'", ")", ")", sep = ""))))
+      }
+    } else {
+      if (is.null(offsetvar)) {
+        incidence_fit <- eval(parse(text = paste("brglm::brglm", "(", "w ~ Z[, -1]", ",
+                family = quasibinomial(link='", link, "'",
+                                      ")", ")", sep = "")))
+      } else {
+        incidence_fit <- eval(parse(text = paste("brglm::brglm", "(", "w ~ Z[, -1] +
+                              offsetvar(offsetvar)", ",
+                              family = quasibinomial(link='", link, "'",
+                              ")", ")", sep = "")))
+      }
+    }
+    update_cureg <- incidence_fit$coef
 
     # Update glm
-    update_cureg <- incidence_fit$coef
-    if (!is.null(offsetvar))
-      update_cureg <- as.numeric(eval(parse(text = paste("glm","(", "w~Z[,-1]
-                       +offset(offsetvar)",",family = quasibinomial(link='",
-                      link, "'", ")", ")", sep = "")))$coef)
 
     # Update cox
     if (model == "ph") {
@@ -101,5 +111,5 @@ tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
     }
   }
   em <- list(incidence_fit = incidence_fit, gamma = gamma, latencyfit = beta,
-             Survival = s, Basehaz = basehaz, Uncureprob = uncureprob, tau = convergence, emrun = i, uncureprob = uncureprob)
+             Survival = s, Basehaz = basehaz, uncureprob = uncureprob, tau = convergence, emrun = i)
 }

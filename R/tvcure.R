@@ -8,15 +8,15 @@
 #' @param na.action
 #' @param link
 #' @param var If
-#' @param firthlogit
+#' @param brglm
 #' @param firthcox
 #' @param emmax Specifies the maximum number of iterations for the EM algorithm.
 #' @param eps
 #' @param nboot Specifies the number of bootstrap samples to draw.
 #' @param parallel If true, bootstraps will be run in parallel. A progress bar displaying the number of completed boostraps will be displayed. This option requires the user to set up a \link{snow} object and register it using the \link{doSNOW} package (see example below).
 tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
-                   na.action = na.omit, link = "logit", var = T, firthlogit = F,
-                   firthcox = FALSE, emmax = 1000, eps = 1e-07, nboot = 100,
+                   na.action = na.omit, link = "logit", var = T, brglm = F,
+                   firthcox = F, emmax = 1000, eps = 1e-07, nboot = 100,
                    parallel = T){
 
   # Preliminaries and error checking--------------------------------------------
@@ -88,8 +88,8 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
   # Obtain initial estimates------------------------------------------------------
   w <- Status
   #w[w==0]<-.001
-  if (firthlogit) {
-    gamma <- logistf(w ~ Z[, -1])$coef
+  if (brglm) {
+    gamma <- brglm::brglm(w ~ Z[, -1])$coef
   } else {
     gamma <- eval(parse(text = paste("glm", "(", "w ~ Z[, -1]", ",
                              family = quasibinomial(link = '", link, "'", ")",
@@ -109,28 +109,25 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
 
 # Call to EM function -------------------------------------------------------
   emfit <- tvem(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
-                link, emmax, eps, firthlogit, firthcox, survobj, survtype)
-  emrun <- emfit$emrun
-  if (emrun == emmax) {
-    warning("Maximum number of EM iterations reached. Model may not have converged.")
+                link, emmax, eps, brglm, firthcox, survobj, survtype)
+  if (emfit$emrun == emmax) {
+    warning("Maximum number of EM iterations reached. Model has not have converged.")
   }
   gamma <- emfit$gamma
   beta <- emfit$latencyfit
   Survival <- emfit$Survival
   Basehaz  <- emfit$Basehaz
-  incidence_fit <- emfit$emfit
+  incidence_fit <- emfit$incidence_fit
   cat("Coefficient estimation complete, estimating variance...\n")
 
 # Fang et al. standard errors
-  # create xb and zg matrices
-  #browser()
-  #varfit <- tvvar(X = X, Z = Z, beta = beta, gamma = gamma, nbeta = nbeta, ngamma = ngamma, Time = Time, Status = Status, Basehaz = Basehaz, nobs = nobs)
+#varfit <- tvvar(X = X, Z = Z, beta = beta, gamma = gamma, nbeta = nbeta, ngamma = ngamma, Time = Time, Status = Status, Basehaz = Basehaz, nobs = nobs)
 
 # Bootstrap standard errors --------------------------------------------------
 if (var) {
   varout <- tvboot(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status,
                    X, Z, gnames, bnames, offsetvar, gamma, beta, model, link, emmax,
-                   eps, firthlogit, firthcox, survobj, nobs, parallel)
+                   eps, brglm, firthcox, survobj, nobs, parallel)
 }
 
 # Final fit details
@@ -158,18 +155,22 @@ if (var) {
   fit$bnames <- bnames
   fit$Survival <- Survival
   fit$BaseHaz  <- Basehaz
-  fit$uncureprob <- emfit$uncureprob
-  #fit$ordBaseHaz <- varfit$ordBasehaz
-  if (survtype == "right") fit$Time <- Time
-  if (survtype == "counting") fit$Time <- Stop
-  fit$Status <- Status
-  fit$model <- model
+
+  # fit$uncureprob <- emfit$uncureprob
+  # fit$ordBaseHaz <- varfit$ordBasehaz
+
+  # if (survtype == "right")
+  #   fit$Time <- Time
+  # if (survtype == "counting")
+  #   fit$Time <- Stop
+  # fit$Status <- Status
+  # fit$model <- model
   fit$link  <- link
-  fit$nfail <- sum(Status)
-  fit$nobs  <- nobs
+  # fit$nfail <- sum(Status)
+  # fit$nobs  <- nobs
   fit$nboot <- nboot
   fit$emmax <- emmax
-  fit$emrun <- emrun
+  fit$emrun <- emfit$emrun
   fit$var <- var
   #fit$a1      <- a1
 	#fit$a1temp1 <- attemp1
