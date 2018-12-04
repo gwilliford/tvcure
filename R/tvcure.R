@@ -89,11 +89,13 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
   w <- Status
   #w[w==0]<-.001
   if (brglm) {
-    gamma <- brglm::brglm(w ~ Z[, -1])$coef
+    gamma <- eval(parse(text = paste("brglm::brglm", "(", "as.integer(w) ~ Z[, -1],",
+                                    "family = binomial(link = '", link, "'", ")",
+                                    ")", sep = "")))$coef
   } else {
-    gamma <- eval(parse(text = paste("glm", "(", "w ~ Z[, -1]", ",
-                             family = quasibinomial(link = '", link, "'", ")",
-                               ")", sep = "")))$coef
+    gamma <- eval(parse(text = paste("glm", "(", "as.integer(w) ~ Z[, -1],",
+                                    "family = binomial(link = '", link, "'", ")",
+                                    ")", sep = "")))$coef
   }
   if (model == "ph") {
     # if (firthcox) {
@@ -164,10 +166,10 @@ if (var) {
   # if (survtype == "counting")
   #   fit$Time <- Stop
   # fit$Status <- Status
-  # fit$model <- model
+  fit$model <- model
   fit$link  <- link
-  # fit$nfail <- sum(Status)
-  # fit$nobs  <- nobs
+  fit$nfail <- sum(Status)
+  fit$nobs  <- nobs
   fit$nboot <- nboot
   fit$emmax <- emmax
   fit$emrun <- emfit$emrun

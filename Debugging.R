@@ -1,10 +1,14 @@
 # Basic Model
 library(smcure); data(e1684); cl <- makeCluster(3, "SOCK"); registerDoSNOW(cl)
-# tmod <- tvcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE, cureform = ~ TRT + SEX + AGE, data = e1684, model = "ph", link = "logit", var = F)
-tmod <- tvcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE, cureform = ~ TRT + SEX + AGE, data = e1684, model = "ph", link = "logit", var = F, brglm = T)
+tmod <- tvcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE, cureform = ~ TRT + SEX + AGE, data = e1684, model = "ph", link = "logit", var = F)
+tmod.brglm <- tvcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE, cureform = ~ TRT + SEX + AGE, data = e1684, model = "ph", link = "logit", var = F, brglm = T)
+
+logit <- glm(as.integer(FAILCENS) ~ TRT + SEX + AGE, family = binomial(link = 'logit'), data = e1684)
+logit2 <- glm(FAILCENS ~ TRT + SEX + AGE, family = quasibinomial(link = "logit"), data = e1684)
+logit3 <- brglm::brglm(FAILCENS ~ TRT + SEX + AGE, family = binomial(link = "logit"), data = e1684)
 
 
-# Check against smcure
+su# Check against smcure
 smod <- smcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE, cureform = ~ TRT + SEX + AGE, data = e1684, model = "ph", link = "logit", Var = F)
 
 # Prediction function with 1 covariate profile
