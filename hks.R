@@ -3,9 +3,11 @@ library(plyr)
 library(tvcure)
 
 hks <- read.dta13("C:/Users/gwill/Dropbox/Research/Peace Settlement Conceptulization Paper/Replication Analysis/Replication - HKS 2016 CMPS/ReplicationHSK2016CMPS.dta")
-hks <- plyr::rename(hks, replace = c("_st" = "st", "_d"="event","_t"="stop","_t0"="start"))
+hks <- plyr::rename(hks, replace = c("_st" = "st", "_d" = "event","_t" = "stop","_t0" = "start"))
 
-a <- coxph(Surv(start, stop, event) ~ troop + police + militaryobservers + wardur + brv_warAgg + osvAll + lntpop + polity2 + polity2Sq + rebpolwing + numprevepisodes + lnrgdppc + troop * lnrgdppc, data = hks);a
+
+
+a <- coxph(Surv(start, stop, event) ~ troop + police + militaryobservers + wardur + brv_warAgg + osvAll + lntpop + polity2 + polity2Sq + rebpolwing + numprevepisodes + lnrgdppc + victoryFull + negsettleFull + lowactFull + frailty(dyad_id, distribution = "gaussian"), data = hks);a
 cox.a <- coxsimInteract(cox, "troop", "lnrgdppc", qi = "Hazard Rate", X1 = 1000, X2 = 4)
 
 cl <- makeCluster(4, "SOCK")
@@ -33,13 +35,15 @@ hks_tvcure_firth <- tvcure(Surv(start, stop, event) ~ troop + police + militaryo
       firthlogit = T,
       nboot = 100)
 
+hks_cox <- coxph(Surv(start, stop, event) ~ wardur + brv_warAgg + osvAll + lntpop + polity2 + polity2Sq + rebpolwing + numprevepisodes + lnrgdppc + negsettleFull,
+      data = hks,)
+
 hks_tvcure_probit <- tvcure(Surv(start, stop, event) ~ troop + police + militaryobservers,
       cureform = ~ wardur + brv_warAgg + osvAll + lntpop + polity2 + polity2Sq + rebpolwing + numprevepisodes + lnrgdppc + negsettleFull + lowactFull,
       model = "ph",
       data = hks,
       emmax = 1000,
-      nboot = 500,
-      link = "probit")
+      nboot = 500)
 
 hkstvcure <- tvcure(Surv(start, stop, event) ~ troop + police + militaryobservers + polity + victoryFull,
       cureform = ~ troop + police + militaryobservers + victoryFull,

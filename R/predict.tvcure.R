@@ -3,7 +3,7 @@
 #' @param model Model returned from tvcure function.
 #' @param newX Values for covariates in hazard formula (X).
 #' @param nexZ Values for covariates in glm formula (Z). This matrix should not include a constant.
-predict_tvcure <- function(model, newX, newZ, link, ...) {
+predict.tvcure <- function(model, newX, newZ, link, ...) {
   call <- match.call()
   if (!inherits(model, "tvcure"))
     stop("Model must be a tvcure object")
@@ -27,7 +27,7 @@ predict_tvcure <- function(model, newX, newZ, link, ...) {
   #if (model == "ph") {
   ebetaX = exp(model$beta %*% t(newX))
   for (i in 1:nrow(newZ)) {
-    suncure[, i] = s0 ^ ebetaX[i]
+    suncure[, i] = s0^ebetaX[i]
   }
   for (i in 1:n) {
     for (j in 1:nrow(newX)) {
@@ -52,5 +52,5 @@ predict_tvcure <- function(model, newX, newZ, link, ...) {
   #   prd = cbind(spop = spop, Time = t)
   #   sur = cbind(s0, Time = t)
   # }
-  structure(list(call = call, uncureprob = uncureprob, Time = model$Time, suncure = suncure, spop = spop, sbase = s0, class = "predicttvcure"))
+  structure(list(call = call, uncureprob = uncureprob, Time = model$Time, suncure = suncure, spop = spop, sbase = s0), class = "predicttvcure")
 }

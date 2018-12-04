@@ -5,7 +5,7 @@
 #' @param xlab A label for the x-axis.
 #' @param ylab A label for the y-axis.
 #' @param ... Further options to be passed to \link{matplot}.
-plot_predict_tvcure <- function(predobj, type = c("basesurv", "spop", "suncure"), xlab = "Time", ylab = "Predicted Survival Probability", ...) {
+plot.predicttvcure <- function(predobj, type = c("basesurv", "spop", "suncure"), xlab = "Time", ylab = "Predicted Survival Probability", ...) {
   #model <- predobj$model
   if (type == "basesurv") pred <- predobj$sbase
   if (type == "spop")     pred <- predobj$spop
@@ -13,6 +13,7 @@ plot_predict_tvcure <- function(predobj, type = c("basesurv", "spop", "suncure")
   Time <- predobj$Time
   mat <- cbind(pred, Time)
   #if (model == "ph") {
+
   pdsort <- mat[order(Time), ]
   matplot(pdsort[, "Time"], pdsort[, -(ncol(pdsort))], type = "l",
           lty = 1:(ncol(pred)), xlab = xlab, ylab = ylab, ...)

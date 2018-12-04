@@ -13,7 +13,7 @@
 #' @param emmax Specifies the maximum number of iterations for the EM algorithm.
 #' @param eps
 #' @param nboot Specifies the number of bootstrap samples to draw.
-#' @param parallel If true, bootstraps will be run in parallel and a progress bar displaying the number of completed boostraps will be displayed. This requires the user to set up a \link{snow} object and register it using the \link{doSNOW} package (see example below).
+#' @param parallel If true, bootstraps will be run in parallel. A progress bar displaying the number of completed boostraps will be displayed. This option requires the user to set up a \link{snow} object and register it using the \link{doSNOW} package (see example below).
 tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
                    na.action = na.omit, link = "logit", var = T, firthlogit = F,
                    firthcox = FALSE, emmax = 1000, eps = 1e-07, nboot = 100,
@@ -24,29 +24,31 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
     if (parallel == T) {
       clstatus <- getDoParRegistered()
       if (clstatus == T) {
-        if (getDoParName() == "doSEQ") stop("Please register a snow cluster
-                              object to use parallel functionality or set parallel = F.")
-      } else stop("Please register a snow cluster
-                              object to use parallel functionality or set parallel = F.")
+        if (getDoParName() == "doSEQ") stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
+      } else stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
     }
 
   # Data set up ----------------------------------------------------------------
     call <- match.call()
     model <- match.arg(model)
+
     # Pull variables from data
     xvars <- all.vars(formula)
     zvars <- all.vars(cureform)
+
     # Create data frame and apply missing data function
     avars <- unique(c(xvars,zvars))
     data <- na.action(data[,c(avars)])
     nobs <- nrow(data)
-    # Create X matrix
+
+    # Create IV matrices
     mf <- model.frame(formula, data)
     X <- model.matrix(attr(mf, "terms"), mf)
-    # Create z matrix
     mf2 <- model.frame(cureform, data)
     Z <- model.matrix(attr(mf2, "terms"), mf2)
+
     #colnames(Z) <- c("(Intercept)", xvars)
+
     # Set up offset variables
     if (!is.null(offset)) {
       offsetvar <- all.vars(offset)
@@ -54,6 +56,7 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
     } else {
       offsetvar <- NULL
     }
+
     # Format dependent variable
     Y <- model.extract(mf, "response")
     if (!inherits(Y, "Surv"))
@@ -133,9 +136,10 @@ if (var) {
 # Final fit details
   fit <- list()
   class(fit) <- c("tvcure")
-  fit$incidence_fit <- incidence_fit
   fit$gamma <- gamma
   fit$beta <- beta
+  fit$X <- X
+  fit$Z <- Z
   if (var) {
     fit$vcovg <- varout$vcovg
     fit$vcovb <- varout$vcovb
@@ -147,24 +151,26 @@ if (var) {
     fit$b_sd <- varout$b_sd
     fit$b_zvalue <- fit$beta/fit$b_sd
     fit$b_pvalue <- (1 - pnorm(abs(fit$b_zvalue))) * 2
+    fit$bootcomp <- varout$bootcomp
   }
-  cat("tvcure finished running at "); print(Sys.time())
   fit$call <- call
   fit$gnames <- gnames
   fit$bnames <- bnames
   fit$Survival <- Survival
   fit$BaseHaz  <- Basehaz
+  fit$uncureprob <- emfit$uncureprob
   #fit$ordBaseHaz <- varfit$ordBasehaz
   if (survtype == "right") fit$Time <- Time
   if (survtype == "counting") fit$Time <- Stop
+  fit$Status <- Status
   fit$model <- model
   fit$link  <- link
   fit$nfail <- sum(Status)
   fit$nobs  <- nobs
   fit$nboot <- nboot
-  fit$bootcomp <- varout$bootcomp
   fit$emmax <- emmax
   fit$emrun <- emrun
+  fit$var <- var
   #fit$a1      <- a1
 	#fit$a1temp1 <- attemp1
 	#fit$a1temp2 <- a1temp2

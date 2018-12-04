@@ -101,5 +101,5 @@ tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
     }
   }
   em <- list(incidence_fit = incidence_fit, gamma = gamma, latencyfit = beta,
-             Survival = s, Basehaz = basehaz, Uncureprob = uncureprob, tau = convergence, emrun = i)
+             Survival = s, Basehaz = basehaz, Uncureprob = uncureprob, tau = convergence, emrun = i, uncureprob = uncureprob)
 }
