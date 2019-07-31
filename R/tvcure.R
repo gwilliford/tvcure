@@ -166,13 +166,13 @@ if (var) {
   # if (survtype == "counting")
   #   fit$Time <- Stop
   # fit$Status <- Status
-  fit$model <- model
-  fit$link  <- link
-  fit$nfail <- sum(Status)
-  fit$nobs  <- nobs
-  fit$nboot <- nboot
-  fit$emmax <- emmax
-  fit$emrun <- emfit$emrun
+  # fit$model <- model
+  # fit$link  <- link
+  # fit$nfail <- sum(Status)
+  # fit$nobs  <- nobs
+  # fit$nboot <- nboot
+  # fit$emmax <- emmax
+  # fit$emrun <- emfit$emrun
   fit$var <- var
   #fit$a1      <- a1
 	#fit$a1temp1 <- attemp1

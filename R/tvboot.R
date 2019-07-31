@@ -20,9 +20,9 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
     n0 <- nrow(data0)
 
   # Set up parallel processing
-    if (parallel == F) {
-      registerDoSEQ()
-    }
+  if (parallel == F) {
+    registerDoSEQ()
+  }
 
   # Sample and Estimate
   bootres <- foreach(i = 1:nboot, .packages = c('survival','logistf'),

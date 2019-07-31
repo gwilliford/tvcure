@@ -8,7 +8,33 @@ logit2 <- glm(FAILCENS ~ TRT + SEX + AGE, family = quasibinomial(link = "logit")
 logit3 <- brglm::brglm(FAILCENS ~ TRT + SEX + AGE, family = binomial(link = "logit"), data = e1684)
 
 
-su# Check against smcure
+# Model 1 - full model
+library(readstata13)
+library(splitstackshape)
+library(plyr)
+library(tvcure)
+library(coxphf)
+library(xtable)
+library(stargazer)
+library(coefplot)
+options(scipen = 999)
+# Load data
+lhr <- read.dta13("C:/Users/gwill/Dropbox/Methods Notes/Survival Analysis/Cure Models Paper/Replication - LHR 2008/lhrIOOct08replication.dta")
+lhr <- rename(lhr, replace = c("_st" = "st", "_d" = "event", "_t" = "stop", "_t0" = "start"))
+lhrna <- as.data.frame(na.omit(with(lhr, cbind(start, stop, event, archigosFIRC, wernerFIRC, capchange, battletide, thirdpartycfire, index, onedem5, twodem5, tie, lndeaths, cfhist, stakes, contiguity, warnumb))))
+
+cl <- makeCluster(4, "SOCK")
+registerDoSNOW(cl)
+a <- tvcure(Surv(start, stop, event) ~ twodem5, cureform = ~ archigosFIRC, data = lhr, model = "ph", nboot = 100)
+b <- tvcure(Surv(start, stop, event) ~ twodem5, cureform = ~ archigosFIRC, data = lhr, model = "ph", brglm = T, nboot = 100)
+c <- tvcure(Surv(start, stop, event) ~ twodem5, cureform = ~ archigosFIRC + twodem5, data = lhr, model = "ph", nboot = 100)
+d <- tvcure(Surv(start, stop, event) ~ twodem5, cureform = ~ archigosFIRC + twodem5, data = lhr, model = "ph", brglm = T, nboot = 100)
+
+
+a <- tvcure(Surv(start, stop, event) ~ capchange + battletide + thirdpartycfire + twodem5 + tie + lndeaths, cureform = ~ wernerFIRC + capchange + battletide + thirdpartycfire + index + twodem5 + tie + lndeaths + cfhist + stakes + contiguity, data = lhr, model = "ph", nboot = 100, brglm = T)
+b <- tvcure(Surv(start, stop, event) ~ capchange + battletide + thirdpartycfire + twodem5 + tie + lndeaths, cureform = ~ archigosFIRC + capchange + battletide + thirdpartycfire + index + twodem5 + tie + lndeaths + cfhist + stakes + contiguity, data = lhr, model = "ph", nboot = 100, brglm = T)
+
+# Check against smcure
 smod <- smcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE, cureform = ~ TRT + SEX + AGE, data = e1684, model = "ph", link = "logit", Var = F)
 
 # Prediction function with 1 covariate profile
