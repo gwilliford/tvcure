@@ -154,6 +154,7 @@ if (var) {
   }
   fit$call <- call
   fit$gnames <- gnames
+  fit$gnames[1] <- "Intercept"
   fit$bnames <- bnames
   fit$Survival <- Survival
   fit$BaseHaz  <- Basehaz
