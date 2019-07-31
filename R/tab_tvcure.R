@@ -1,7 +1,7 @@
 #' @param model Model of class tvcure
 #' @param format Specifies format of the resulting table. Wide presents incidence and latency results side-by-side with standard errors presented in separate columns. Long presents coefficient estimates side-by-side with standard errors beneath them.
-#' @param digits Number of digits to round coefficients and standard errors to
-tvtable <- function(model, qi = "se", stars = T, digits = 3) {
+#' @param digits Number of digits to display past the decimal point
+tvtable <- function(model, format = c("wide"), qi = "se", stars = T, digits = 3) {
   gamma <- round(model$gamma, digits)
   beta  <- round(model$beta, digits)
   gse   <- round(model$g_sd, digits)
@@ -57,7 +57,15 @@ tvtable <- function(model, qi = "se", stars = T, digits = 3) {
   fullmat <- merge(gmat, bmat, all = T, sort = F)
   fullmat <- fullmat[c(gnames)]
   fullmat <- t(fullmat)
-  colnames(fullmat) <- c("Incidence Coef.", "S.E.", "Hazard Coef.", "S.E.")
+  if (qi == "se") {
+    colnames(fullmat) <- c("Incidence Coef.", "Std. Error", "Hazard Coef.", "Std. Error")
+  }
+  if (qi == "pvalue") {
+    colnames(fullmat) <- c("Incidence Coef.", "P-value", "Hazard Coef.", "P-value")
+  }
+  if (qi == "zscore") {
+    colnames(fullmat) <- c("Incidence Coef.", "Z-score", "Hazard Coef.", "Z-score")
+  }
   #fullmat <- round(fullmat, digits)
   for (i in 1:nrow(fullmat)) {
     fullmat[i, 1] <- ifelse(is.na(fullmat[i, 1]), "", fullmat[i, 1])
@@ -66,23 +74,23 @@ tvtable <- function(model, qi = "se", stars = T, digits = 3) {
     fullmat[i, 4] <- ifelse(is.na(fullmat[i, 4]), "", fullmat[i, 4])
   }
 
-  #long1 <- as.vector(rbind(fullmat[, 1], fullmat[, 2]))
-  #long2 <- as.vector(rbind(fullmat[, 3], fullmat[, 4]))
-  #long  <- cbind(long1, long2)
-  #colnames(long) <- c("GLM", "Hazard")
-  #rownames(long) <- as.vector(rbind(rownames(fullmat), rep("", length(allnames))))
+  long1 <- as.vector(rbind(fullmat[, 1], fullmat[, 2]))
+  long2 <- as.vector(rbind(fullmat[, 3], fullmat[, 4]))
+  long  <- cbind(long1, long2)
+  colnames(long) <- c("Incidence Coef.", "Hazard Coef.")
+  rownames(long) <- as.vector(rbind(rownames(fullmat), rep("", length(allnames))))
+  browser()
 
-  #stacked <- c("GLM Estimates", long1, "Hazard Estimates", long2)
-  #rownames(stacked) <-
+  stacked <- c("", long1, "", long2[3:length(long2)])
+  # stackmat <- matrix(ncol = 1, nrow = length(stacked) + 2)
+  stackmat <- matrix(stacked)
+  # colnames(stacked) <- c("Incidence Coef.", "Hazard Coef.")
+  rownames(stackmat) <- c("Incidence Coef.",
+                          as.vector(rbind(rownames(fullmat), rep("", length(allnames)))),
+                          "Hazard Coef.",
+                          as.vector(rbind(rownames(fullmat)[2:length(allnames)], rep("", length(allnames) - 1))))
 
-  #browser()
-  #if (format == "wide")    return(fullmat)
-  #if (format == "long")    return(long)
-  #if (format == "stacked") return(stacked)
-  # Todo
-    # option for sorting variables
-    # option for multiple models
-    # option for qi
-    # stars on standard errors
-  return(fullmat)
+  if (format == "wide")    return(fullmat)
+  if (format == "long")    return(long)
+  if (format == "stacked") return(stackmat)
 }
