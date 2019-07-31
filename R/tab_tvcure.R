@@ -1,15 +1,19 @@
-#' @param model Model of class tvcure
+#' @param modname modname of class tvcure
 #' @param format Specifies format of the resulting table. Wide presents incidence and latency results side-by-side with standard errors presented in separate columns. Long presents coefficient estimates side-by-side with standard errors beneath them.
 #' @param digits Number of digits to display past the decimal point
-tvtable <- function(model, format = c("wide"), qi = "se", stars = T, digits = 3) {
-  gamma <- round(model$gamma, digits)
-  beta  <- round(model$beta, digits)
-  gse   <- round(model$g_sd, digits)
-  bse   <- round(model$b_sd, digits)
-  gz    <- round(model$g_zvalue, digits)
-  bz    <- round(model$b_zvalue, digits)
-  gpval <- round(model$g_pvalue, digits)
-  bpval <- round(model$b_pvalue, digits)
+tvtable <- function(modname = ..., format = c("wide"), qi = "se", stars = T, digits = 3) {
+  modellist <- list(...)
+  for (i in 1:length(modellist)) {
+  modname <- modellist[i]
+  browser()
+  gamma <- round(modname$gamma, digits)
+  beta  <- round(modname$beta, digits)
+  gse   <- round(modname$g_sd, digits)
+  bse   <- round(modname$b_sd, digits)
+  gz    <- round(modname$g_zvalue, digits)
+  bz    <- round(modname$b_zvalue, digits)
+  gpval <- round(modname$g_pvalue, digits)
+  bpval <- round(modname$b_pvalue, digits)
   if (stars == T) {
     gstar <- gtools::stars.pval(gpval)
     bstar <- gtools::stars.pval(bpval)
@@ -17,9 +21,9 @@ tvtable <- function(model, format = c("wide"), qi = "se", stars = T, digits = 3)
     gstar <- NULL
     bstar <- NULL
   }
-  gnames <- model$gnames
-  bnames <- model$bnames
-  allnames <- unique(c(model$gnames, model$bnames))
+  gnames <- modname$gnames
+  bnames <- modname$bnames
+  allnames <- unique(c(modname$gnames, modname$bnames))
 
   gsevec <- vector(length = length(gamma))
   bsevec <- vector(length = length(beta))
@@ -79,7 +83,6 @@ tvtable <- function(model, format = c("wide"), qi = "se", stars = T, digits = 3)
   long  <- cbind(long1, long2)
   colnames(long) <- c("Incidence Coef.", "Hazard Coef.")
   rownames(long) <- as.vector(rbind(rownames(fullmat), rep("", length(allnames))))
-  browser()
 
   stacked <- c("", long1, "", long2[3:length(long2)])
   # stackmat <- matrix(ncol = 1, nrow = length(stacked) + 2)
@@ -89,7 +92,7 @@ tvtable <- function(model, format = c("wide"), qi = "se", stars = T, digits = 3)
                           as.vector(rbind(rownames(fullmat), rep("", length(allnames)))),
                           "Hazard Coef.",
                           as.vector(rbind(rownames(fullmat)[2:length(allnames)], rep("", length(allnames) - 1))))
-
+  }
   if (format == "wide")    return(fullmat)
   if (format == "long")    return(long)
   if (format == "stacked") return(stackmat)
