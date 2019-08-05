@@ -24,6 +24,10 @@ tvtable <- function(model, format = c("wide"), qi = "se", stars = T, digits = 3)
     gnames <- modname$gnames
     bnames <- modname$bnames
     allnames <- unique(c(modname$gnames, modname$bnames))
+    nobs = modname$nobs
+    nfail = modname$nfail
+    emat <- matrix(ncol = 4, nrow = 2)
+    emat[ , 1] <- c(nobs, nfail)
 
     gsevec <- vector(length = length(gamma))
     bsevec <- vector(length = length(beta))
@@ -58,10 +62,26 @@ tvtable <- function(model, format = c("wide"), qi = "se", stars = T, digits = 3)
     colnames(gmat) <- gnames
     colnames(bmat) <- bnames
     fullmat <- merge(gmat, bmat, all = T, sort = F)
-    #fullmat <- fullmat[c(gnames)]
-    #fullmat <- fullmat[,allnames]
+    # fullmat <- fullmat[c(gnames)]
+    # fullmat <- fullmat[,allnames]
     fullmat <- t(fullmat)
-    fullmat <- fullmat[allnames,]
+    fullmat <- fullmat[allnames, ]
+    fullmat <- rbind(as.matrix(fullmat), emat)
+    rownames(fullmat)[nrow(fullmat) - 1] <- "Number of Observations"
+    rownames(fullmat)[nrow(fullmat)] <- "Number of Failures"
+    browser()
+
+    # if (rownames(test) == rownames(a)) {
+    #   for (n in 1:nrow(test)) {
+    #     rownames[n](test) <- a[n]
+    #   }
+    # }
+    # for (n in 1:nrow(test)) {
+    #   if (rownames(test)[n] %in% rownames(a)) {
+    #     rownames(test)[n] <- a[1, rownames(test)[n] == rownames(a)]
+    #   }
+    # }
+
     if (qi == "se") {
       colnames(fullmat) <- c("Incidence Coef.", "Std. Error", "Hazard Coef.", "Std. Error")
     }
@@ -72,7 +92,7 @@ tvtable <- function(model, format = c("wide"), qi = "se", stars = T, digits = 3)
       colnames(fullmat) <- c("Incidence Coef.", "Z-score", "Hazard Coef.", "Z-score")
     }
     #fullmat <- round(fullmat, digits)
-    for (i in 1:nrow(fullmat)) {
+    for (i in 1:nrow(fullmat) - 2) {
       fullmat[i, 1] <- ifelse(is.na(fullmat[i, 1]), "", fullmat[i, 1])
       fullmat[i, 2] <- ifelse(is.na(fullmat[i, 2]), "", fullmat[i, 2])
       fullmat[i, 3] <- ifelse(is.na(fullmat[i, 3]), "", fullmat[i, 3])
@@ -80,19 +100,30 @@ tvtable <- function(model, format = c("wide"), qi = "se", stars = T, digits = 3)
     }
 
     long1 <- as.vector(rbind(fullmat[, 1], fullmat[, 2]))
+    long1 <- long1[1:(length(long1) - 4)]
     long2 <- as.vector(rbind(fullmat[, 3], fullmat[, 4]))
-    long  <- cbind(long1, long2)
+    long2 <- long2[1:(length(long2) - 4)]
+    long <- cbind(long1, long2)
+    #long <- matrix(long, ncol = 2)
+    long <- rbind(long, emat[, 1:2])
     colnames(long) <- c("Incidence Coef.", "Hazard Coef.")
-    rownames(long) <- as.vector(rbind(rownames(fullmat), rep("", length(allnames))))
+    longnames <- as.vector(rbind(rownames(fullmat), rep("", length(allnames) + 2)))
+    rownames(long) <- longnames[-c(length(longnames) - 2, length(longnames))]
+    # long <- long[-c(nrow(long), nrow(long) - 2), ]
 
-    stacked <- c("", long1, "", long2[3:length(long2)])
+    stacked <- as.matrix(c("", long1, "", long2[3:length(long2)], emat[, 1:2]))
     # stackmat <- matrix(ncol = 1, nrow = length(stacked) + 2)
-    stackmat <- matrix(stacked)
+    stackmat <- as.data.frame(stacked[1:(nrow(stacked) - 2), 1])
     # colnames(stacked) <- c("Incidence Coef.", "Hazard Coef.")
+    stacknames <-
     rownames(stackmat) <- c("Incidence Coef.",
                             as.vector(rbind(rownames(fullmat), rep("", length(allnames)))),
                             "Hazard Coef.",
-                            as.vector(rbind(rownames(fullmat)[2:length(allnames)], rep("", length(allnames) - 1))))
+                            as.vector(rbind(rownames(fullmat)[2:length(allnames)],
+                            rep("", length(allnames) - 1))), "Number of Observations",
+                            "Number of Failures")
+    stacknames <- c("Incidence Coefficients", longnames[1:(nrow(long) - 4)], "Hazard Coefficients", longnames[1:(nrow(long) - 4)], "Number of Observations", "Number of Failures")
+
   #}
   # browser()
   #   if (format == "wide") {
