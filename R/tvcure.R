@@ -158,26 +158,22 @@ if (var) {
   fit$bnames <- bnames
   fit$Survival <- Survival
   fit$BaseHaz  <- Basehaz
-
-  # fit$uncureprob <- emfit$uncureprob
+  fit$uncureprob <- emfit$uncureprob
   # fit$ordBaseHaz <- varfit$ordBasehaz
 
-  # if (survtype == "right")
-  #   fit$Time <- Time
-  # if (survtype == "counting")
-  #   fit$Time <- Stop
-  # fit$Status <- Status
-  # fit$model <- model
-  # fit$link  <- link
-  # fit$nfail <- sum(Status)
-  # fit$nobs  <- nobs
-  # fit$nboot <- nboot
-  # fit$emmax <- emmax
-  # fit$emrun <- emfit$emrun
+  if (survtype == "right")
+    fit$Time <- Time
+  if (survtype == "counting")
+    fit$Time <- Stop
+  fit$Status <- Status
+  fit$model <- model
+  fit$link  <- link
+  fit$nfail <- sum(Status)
+  fit$nobs  <- nobs
+  fit$nboot <- nboot
+  fit$emmax <- emmax
+  fit$emrun <- emfit$emrun
   fit$var <- var
-  #fit$a1      <- a1
-	#fit$a1temp1 <- attemp1
-	#fit$a1temp2 <- a1temp2
   fit
   #print_tvcure(fit, var)
 }
