@@ -64,9 +64,9 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
                        Coef_smplb[j, ], w, model$model) # 1 X 284
       s0sim[j, ] <- s0temp$survival
     }
-    s0sim_mean <- apply(s0sim, 2, mean)[order(Time)]
-    s0sim_05   <- apply(s0sim, 2, quantile, 0.05)[order(Time)]
-    s0sim_95   <- apply(s0sim, 2, quantile, 0.95)[order(Time)]
+    s0mean <- apply(s0sim, 2, mean)[order(Time)]
+    s0lo   <- apply(s0sim, 2, quantile, 0.05)[order(Time)]
+    s0hi   <- apply(s0sim, 2, quantile, 0.95)[order(Time)]
 
     # suncuresim = array(0, dim = c(nobs, nrow(newX), nsims)) # i = 284, j = 2, k = 1000
     # for (k in 1:nsims){
@@ -89,37 +89,34 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
       }
     }
     suncuremean <- matrix(nrow = nobs, ncol = dim(newZ)) # 284 x 2
-    suncure05   <- matrix(nrow = nobs, ncol = dim(newZ))
-    suncure95   <- matrix(nrow = nobs, ncol = dim(newZ))
+    suncurelo   <- matrix(nrow = nobs, ncol = dim(newZ))
+    suncurehi   <- matrix(nrow = nobs, ncol = dim(newZ))
     spopmean    <- matrix(nrow = nobs, ncol = dim(newZ))
-    spop05      <- matrix(nrow = nobs, ncol = dim(newZ))
-    spop95      <- matrix(nrow = nobs, ncol = dim(newZ))
+    spoplo      <- matrix(nrow = nobs, ncol = dim(newZ))
+    spophi      <- matrix(nrow = nobs, ncol = dim(newZ))
     for (i in 1:nrow(newX)) {
       suncuremean[, i] <- apply(suncuresims[, , i], 2, mean)
-      suncure05[, i]   <- apply(suncuresims[, , i], 2, quantile, 0.05)
-      suncure95[, i]   <- apply(suncuresims[, , i], 2, quantile, 0.95)
+      suncurelo[, i]   <- apply(suncuresims[, , i], 2, quantile, 0.05)
+      suncurehi[, i]   <- apply(suncuresims[, , i], 2, quantile, 0.95)
       spopmean[, i]    <- apply(spopsims[, , i], 2, mean)
-      spop05[, i]      <- apply(spopsims[, , i], 2, quantile, 0.05)
-      spop95[, i]      <- apply(spopsims[, , i], 2, quantile, 0.95)
+      spoplo[, i]      <- apply(spopsims[, , i], 2, quantile, 0.05)
+      spophi[, i]      <- apply(spopsims[, , i], 2, quantile, 0.95)
     }
-  lapply(list(suncuremean, suncure05, suncure95, spopmean, spop05, spop95), function(x) x[order(Time), ])
+  lapply(list(suncuremean, suncurelo, suncurehi, spopmean, spoplo, spophi), function(x) x[order(Time), ])
   }
 
   if (CI == F) {
     structure(list(uncureprob = uncureprob,
                    s0 = s0, suncure = suncure, spop = spop,
-                   newZ = newZ, newX = newX,
-                   beta = beta, gamma = gamma,
-                   vcovb = model$vcovb, vcovg = model$vcovg,
                    Survival = model$Survival,
-                   link = link, Time = sort(Time)),
+                   link = link, Time = Time, CI = CI),
               class = "predicttvcure")
 
   } else {
-    structure(list(s0mean = s0sim_mean, s0lo = s0sim_05, s0hi = s0sim_95,
-                   suncuremean = suncuremean, suncurelo = suncure05, suncurehi = suncure95,
-                   spopmean = spopmean, spoplo = spop05, spophi = spop95,
-                   link = link, Time = Time),
+    structure(list(s0mean = s0mean, s0lo = s0lo, s0hi = s0hi,
+                   suncuremean = suncuremean, suncurelo = suncurelo, suncurehi = suncurehi,
+                   spopmean = spopmean, spoplo = spoplo, spophi = spophi,
+                   link = link, Time = Time, CI = CI),
               class = "predicttvcure")
   }
 # TODO Rewrite s0sim a pbapply function
