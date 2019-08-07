@@ -102,7 +102,7 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
       #s0temp <- tvsurv(Time, Status, cbind(1, newX), Coef_smplb[j, ], w) # 1 X 284
       #s0sim[j, ] <- s0temp$survival
     }
-    s0mean <- sort(apply(s0sim, 2, mean)[order(Time)], decreasing = T)
+    s0mean <- sort(apply(s0sim, 2, mean), decreasing = T)
     s0lo   <- sort(apply(s0sim, 2, quantile, 0.05), decreasing = T)
     s0hi   <- sort(apply(s0sim, 2, quantile, 0.95), decreasing = T)
     # browser()
@@ -127,15 +127,24 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
     spoplo      <- matrix(nrow = nobs, ncol = dim(newZ))
     spophi      <- matrix(nrow = nobs, ncol = dim(newZ))
     for (i in 1:nrow(newX)) {
-      suncuremean[, i] <- apply(suncuresims[, , i], 2, mean)
-      suncurelo[, i]   <- apply(suncuresims[, , i], 2, quantile, 0.05)
-      suncurehi[, i]   <- apply(suncuresims[, , i], 2, quantile, 0.95)
-      spopmean[, i]    <- apply(spopsims[, , i], 2, mean)
-      spoplo[, i]      <- apply(spopsims[, , i], 2, quantile, 0.05)
-      spophi[, i]      <- apply(spopsims[, , i], 2, quantile, 0.95)
+      suncuremean[, i] <- sort(apply(suncuresims[, , i], 2, mean), decreasing = T)
+      suncurelo[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.05), decreasing = T)
+      suncurehi[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.95), decreasing = T)
+      spopmean[, i]    <- sort(apply(spopsims[, , i], 2, mean), decreasing = T)
+      spoplo[, i]      <- sort(apply(spopsims[, , i], 2, quantile, 0.05), decreasing = T)
+      spophi[, i]      <- sort(apply(spopsims[, , i], 2, quantile, 0.95), decreasing = T)
     }
-    lapply(list(suncuremean, suncurelo, suncurehi, spopmean, spoplo, spophi), function(x) x[order(Time), ])
+    browser()
+    # lapply(list(suncuremean, suncurelo, suncurehi, spopmean, spoplo, spophi), function(x) x[order(Time), ])
+    # sortfun <- function(x) {
+    #   for (i in 1:nrow(newX)) {
+    #     x <- sort(x[, i], decreasing = T)
+    #   }
+    # }
+    # lapply(list(suncuremean, suncurelo, suncurehi, spopmean, spoplo, spophi), fun(x) apply(x, 2, sort, decreasing = T)
+    # lapply(list(suncuremean, suncurelo, suncurehi, spopmean, spoplo, spophi), sortfun)
   }
+  # suncuremean[, order(Time)]
 
   if (CI == F) {
     structure(list(uncureprob = uncureprob,
@@ -156,3 +165,6 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
 # TODO Rewrite s0sim a pbapply function
 # TODO Order singulate s0 in a logical way
 # TODO - are graphs behaving for suncure and spop
+# Smooth the output of the lines
+# Optimize the speed
+# Spop still looks bad
