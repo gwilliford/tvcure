@@ -111,15 +111,38 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
     ebetaXsim <- exp(Coef_smplb %*% t(newX))
     suncuresims <- array(NA, dim = c(nsims, model$nobs, nrow(newX)))
     spopsims    <- array(NA, dim = c(nsims, model$nobs, nrow(newX)))
+    # for(i in 1:nsims) {
+    #   for(k in 1:nrow(newX)) {
+    #     suncuresims[i, , k] <- s0sim[i, ]^ebetaXsim[i, k]
+    #     for (j in 1:nobs) {
+    #       spopsims[, j, k]    <- uncureprobsims[i, ] * suncuresims[i, j, k] + (1 - uncureprobsims[i, ])
+    #     }
+    #   }
+    # }
     for(i in 1:nsims) {
       for(k in 1:nrow(newX)) {
         suncuresims[i, , k] <- s0sim[i, ]^ebetaXsim[i, k]
-        for (j in 1:nobs) {
-          spopsims[, j, k]    <- uncureprobsims[i, ] * suncuresims[i, j, k]
-          + (1 - uncureprobsims[i, ])
-        }
       }
     }
+    for (i in 1:nsims) {
+    	# Take the uncureprob for var j and multiply by suncure[j, k]
+    	for (j in 1:nobs) {
+    		for (k in 1:nrow(newX)) {
+    			# spop[i, j] = uncureprobsims[i, j] * suncuresims[i, j] + (1 - uncureprobsims[i, j])
+    			spopsims[, j, k]    <- uncureprobsims[i, k] * suncuresims[i, j, k] + (1 - uncureprobsims[i, k])
+    		}
+    	}
+    }
+
+    # for (i in 1:nsims) {
+    # 	# Take the uncureprob for var j and multiply by suncure[j, k]
+    # 	for (j in 1:nobs) {
+    # 		for (k in 1:nrow(newX)) {
+    # 			# spop[i, j] = uncureprobsims[i, j] * suncuresims[i, j] + (1 - uncureprobsims[i, j])
+    # 			spopsims[i, j, k]    <- uncureprobsims[i, j, k] * suncuresims[i, j, k] + (1 - uncureprobsims[i, j, k])
+    # 		}
+    # 	}
+    # }
     suncuremean <- matrix(nrow = nobs, ncol = dim(newZ)) # 284 x 2
     suncurelo   <- matrix(nrow = nobs, ncol = dim(newZ))
     suncurehi   <- matrix(nrow = nobs, ncol = dim(newZ))
@@ -130,11 +153,18 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
       suncuremean[, i] <- sort(apply(suncuresims[, , i], 2, mean), decreasing = T)
       suncurelo[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.05), decreasing = T)
       suncurehi[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.95), decreasing = T)
+    }
+    for (i in 1:nrow(newX)) {
       spopmean[, i]    <- sort(apply(spopsims[, , i], 2, mean), decreasing = T)
       spoplo[, i]      <- sort(apply(spopsims[, , i], 2, quantile, 0.05), decreasing = T)
       spophi[, i]      <- sort(apply(spopsims[, , i], 2, quantile, 0.95), decreasing = T)
     }
     browser()
+    # for (i in 1:nrow(newX)) {
+    #         spopmean[, i]    <- apply(spopsims[, , i], 2, mean)
+    #         spoplo[, i]      <- apply(spopsims[, , i], 2, quantile, 0.05)
+    #         spophi[, i]      <- apply(spopsims[, , i], 2, quantile, 0.95)
+    # }
     # lapply(list(suncuremean, suncurelo, suncurehi, spopmean, spoplo, spophi), function(x) x[order(Time), ])
     # sortfun <- function(x) {
     #   for (i in 1:nrow(newX)) {
@@ -168,3 +198,4 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
 # Smooth the output of the lines
 # Optimize the speed
 # Spop still looks bad
+# Spop cis aren't estimating properly
