@@ -11,11 +11,11 @@ plot.predicttvcure <- function(predobj, type = c("basesurv", "spop", "suncure"),
   if (type == "spop")     pred <- predobj$spop
   if (type == "suncure")  pred <- predobj$suncure
   Time <- predobj$Time
-  mat <- cbind(pred, Time)
+  mat <- cbind(pred)
   #if (model == "ph") {
 
   pdsort <- mat[order(Time), ]
-  matplot(pdsort[, "Time"], pdsort[, -(ncol(pdsort))], type = "l",
+  matplot(Time, pdsort[, "Time"], pdsort[, -(ncol(pdsort))], type = "l",
           lty = 1:(ncol(pred)), xlab = xlab, ylab = ylab, ...)
   #}
   # if (model == "aft") {
