@@ -47,8 +47,12 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
     # spop <- sort(spop, decreasing = T)
 
   } else {
-    Coef_smplb <- MASS::mvrnorm(n = nsims, mu = beta,  Sigma = model$vcovb)
-    Coef_smplg <- MASS::mvrnorm(n = nsims, mu = gamma, Sigma = model$vcovg)
+    # Coef_smplb <- MASS::mvrnorm(n = nsims, mu = beta,  Sigma = model$vcovb)
+    # Coef_smplg <- MASS::mvrnorm(n = nsims, mu = gamma, Sigma = model$vcovg)
+    mu = c(beta, gamma)
+    Coef_smpl <- MASS::mvrnorm(n = nsims, mu = mu, Sigma = cov(diag(mu)))
+    Coef_smplb <- Coef_smpl[, 1:length(beta)]
+    Coef_smplg <- Coef_smpl[, (length(beta) + 1):ncol(Coef_smpl)]
 
     # Estimate nsims simulated values of uncureprob
     if (link == "logit") {
@@ -57,18 +61,51 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
     if (link == "probit") {
       uncureprobsims <- pnorm(Coef_smplg %*% t(newZ))
     }
+    # browser()
 
-    # Obtain simulated values of s0
-    w <- Status
+#
+#     # Simulate new value of s0 using old data and new coefficients
+#       if (link == "logit") {
+#         ucp <- exp(Coef_smplg %*% t(model$Z)) / (1 + exp(Coef_smplg %*% t(model$Z)))
+#       }
+#       if (link == "probit") {
+#         ucp <- pnorm(Coef_smplg %*% t(model$Z))
+#       }
+#     # Simulate new survival function using old betas and new betas
+#     # Simulate s0 with simulated betas and simulated s0
+        # survival <- drop(s^(exp(beta %*% t(newX))))
+        survival <- as.vector(s0)^exp(beta %*% t(model$X[, -1]))
+#     # Update
+#             s <- tvsurv(Time, Status, cbind(1, newX), Coef_smplb[j, ], w)
+#             $survival # lenght =  284
+#
+#     # Obtain simulated values of s0
+#       # Get fitted values of pp from a set of coefficients
+#         # Z <- newZ
+#         # uncureprob <- matrix(exp((gamma) %*% t(Z))/(1 + exp((gamma) %*% t(Z))), ncol = 1)
+#       # Get original baseline survival function
+#             # survival <- drop(s^(exp((beta) %*% t(X[, -1]))))
+#       # Calculate w
+#         w <- vector(length = nobs)
+#         for (i in 1:nobs) {
+#           w <- Status + (1 - Status) * (ucp[i, ] * survival)/((1 -
+#           ucp[i, ]) + ucp[i, ] * survival)
+#         }
+#       # Reestimate
+
+
+    # w <- Status
+    # It is easy to see that w = 1 if δi = 1 and is the probability of uncured patients if δi = 0.
     s0sim <- matrix(nrow = nsims, ncol = model$nobs)
     for (j in 1:nsims) {
-      s0temp <- tvsurv(Time, Status, cbind(1, newX),
-                       Coef_smplb[j, ], w, model$model) # 1 X 284
-      s0sim[j, ] <- s0temp$survival
+      s0sim[j, ] <- as.vector(s0)^exp(Coef_smplb[j, ] %*% t(model$X[, -1]))
+      #s0temp <- tvsurv(Time, Status, cbind(1, newX), Coef_smplb[j, ], w) # 1 X 284
+      #s0sim[j, ] <- s0temp$survival
     }
-    s0mean <- apply(s0sim, 2, mean)[order(Time)]
-    s0lo   <- apply(s0sim, 2, quantile, 0.05)[order(Time)]
-    s0hi   <- apply(s0sim, 2, quantile, 0.95)[order(Time)]
+    s0mean <- sort(apply(s0sim, 2, mean)[order(Time)], decreasing = T)
+    s0lo   <- sort(apply(s0sim, 2, quantile, 0.05), decreasing = T)
+    s0hi   <- sort(apply(s0sim, 2, quantile, 0.95), decreasing = T)
+    # browser()
 
     # Obtain simulated values of suncure and spop
     ebetaXsim <- exp(Coef_smplb %*% t(newX))
@@ -118,3 +155,4 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
 # Export uncureprobsims
 # TODO Rewrite s0sim a pbapply function
 # TODO Order singulate s0 in a logical way
+# TODO - are graphs behaving for suncure and spop
