@@ -14,7 +14,7 @@
 #' @param eps
 #' @param nboot Specifies the number of bootstrap samples to draw.
 #' @param parallel If true, bootstraps will be run in parallel. A progress bar displaying the number of completed boostraps will be displayed. This option requires the user to set up a \link{snow} object and register it using the \link{doSNOW} package (see example below).
-tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
+tvcure <- function(formula, cureform, offset = NULL, model = "ph", data,
                    na.action = na.omit, link = "logit", var = T, brglm = F,
                    firthcox = F, emmax = 1000, eps = 1e-07, nboot = 100,
                    parallel = T){
@@ -22,7 +22,7 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
   # Preliminaries and error checking--------------------------------------------
     # If parallel is true, ensure that snow cluster is registered
     if (parallel == T) {
-      clstatus <- getDoParRegistered()
+      clstatus <- foreach::getDoParRegistered()
       if (clstatus == T) {
         if (getDoParName() == "doSEQ") stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
       } else stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
@@ -37,9 +37,9 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
     zvars <- all.vars(cureform)
 
     # Create data frame and apply missing data function
-    avars <- unique(c(xvars,zvars))
-    data <- na.action(data[,c(avars)])
-    nobs <- nrow(data)
+    avars <- unique(c(xvars, zvars))
+    data  <- na.action(data[, c(avars)])
+    nobs  <- nrow(data)
 
     # Create IV matrices
     mf <- model.frame(formula, data)
@@ -79,15 +79,10 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
       bnames <- colnames(X)[-1]
       nbeta <- ncol(X) - 1
     }
-    # if (model == "aft") {
-    #   bnames <- colnames(X)
-    #   nbeta <- ncol(X)
-    # }
     cat("tvcure started at "); print(Sys.time());cat("Estimating coefficients...\n")
 
   # Obtain initial estimates------------------------------------------------------
   w <- Status
-  #w[w==0]<-.001
   if (brglm) {
     gamma <- eval(parse(text = paste("brglm::brglm", "(", "as.integer(w) ~ Z[, -1],",
                                     "family = binomial(link = '", link, "'", ")",
@@ -105,8 +100,6 @@ tvcure <- function(formula, cureform, offset = NULL, model=c("ph","aft"), data,
                     method = "breslow")$coef
     # }
   }
-  # if (model == "aft")
-  #   beta <- survreg(survobj ~ X[, -1])$coef
   cat("Initial estimates obtained, beginning em algorithm...\n")
 
 # Call to EM function -------------------------------------------------------

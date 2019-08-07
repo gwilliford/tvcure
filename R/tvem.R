@@ -3,7 +3,7 @@
     w <- Status
     n <- length(Status)
     # if (model == "ph")
-        s <- tvsurv(Time, Status, X, beta, w, model)$survival
+        s <- tvsurv(Time, Status, X, beta, w)$survival
     # if (model == "aft") {
     #   if (!is.null(offsetvar))
     #     Time <- Time/exp(offsetvar)
@@ -19,15 +19,10 @@
       if (link == "probit") {
         uncureprob <- matrix(pnorm(gamma %*% t(Z)), ncol = 1)
       }
-      # if (model == "ph") {
-        survival <- drop(s^(exp((beta) %*% t(X[, -1]))))
-      # }
-      # if (model == "aft") {
-      #   error <- drop(log(Time) - beta %*% t(X))
-      #   survival <- s
-      # }
+      survival <- drop(s^(exp((beta) %*% t(X[, -1]))))
       w <- Status + (1 - Status) * (uncureprob * survival)/((1 -
           uncureprob) + uncureprob * survival)
+      # browser()
       if (brglm) {
         if (is.null(offsetvar)) {
           incidence_fit <- eval(parse(text = paste("brglm::brglm", "(", "as.integer(w) ~ Z[, -1],",
@@ -74,14 +69,14 @@
             #)
           # }
         }
-        update_a <- tvsurv(Time, Status, X, beta, w, model)
+        update_a <- tvsurv(Time, Status, X, beta, w)
         update_s <- update_a$survival
       }
       # if (model == "aft") {
       #   update_beta <- optim(rep(0, ncol(X)), smrank, Time = Time, X = X, n = n,
       #                        w = w, Status = Status, method = "Nelder-Mead",
       #                        control = list(reltol = 1e-04, maxit = 500))$par
-      #   update_a <- tvsurv(error, Status, X, beta, w, model)
+      #   update_a <- tvsurv(error, Status, X, beta, w)
       #   update_s <- update_a$survival
       # }
       if (!inherits(coxit,"error")){
