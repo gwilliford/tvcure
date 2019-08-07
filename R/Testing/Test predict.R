@@ -59,8 +59,8 @@ lines(testpred$suncure[, 2], type = "l", col = 3)
 
 # Plot spop survival
 plot(testpred4$spopmean[, 1], type = "l")
-lines(testpred4$spoplo[, 1], type = "l", lty = 2, col = 2)
-lines(testpred4$spophi[, 1], type = "l", lty = 2, col = 3)
+lines(testpred4$spoplo[, 1], type = "l", lty = 2, col = 1)
+lines(testpred4$spophi[, 1], type = "l", lty = 2, col = 1)
 lines(testpred4$spopmean[, 2], type = "l", col = 2)
 lines(testpred4$spoplo[, 2], type = "l", lty = 2, col = 2)
 lines(testpred4$spophi[, 2], type = "l", lty = 2, col = 2)
