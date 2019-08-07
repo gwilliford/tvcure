@@ -3,6 +3,7 @@
 #' @param model Model returned from tvcure function.
 #' @param newX Values for covariates in hazard formula (X).
 #' @param nexZ Values for covariates in glm formula (Z). This matrix should not include a constant.
+#' @param CI Logical value indicating whether predictions and confidence intervals should be estimated using maximum simulated likelihood
 predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000, ...) {
   call <- match.call()
   if (!inherits(model, "tvcure"))
@@ -19,31 +20,32 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
   if (is.vector(newX))
     newX = as.matrix(newX)
 
-  # No CI
   if (CI == F) {
-    # Estimate uncureprob for simulated observations
     if (link == "logit") {
-      uncureprob <- exp(model$gamma %*% t(newZ)) /
-                  (1 + exp(model$gamma %*% t(newZ)))
+      uncureprob <- exp(model$gamma %*% t(newZ)) / (1 + exp(model$gamma %*% t(newZ)))
     }
     if (link == "probit") {
       uncureprob <- pnorm(model$gamma %*% t(newZ))
     }
 
-    # Estimate survival for uncured patients for simulated observations
     suncure = array(0, dim = c(nobs, nrow(newX)))
     ebetaX = exp(model$beta %*% t(newX))
     for (i in 1:nrow(newX)) {
       suncure[, i] = s0^ebetaX[i]
     }
 
-    # Estimate survival for all patients for simulated observations
     spop = array(0, dim = c(nobs, nrow(newX)))
     for (i in 1:nobs) {
       for (j in 1:nrow(newX)) {
         spop[i, j] = uncureprob[j] * suncure[i, j] + (1 - uncureprob[j])
       }
     }
+    s0      <- s0[order(s0, decreasing = T)]
+    suncure <- suncure[order(suncure[, 1], decreasing = T), ]
+    spop    <- spop[order(spop[, 1], decreasing = T), ]
+    # suncure <- sort(suncure, decreasing = T)
+    # spop <- sort(spop, decreasing = T)
+
   } else {
     Coef_smplb <- MASS::mvrnorm(n = nsims, mu = beta,  Sigma = model$vcovb)
     Coef_smplg <- MASS::mvrnorm(n = nsims, mu = gamma, Sigma = model$vcovg)
@@ -53,11 +55,11 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
       uncureprobsims <- exp(Coef_smplg %*% t(newZ)) / (1 + exp(Coef_smplg %*% t(newZ)))
     }
     if (link == "probit") {
-      uncureprob <- pnorm(Coef_smplg %*% t(newZ))
+      uncureprobsims <- pnorm(Coef_smplg %*% t(newZ))
     }
 
+    # Obtain simulated values of s0
     w <- Status
-    # Calculate simulated values of s0
     s0sim <- matrix(nrow = nsims, ncol = model$nobs)
     for (j in 1:nsims) {
       s0temp <- tvsurv(Time, Status, cbind(1, newX),
@@ -68,14 +70,7 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
     s0lo   <- apply(s0sim, 2, quantile, 0.05)[order(Time)]
     s0hi   <- apply(s0sim, 2, quantile, 0.95)[order(Time)]
 
-    # suncuresim = array(0, dim = c(nobs, nrow(newX), nsims)) # i = 284, j = 2, k = 1000
-    # for (k in 1:nsims){
-    #   for (j in 1:nrow(newX)){
-    #     for (i in 1:nobs) {
-    #       suncuresim[i, j, k] = s0sim[i, j]^ebetaXsim[i, j, k]
-    #     }
-    #   }
-    # }
+    # Obtain simulated values of suncure and spop
     ebetaXsim <- exp(Coef_smplb %*% t(newX))
     suncuresims <- array(NA, dim = c(nsims, model$nobs, nrow(newX)))
     spopsims    <- array(NA, dim = c(nsims, model$nobs, nrow(newX)))
@@ -102,7 +97,7 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
       spoplo[, i]      <- apply(spopsims[, , i], 2, quantile, 0.05)
       spophi[, i]      <- apply(spopsims[, , i], 2, quantile, 0.95)
     }
-  lapply(list(suncuremean, suncurelo, suncurehi, spopmean, spoplo, spophi), function(x) x[order(Time), ])
+    lapply(list(suncuremean, suncurelo, suncurehi, spopmean, spoplo, spophi), function(x) x[order(Time), ])
   }
 
   if (CI == F) {
@@ -119,5 +114,7 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
                    link = link, Time = Time, CI = CI),
               class = "predicttvcure")
   }
-# TODO Rewrite s0sim a pbapply function
 }
+# Export uncureprobsims
+# TODO Rewrite s0sim a pbapply function
+# TODO Order singulate s0 in a logical way
