@@ -1,22 +1,64 @@
-setwd("C:/Users/gwill/Dropbox/Research/Dissertation/Data - Police Reform Data")
 library(readstata13)
 library(plyr)
 library(tvcure)
-cl <- makeCluster(3, "SOCK")
-registerDoSNOW(cl)
-options(scipen = 999)
 
-hks <- read.dta13("PRPA HKS CID Dummies.dta")
-hks <- plyr::rename(hks, replace = c("_st" = "st", "_d"="event","_t"="stop","_t0"="start"))
-hks$index <- with(hks, accountability + training + capacity + human_rights + composition_all + int_monitoring)
-hks2 <- hks[hks$agreement == 1, ]
+hks <- read.dta13("C:/Users/gwill/Dropbox/Research/Dissertation/tvcure/Replication Files/Replication - HKS/ReplicationHSK2016CMPS.dta")
+hks <- plyr::rename(hks, replace = c("_st" = "st", "_d" = "event","_t" = "stop","_t0" = "start"))
 
-m1 <- tvcure(Surv(start, stop, event) ~ accountability + agreement, cureform = ~ accountability + agreement, data = hks, var = F)
-m2 <- tvcure(Surv(start, stop, event) ~ index + polity2 + wardur + brv_warAgg + numprevepisodes + lntpop + lnrgdppc, cureform = ~ index + lntpop + polity2 + victoryFull + wardur + brv_warAgg + numprevepisodes + lnrgdppc, data = hks2, var = T)
-with(hks2, cor(cbind(accountability, lntpop, polity2, victoryFull, wardur, brv_warAgg, numprevepisodes, lnrgdppc, troop, police, militaryobservers)))
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+hkstest <- tvcure(Surv(start, stop, event) ~ troop + polity2 + lntpop + lnrgdppc,
+      cureform = ~ polity2,
+      model = "ph",
+      data = hks,
+      emmax = 1000,
+      nboot = 100); summary(hkstest)
+
+a <- coxph(Surv(start, stop, event) ~ troop + police + militaryobservers + wardur + brv_warAgg + osvAll + lntpop + polity2 + polity2Sq + rebpolwing + numprevepisodes + lnrgdppc + victoryFull + negsettleFull + lowactFull + frailty(dyad_id, distribution = "gaussian"), data = hks);a
+cox.a <- coxsimInteract(cox, "troop", "lnrgdppc", qi = "Hazard Rate", X1 = 1000, X2 = 4)
+
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+hks_tvcure <- tvcure(Surv(start, stop, event) ~ troop + police + militaryobservers,
+      cureform = ~ troop + police + militaryobservers + ,
+      model = "ph",
+      data = hks,
+      emmax = 1000,
+      nboot = 100)
+
+hks_tvcure_novar <- tvcure(Surv(start, stop, event) ~ troop + police + militaryobservers,
+      cureform = ~ troop + police + militaryobservers,
+      model = "ph",
+      data = hks,
+      emmax = 1000,
+      var = F)
+
+hks_tvcure_firth <- tvcure(Surv(start, stop, event) ~ troop + police + militaryobservers,
+      cureform = ~ troop + police + militaryobservers + lntpop + polity2 +
+        polity2Sq + rebpolwing + numprevepisodes,
+      model = "ph",
+      data = hks,
+      emmax = 1000,
+      firthlogit = T,
+      nboot = 100)
+
+hks_cox <- coxph(Surv(start, stop, event) ~ wardur + brv_warAgg + osvAll + lntpop + polity2 + polity2Sq + rebpolwing + numprevepisodes + lnrgdppc + negsettleFull,
+      data = hks,)
+
+hks_tvcure_probit <- tvcure(Surv(start, stop, event) ~ troop + police + militaryobservers,
+      cureform = ~ wardur + brv_warAgg + osvAll + lntpop + polity2 + polity2Sq + rebpolwing + numprevepisodes + lnrgdppc + negsettleFull + lowactFull,
+      model = "ph",
+      data = hks,
+      emmax = 1000,
+      nboot = 500)
+
+hkstvcure <- tvcure(Surv(start, stop, event) ~ troop + police + militaryobservers + polity + victoryFull,
+      cureform = ~ troop + police + militaryobservers + victoryFull,
+      model = "ph",
+      data = hks,
+      emmax = 100,
+#      firthlogit = T,
+      nboot = 100)
 
 
-coxph(Surv(start, stop, event) ~ index + polity2 + victoryFull + wardur + brv_warAgg + numprevepisodes + lntpop + lnrgdppc + troop + police + militaryobservers, data = hks)
-d3 <- as.data.frame(na.omit(hks2[, c("start", "stop", "event", "index", "lntpop", "polity2", "victoryFull", "wardur", "brv_warAgg", "numprevepisodes", "lnrgdppc", "police", "militaryobservers", "troop")]))
-coxphf(Surv(start, stop, event) ~ index + polity2 + victoryFull + wardur + brv_warAgg + numprevepisodes + lntpop + lnrgdppc + troop + police + militaryobservers, data = d3)
-
+#wardur + brv_warAgg + osvAll + lntpop + polity2 + polity2Sq + rebpolwing + numprevepisodes + lnrgdppc + negsettleFull +  + lowactFull,
+# robust
+# stcox troop police militaryobservers wardur brv_warAgg osvAll lntpop polity2 polity2Sq rebpolwing numprevepisodes lnrgdppc if negsettleFull==1 | lowactFull==1 , robust nohr
