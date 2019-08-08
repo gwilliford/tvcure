@@ -5,29 +5,32 @@
 #' @param xlab A label for the x-axis.
 #' @param ylab A label for the y-axis.
 #' @param ... Further options to be passed to \link{matplot}.
-plot.predicttvcure <- function(predobj, type = c("basesurv", "spop", "suncure"), xlab = "Time", ylab = "Predicted Survival Probability", ...) {
-  #model <- predobj$model
-  if (type == "basesurv") pred <- predobj$sbase
-  if (type == "spop")     pred <- predobj$spop
-  if (type == "suncure")  pred <- predobj$suncure
-  Time <- predobj$Time
-  mat <- cbind(pred)
-  #if (model == "ph") {
+plot.predicttvcure <- function(predobj, type = c("basesurv", "spop", "suncure"),
+                               xlab = "Time", ylab = "Predicted Survival Probability", ...) {
+  require(ggplot2)
+  CI = predobj$CI
+  Time = predobj$Time
+  nprof = predobj$nprof
+  if (CI == F) {
+    if (type == "basesurv") p1 <- ggplot(mapping = aes(x = Time, y = predobj$s0)) + geom_line()
+    if (type == "suncure") {
+      p1 <- ggplot(mapping = aes(x = predobj$Time, y = predobj$suncure[, 1])) + geom_line()
+      for(i in 2:nprof) {
+        p1 <- p1 + geom_line() + geom_line(aes(x = predobj$Time, y = predobj$suncure[, i]), col = "blue")
+      }
+    }
+    if (type == "spop") {
+      p1 <- ggplot(mapping = aes(x = predobj$Time, y = predobj$spop[, 1])) + geom_line()
+      for(i in 2:nprof) {
+        p1 <- p1 + geom_line() + geom_line(aes(x = predobj$Time, y = predobj$spop[, i]), col = "blue")
+      }
+    }
+  }
+          #+ geom_smooth(aes(x = Time)#, ymin = lower, ymax = upper), stat = "identity") + facet_wrap(~ Interaction)
 
-  pdsort <- mat[order(Time), ]
-  matplot(Time, pdsort[, "Time"], pdsort[, -(ncol(pdsort))], type = "l",
-          lty = 1:(ncol(pred)), xlab = xlab, ylab = ylab, ...)
-  #}
-  # if (model == "aft") {
-  #   nplot = ncol(pred)/2
-  #   pdsort <- pred[order(pred[, 1 + nplot]), c(1, 1 + nplot)]
-  #   plot(pdsort[, 2], pdsort[, 1], xlab = xlab, ylab = ylab,
-  #        col = 1, type = "S", ylim = c(0, 1))
-  #   if (nplot > 1) {
-  #     for (i in 2:nplot) {
-  #       pdsort <- pred[order(pred[, i + nplot]), c(i, i + nplot)]
-  #       lines(pdsort[, 2], pdsort[, 1], lty = i, type = "S")
-  #     }
-  #   }
-  # }
+    #mat <- cbind(pred)B
+    #matplot(Time, , pdsort[, -(ncol(pdsort))], type = "l",
+    #        lty = 1:(ncol(pred)), xlab = xlab, ylab = ylab, ...)
+    browser()
+    p1
 }
