@@ -4,7 +4,7 @@
 #' @param newX Values for covariates in hazard formula (X).
 #' @param nexZ Values for covariates in glm formula (Z). This matrix should not include a constant.
 #' @param CI Logical value indicating whether predictions and confidence intervals should be estimated using maximum simulated likelihood
-predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000, ...) {
+predict.tvcure <- function(model, newX, newZ, CI = F, nsims = 1000, ...) {
   call <- match.call()
   if (!inherits(model, "tvcure"))
     stop("Model must be a tvcure object")
@@ -22,7 +22,7 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
 
   if (CI == F) {
     if (link == "logit") {
-      uncureprob <- exp(model$gamma %*% t(newZ)) / (1 + exp(model$gamma %*% t(newZ)))
+      uncureprob <- exp(gamma %*% t(newZ)) / (1 + exp(gamma %*% t(newZ)))
     }
     if (link == "probit") {
       uncureprob <- pnorm(model$gamma %*% t(newZ))
@@ -61,8 +61,9 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
     if (link == "probit") {
       uncureprobsims <- pnorm(Coef_smplg %*% t(newZ))
     }
-    # browser()
-
+    uncuremean = apply(uncureprobsims, 2, mean)
+    uncurelo   = apply(uncureprobsims, 2, quantile, 0.05)
+    uncurehi   = apply(uncureprobsims, 2, quantile, 0.95)
 #
 #     # Simulate new value of s0 using old data and new coefficients
 #       if (link == "logit") {
@@ -179,20 +180,26 @@ predict.tvcure <- function(model, newX = NULL, newZ = NULL, CI = F, nsims = 1000
     structure(list(uncureprob = uncureprob,
                    s0 = s0, suncure = suncure, spop = spop,
                    Survival = model$Survival,
-                   link = link, Time = Time, CI = CI),
+                   link = link, Time = Time, CI = CI, nprof = nrow(newX),
+                   newX = newX, newZ = newZ, variable = variable),
               class = "predicttvcure")
 
   } else {
-    structure(list(s0mean = s0mean, s0lo = s0lo, s0hi = s0hi,
+    structure(list(uncuremean = uncuremean, uncurelo = uncurelo, uncurehi = uncurehi,
+                   s0mean = s0mean, s0lo = s0lo, s0hi = s0hi,
                    suncuremean = suncuremean, suncurelo = suncurelo, suncurehi = suncurehi,
                    spopmean = spopmean, spoplo = spoplo, spophi = spophi,
-                   link = link, Time = Time, CI = CI),
+                   link = link, Time = Time, CI = CI, nprof = nrow(newX),
+                   newX = newX, newz = newZ, variable = variable),
               class = "predicttvcure")
   }
 }
 # Export uncureprobsims
-# TODO Rewrite s0sim a pbapply function
+# TODO Rewrite s0sim a parapply function
 # TODO Order singulate s0 in a logical way
 # TODO - are graphs behaving for suncure and spop
 # Smooth the output of the lines
 # Optimize the speed
+# choose which fucntion to allow
+# create error function if Z and X are not both specified when new
+# Create functionality to just get baselines for population
