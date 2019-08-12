@@ -9,7 +9,7 @@
 
 prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "suncure", "uncureprob"), CI = F, nsims = 1000,
                         xlab = "Time", legendtitle = NULL, ylab = "Predicted Survival Probability", lty = 2) {
-
+  require(ggplot2)
   call <- match.call()
   if (!inherits(model, "tvcure"))
     stop("Model must be a tvcure object")
@@ -63,6 +63,40 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
     s0      <- s0[order(s0, decreasing = T)]
     suncure <- suncure[order(suncure[, 1], decreasing = T), ]
     spop    <- spop[order(spop[, 1], decreasing = T), ]
+
+    if (type == "uncureprob") {
+      # p1 <- plot(values, as.vector(uncureprob),
+      #            ylim = c(round(min(uncureprob), 2), round(max(uncureprob), 2)),
+      #            xlim = c(0, nx - 1), ylab = "Probability of Failure", axes = F)
+      # box()
+      # axis(1, seq(0, 1, 1))
+      # axis(2, seq(round(min(uncureprob), 2), round(max(uncureprob), 2),
+      #             by = ((round(max(uncureprob), 2) - round(min(uncureprob), 2))/2)))
+      # splot <- ggplot(mapping = aes(values, as.vector(uncureprob))) + ylab(ylab) +
+      #   geom_point() + scale_x_discrete(breaks = values, limits = c(min(values), max(values))) # coord_fixed(xlim = )
+      # splot <- ggplot(mapping = aes(values, as.vector(uncureprob))) +
+        # geom_dotplot(binaxis = 'y') + ylab(ylab)
+      xl <- c(min(values) + 0.10, max(values) + 0.10)
+      # yl <- c(min(uncureprob) + 0.10, max(uncureprob) + 0.10)
+      df <- as.data.frame(cbind(values, uncureprob = as.vector(uncureprob)))
+      splot <- ggplot(df, aes(values, uncureprob)) + ylab(ylab) +
+        geom_point() + scale_x_discrete(breaks = values)
+        #scale_y_discrete(limits = yl)# coord_fixed(xlim = )
+      splot <- ggplot(df, aes(values, uncureprob)) + ylab(ylab) +
+        geom_dotplot(mapping = aes(y = uncureprob)) #  + scale_x_discrete(breaks = values)
+        #scale_y_discrete(limits = yl)# coord_fixed(xlim = )
+      splot <- ggplot(mapping = aes(x=values, y= as.vector(uncureprob))) +
+        geom_point() #,ymax)
+        #geom_errorbar(width=.1, aes(ymin = value-ci, ymax=value+ci), colour="red") +
+        #geom_errorbar(width=.1, aes(ymin = value-ci, ymax=value+ci), data=dfwc) +
+        #geom_point(shape=21, size=3, fill="white") +
+      splot <- ggplot(mapping = aes(x=values, y= as.vector(uncureprob))) +
+        geom_point()  + scale_x_continuous(breaks = values) + coord_fixed()
+    }
+    ggplot(mapping = aes(values, y = as.vector(uncureprob), ymin = as.vector(uncureprob), ymax = as.vector(uncureprob))) + geom_pointrange(position=position_dodge(width=0.1))
+    ggplot(mapping = aes(values, as.vector(uncureprob))) + geom_point(size = 4) #+
+  geom_errorbar(aes(ymax = U, ymin = L))
+      #geom_line(position=position_dodge(width=0.1)) +
 
     if (type == "basesurv") {
       splot <- ggplot(mapping = aes(Time, s0)) + geom_line() +  ylab(ylab)
@@ -120,17 +154,18 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
     suncuresims <- array(NA, dim = c(nsims, nobs, nrow(newX)))
     spopsims    <- array(NA, dim = c(nsims, nobs, nrow(newX)))
 
+    if (type == "suncure" | type == "spop")
     for (i in 1:nsims) {
     	# Take the uncureprob for var j and multiply by suncure[j, k]
     	for (j in 1:nobs) {
     		for (k in 1:nrow(newX)) {
     			# spop[i, j] = uncureprobsims[i, j] * suncuresims[i, j] + (1 - uncureprobsims[i, j])
     			suncuresims[i, , k] <- s0sim[i, ]^ebetaXsim[i, k]
-    		  spopsims[i, j, k]    <- uncureprobsims[i, k] * suncuresims[i, j, k] + (1 - uncureprobsims[i, k])
+    		  if (type == "spop") spopsims[i, j, k]    <- uncureprobsims[i, k] * suncuresims[i, j, k] + (1 - uncureprobsims[i, k])
     		}
     	}
     }
-
+browser()
     suncuremean <- matrix(nrow = nobs, ncol = dim(newZ)) # 284 x 2
     suncurelo   <- matrix(nrow = nobs, ncol = dim(newZ))
     suncurehi  <- matrix(nrow = nobs, ncol = dim(newZ))
@@ -138,13 +173,18 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
     spoplo      <- matrix(nrow = nobs, ncol = dim(newZ))
     spophi      <- matrix(nrow = nobs, ncol = dim(newZ))
     for (i in 1:nrow(newX)) {
-      suncuremean[, i] <- sort(apply(suncuresims[, , i], 2, mean), decreasing = T)
-      suncurelo[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.05), decreasing = T)
-      suncurehi[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.95), decreasing = T)
-      spopmean[, i]    <- sort(apply(spopsims[, , i], 2, mean), decreasing = T)
-      spoplo[, i]      <- sort(apply(spopsims[, , i], 2, quantile, 0.05), decreasing = T)
-      spophi[, i]      <- sort(apply(spopsims[, , i], 2, quantile, 0.95), decreasing = T)
+      if (type == "suncure" | type == "spop") {
+        suncuremean[, i] <- sort(parapply::parapply(suncuresims[, , i], 2, mean), decreasing = T)
+        suncurelo[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.05), decreasing = T)
+        suncurehi[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.95), decreasing = T)
+      }
+      if (type == "spop") {
+        spopmean[, i]    <- sort(apply(spopsims[, , i], 2, mean), decreasing = T)
+        spoplo[, i]      <- sort(apply(spopsims[, , i], 2, quantile, 0.05), decreasing = T)
+        spophi[, i]      <- sort(apply(spopsims[, , i], 2, quantile, 0.95), decreasing = T)
+      }
     }
+# Plotting CIs ------------------------------------------------------------
 
     if (type == "uncureprob") {
       require(plotrix)
@@ -187,6 +227,9 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
     }
   }
 
+
+# Output ------------------------------------------------------------------
+
   if (CI == F) {
     structure(list(uncureprob = uncureprob,
                    s0 = s0, suncure = suncure, spop = spop,
@@ -198,8 +241,8 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
   } else {
     structure(list(uncuremean = uncuremean, uncurelo = uncurelo, uncurehi = uncurehi,
                    s0mean = s0mean, s0lo = s0lo, s0hi = s0hi,
-                   scm = scm, sclo = sclo, schi = schi,
-                   spopmean = spopmean, spoplo = spoplo, spophi = spophi,
+                   # scm = scm, sclo = sclo, schi = schi,
+                   # spopmean = spopmean, spoplo = spoplo, spophi = spophi,
                    link = link, Time = Time, CI = CI,
                    newX = newX, newz = newZ, variable = variable, splot = splot),
               class = "predicttvcure")
