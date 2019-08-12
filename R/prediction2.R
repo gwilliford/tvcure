@@ -64,27 +64,9 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
     suncure <- suncure[order(suncure[, 1], decreasing = T), ]
     spop    <- spop[order(spop[, 1], decreasing = T), ]
 
-    # if (type == "uncureprob") {
-    #   p1 <- plot(values, as.vector(uncureprob),
-    #              ylim = c(round(min(uncureprob), 2), round(max(uncureprob), 2)),
-    #              xlim = c(0, nx - 1), ylab = "Probability of Failure", axes = F)
-    #   box()
-    #   axis(1, seq(0, 1, 1))
-    #   axis(2, seq(round(min(uncureprob), 2), round(max(uncureprob), 2),
-    #               by = ((round(max(uncureprob), 2) - round(min(uncureprob), 2))/2)))
-    # }
     if (type == "basesurv") {
-    #   # p1 <- plot(Time, s0, type = "l",
-    #   #            ylim = c(round(min(s0), 2), round(max(s0), 2)), ylab = ylab)
       splot <- ggplot(mapping = aes(Time, s0)) + geom_line() +  ylab(ylab)
     }
-    # if (type == "suncure") {
-    #   p1 <- plot(Time, suncure[, 1], type = "l", ylim = c(round(min(suncure), 2), round(max(suncure), 2)), ylab = ylab)
-    #   for (i in 2:nx) {
-    #     lines(Time, suncure[, i], type = "l", col = i)
-    #   }
-    #   legend("topright", legend = values, col = 1:nx, lty = 1:nx, title = variable)
-    # }
     if (type == "suncure") {
       scm  <- split(suncure, rep(1:ncol(suncure), each = nrow(suncure)))
       for (i in 1:length(scm)) {
@@ -97,11 +79,6 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
         ylab(ylab)
     }
     if (type == "spop") {
-      # p1 <- plot(Time, spop[, 1], type = "l", ylim = c(round(min(spop), 2), round(max(spop), 2)), ylab = ylab, lwd = 2)
-      # for (i in 2:nx) {
-      #   lines(Time, spop[, i], type = "l", col = i, lwd = 2)
-      # }
-      # legend("topright", legend = values, col = 1:nx, lty = 1:nx, title = variable)
       spm  <- split(spop, rep(1:ncol(spop), each = nrow(spop)))
       for (i in 1:length(spm)) {
         spm[[i]] <- cbind(spm[[i]], Time, num = i)
@@ -170,9 +147,6 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
     }
 
     if (type == "uncureprob") {
-      # p1 <- plot(values, as.vector(uncuremean),
-      #            ylim = c(round(min(uncurelo), 2), round(max(uncurehi), 2)),
-      #            xlim = c(0, nx - 1), ylab = "Probability of Failure", axes = F)
       require(plotrix)
       p1 <- plotCI(values, uncuremean, ui = uncurehi[, i], hi = uncurelo[,])
       box()
@@ -180,30 +154,10 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
       axis(2, seq(round(min(uncurelo), 2), round(max(uncurehi), 2), by = ((round(max(uncurelo), 2) - round(min(uncurehi), 2))/2)))
     }
     if (type == "basesurv") {
-      # bsm  = split(s0mean, rep(1:ncol(s0mean), each = nrow(s0mean)))
-      # bslo = split(s0lo, rep(1:ncol(s0lo), each = nrow(s0lo)))
-      # bshi = split(s0hi, rep(1:ncol(s0hi), each = nrow(s0hi)))
-      # for (i in 1:length(bsm)) {
-      #   bsm[[i]] <- cbind(bsm[[i]], Time, num = i, bslo[[i]], bshi[[i]])
-      # }
-      # scf <- as.data.frame(do.call(rbind, bsm))
-      # colnames(scf) <- c("bsm", "Time", "num", "bslo", "bshi")
       splot <- ggplot(mapping = aes(Time, s0mean)) + geom_line() +
         geom_ribbon(aes(ymin = s0lo, ymax = s0hi), alpha=0.2) + ylab(ylab)
-      # p1 <- plot(Time, s0, type = "l",
-      #            ylim = c(round(min(s0lo), 2), round(max(s0hi), 2)), ylab = ylab)
-      #           lines(s0lo, lty = 2)
     }
     if (type == "suncure") {
-      # p1 <- plot(Time, scm[, 1], type = "l", ylim = c(round(min(sclo), 2), round(max(schi), 2)), ylab = ylab)
-      # lines(sclo, lty = 2)
-      # lines(schi, lty = 2)
-      # for (i in 2:nx) {
-      #   lines(Time, scm[, i], type = "l", col = i)
-      #   lines(sclo[, i], lty = 2, col = i)
-      #   lines(schi[, i], lty = 2, col = i)
-      # }
-      # legend("topright", legend = values, col = 1:nx, lty = 1:nx, title = variable)
       scm  <- split(suncuremean, rep(1:ncol(suncuremean), each = nrow(suncuremean)))
       sclo <- split(suncurelo, rep(1:ncol(suncurelo), each = nrow(suncurelo)))
       schi <- split(suncurehi, rep(1:ncol(suncurehi), each = nrow(suncurehi)))
@@ -218,14 +172,6 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
         labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) + ylab(ylab)
     }
     if (type == "spop") {
-      # p1 <- plot(Time, spopmean[, 1], type = "l", ylim = c(round(min(spoplo), 2), round(max(spophi), 2)), ylab = ylab, lwd = 2)
-      # lines(spoplo, lty = 2)
-      # lines(spophi, lty = 2)
-      # for (i in 2:nx) {
-      #   lines(Time, spopmean[, i], type = "l", col = i, lwd = 2)
-      #   lines(spoplo[, i], lty = 2, col = i)
-      # }
-      # legend("topright", legend = values, col = 1:nx, lty = 1:nx, title = variable)
       spm  <- split(spopmean, rep(1:ncol(spopmean), each = nrow(spopmean)))
       splo <- split(spoplo, rep(1:ncol(spoplo), each = nrow(spoplo)))
       sphi <- split(spophi, rep(1:ncol(spophi), each = nrow(spophi)))
