@@ -25,6 +25,16 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
   X <- model$X
   Z <- model$Z
   if (is.null(legendtitle)) legendtitle <- variable
+  # clstatus <- foreach::getDoParRegistered()
+  # if (foreach::getDoParRegistered() == T) cl <- foreach::getDoSeqName()
+  if (foreach::getDoParRegistered() == F) cl <- foreach::registerDoSEQ()
+  pb <- txtProgressBar(max = nsims, style = 3)
+  progress <- function(n) setTxtProgressBar(pb, n)
+  opts <- list(progress = progress)
+  #}
+
+
+# Simulate Data -----------------------------------------------------------
 
   newX <- apply(X[, 2:ncol(X)], 2, median)
   newX <- matrix(rep(newX, length(values)), ncol = length(newX), byrow = T)
@@ -39,6 +49,9 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
   if (variable %in% gnames) newZ[, variable] <- values
   newZ <- as.matrix(newZ)
   nz <- nrow(newZ)
+
+
+# No CIs ------------------------------------------------------------------
 
   if (CI == F) {
     if (link == "logit") {
@@ -155,16 +168,18 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
     spopsims    <- array(NA, dim = c(nsims, nobs, nrow(newX)))
 
     if (type == "suncure" | type == "spop")
-    for (i in 1:nsims) {
+    foreach (i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %:%
     	# Take the uncureprob for var j and multiply by suncure[j, k]
-    	for (j in 1:nobs) {
-    		for (k in 1:nrow(newX)) {
+      # foreach(i = 1:nobs, .options.snow = opts, .errorhandling = 'remove') %dopar
+      # foreach(i = 1:nobs, .options.snow = opts, .errorhandling = 'remove') %:%
+    	# for (j in 1:nobs) {
+    		foreach (k = 1:nrow(newX)) %dopar% {
     			# spop[i, j] = uncureprobsims[i, j] * suncuresims[i, j] + (1 - uncureprobsims[i, j])
     			suncuresims[i, , k] <- s0sim[i, ]^ebetaXsim[i, k]
     		  if (type == "spop") spopsims[i, j, k]    <- uncureprobsims[i, k] * suncuresims[i, j, k] + (1 - uncureprobsims[i, k])
     		}
-    	}
-    }
+    	#}
+    # }
 browser()
     suncuremean <- matrix(nrow = nobs, ncol = dim(newZ)) # 284 x 2
     suncurelo   <- matrix(nrow = nobs, ncol = dim(newZ))
@@ -172,9 +187,14 @@ browser()
     spopmean    <- matrix(nrow = nobs, ncol = dim(newZ))
     spoplo      <- matrix(nrow = nobs, ncol = dim(newZ))
     spophi      <- matrix(nrow = nobs, ncol = dim(newZ))
-    for (i in 1:nrow(newX)) {
+
+    foreach(i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %dopar% {
+    # for (i in 1:nrow(newX)) {
       if (type == "suncure" | type == "spop") {
-        suncuremean[, i] <- sort(parapply::parapply(suncuresims[, , i], 2, mean), decreasing = T)
+        # suncuremean[, i] <- sort(snow::parApply(cl, suncuresims[, , i], 2, mean), decreasing = T)
+        # suncurelo[, i]   <- sort(snow::parApply(cl, suncuresims[, , i], 2, quantile, 0.05), decreasing = T)
+        # suncurehi[, i]   <- sort(snow::parApply(cl, suncuresims[, , i], 2, quantile, 0.95), decreasing = T)
+        suncuremean[, i] <- sort(apply(suncuresims[, , i], 2, mean), decreasing = T)
         suncurelo[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.05), decreasing = T)
         suncurehi[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.95), decreasing = T)
       }
@@ -250,7 +270,9 @@ browser()
 }
 
 # Export uncureprobsims
-# TODO Rewrite s0sim a parapply function
+# TODO Rewrite s0sim a
+
+# function
 # TODO Order singulate s0 in a logical way
 # TODO - are graphs behaving for suncure and spop
 # Smooth the output of the lines
