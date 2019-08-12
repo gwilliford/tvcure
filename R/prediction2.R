@@ -40,9 +40,6 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
   newZ <- as.matrix(newZ)
   nz <- nrow(newZ)
 
-
-# No CIs ------------------------------------------------------------------
-
   if (CI == F) {
     if (link == "logit") {
       uncureprob <- exp(gamma %*% t(newZ)) / (1 + exp(gamma %*% t(newZ)))
@@ -67,31 +64,53 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
     suncure <- suncure[order(suncure[, 1], decreasing = T), ]
     spop    <- spop[order(spop[, 1], decreasing = T), ]
 
-    if (type == "uncureprob") {
-      p1 <- plot(values, as.vector(uncureprob),
-                 ylim = c(round(min(uncureprob), 2), round(max(uncureprob), 2)),
-                 xlim = c(0, nx - 1), ylab = "Probability of Failure", axes = F)
-      box()
-      axis(1, seq(0, 1, 1))
-      axis(2, seq(round(min(uncureprob), 2), round(max(uncureprob), 2), by = ((round(max(uncureprob), 2) - round(min(uncureprob), 2))/2)))
-    }
+    # if (type == "uncureprob") {
+    #   p1 <- plot(values, as.vector(uncureprob),
+    #              ylim = c(round(min(uncureprob), 2), round(max(uncureprob), 2)),
+    #              xlim = c(0, nx - 1), ylab = "Probability of Failure", axes = F)
+    #   box()
+    #   axis(1, seq(0, 1, 1))
+    #   axis(2, seq(round(min(uncureprob), 2), round(max(uncureprob), 2),
+    #               by = ((round(max(uncureprob), 2) - round(min(uncureprob), 2))/2)))
+    # }
     if (type == "basesurv") {
-      p1 <- plot(Time, s0, type = "l",
-                 ylim = c(round(min(s0), 2), round(max(s0), 2)), ylab = ylab)
+    #   # p1 <- plot(Time, s0, type = "l",
+    #   #            ylim = c(round(min(s0), 2), round(max(s0), 2)), ylab = ylab)
+      splot <- ggplot(mapping = aes(Time, s0)) + geom_line() +  ylab(ylab)
     }
+    # if (type == "suncure") {
+    #   p1 <- plot(Time, suncure[, 1], type = "l", ylim = c(round(min(suncure), 2), round(max(suncure), 2)), ylab = ylab)
+    #   for (i in 2:nx) {
+    #     lines(Time, suncure[, i], type = "l", col = i)
+    #   }
+    #   legend("topright", legend = values, col = 1:nx, lty = 1:nx, title = variable)
+    # }
     if (type == "suncure") {
-      p1 <- plot(Time, suncure[, 1], type = "l", ylim = c(round(min(suncure), 2), round(max(suncure), 2)), ylab = ylab)
-      for (i in 2:nx) {
-        lines(Time, suncure[, i], type = "l", col = i)
+      scm  <- split(suncure, rep(1:ncol(suncure), each = nrow(suncure)))
+      for (i in 1:length(scm)) {
+        scm[[i]] <- cbind(scm[[i]], Time, num = i)
       }
-      legend("topright", legend = values, col = 1:nx, lty = 1:nx, title = variable)
+      scf <- as.data.frame(do.call(rbind, scm))
+      colnames(scf) <- c("scm", "Time", "num")
+      splot <- ggplot(scf, aes(Time, scm, col = as.factor(num), linetype = as.factor(num))) +
+        geom_line() + labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) +
+        ylab(ylab)
     }
     if (type == "spop") {
-      p1 <- plot(Time, spop[, 1], type = "l", ylim = c(round(min(spop), 2), round(max(spop), 2)), ylab = ylab, lwd = 2)
-      for (i in 2:nx) {
-        lines(Time, spop[, i], type = "l", col = i, lwd = 2)
+      # p1 <- plot(Time, spop[, 1], type = "l", ylim = c(round(min(spop), 2), round(max(spop), 2)), ylab = ylab, lwd = 2)
+      # for (i in 2:nx) {
+      #   lines(Time, spop[, i], type = "l", col = i, lwd = 2)
+      # }
+      # legend("topright", legend = values, col = 1:nx, lty = 1:nx, title = variable)
+      spm  <- split(spop, rep(1:ncol(spop), each = nrow(spop)))
+      for (i in 1:length(spm)) {
+        spm[[i]] <- cbind(spm[[i]], Time, num = i)
       }
-      legend("topright", legend = values, col = 1:nx, lty = 1:nx, title = variable)
+      spf <- as.data.frame(do.call(rbind, spm))
+      colnames(spf) <- c("spm", "Time", "num")
+      splot <- ggplot(spf, aes(Time, spm, col = as.factor(num), linetype = as.factor(num))) +
+        geom_line() + labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) +
+        ylab(ylab)
     }
   } else {
     mu = c(beta, gamma)
@@ -170,7 +189,7 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
       # scf <- as.data.frame(do.call(rbind, bsm))
       # colnames(scf) <- c("bsm", "Time", "num", "bslo", "bshi")
       splot <- ggplot(mapping = aes(Time, s0mean)) + geom_line() +
-        geom_ribbon(aes(ymin = s0lo, ymax = s0hi), alpha=0.2) + ylab("Cumulative Probability of Survival")
+        geom_ribbon(aes(ymin = s0lo, ymax = s0hi), alpha=0.2) + ylab(ylab)
       # p1 <- plot(Time, s0, type = "l",
       #            ylim = c(round(min(s0lo), 2), round(max(s0hi), 2)), ylab = ylab)
       #           lines(s0lo, lty = 2)
@@ -196,7 +215,7 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
       splot <- ggplot(scf, aes(Time, scm, col = as.factor(num), linetype = as.factor(num))) +
         geom_line() + geom_ribbon(aes(ymin = sclo, ymax = schi, col = as.factor(num),
                                       fill = as.factor(num), linetype = as.factor(num)), alpha=0.2) +
-        labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) + ylab("Cumulative Probability of Survival")
+        labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) + ylab(ylab)
     }
     if (type == "spop") {
       # p1 <- plot(Time, spopmean[, 1], type = "l", ylim = c(round(min(spoplo), 2), round(max(spophi), 2)), ylab = ylab, lwd = 2)
@@ -218,7 +237,7 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
       splot <- ggplot(spf, aes(Time, spm, col = as.factor(num), linetype = as.factor(num))) +
         geom_line() + geom_ribbon(aes(ymin = splo, ymax = sphi, col = as.factor(num),
                                       linetype = as.factor(num), fill = as.factor(num)), alpha=0.2) +
-        labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) + ylab("Cumulative Probability of Survival")
+        labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) + ylab(ylab)
     }
   }
 
