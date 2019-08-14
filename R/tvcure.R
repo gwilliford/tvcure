@@ -41,9 +41,12 @@ tvcure <- function(formula, cureform, offset = NULL, model = "ph", data,
     data  <- na.action(data[, c(avars)])
     nobs  <- nrow(data)
 
+
+    browser()
     # Create IV matrices
     mf <- model.frame(formula, data)
     X <- model.matrix(attr(mf, "terms"), mf)
+    X <- X[, -1]
     mf2 <- model.frame(cureform, data)
     Z <- model.matrix(attr(mf2, "terms"), mf2)
 
@@ -76,8 +79,8 @@ tvcure <- function(formula, cureform, offset = NULL, model = "ph", data,
     gnames <- colnames(Z)
     ngamma <- ncol(Z)
     if (model == "ph") {
-      bnames <- colnames(X)[-1]
-      nbeta <- ncol(X) - 1
+      bnames <- colnames(X)
+      nbeta <- ncol(X)
     }
     cat("tvcure started at "); print(Sys.time());cat("Estimating coefficients...\n")
 
@@ -94,9 +97,9 @@ tvcure <- function(formula, cureform, offset = NULL, model = "ph", data,
   }
   if (model == "ph") {
     # if (firthcox) {
-    #   beta <- coxphf(survobj ~ X[, -1] + offset(log(w)), pl = F)$coefficients
+    #   beta <- coxphf(survobj ~ X + offset(log(w)), pl = F)$coefficients
     # } else {
-      beta <- coxph(survobj ~ X[, -1] + offset(log(w)), subset = w!=0,
+      beta <- coxph(survobj ~ X + offset(log(w)), subset = w!=0,
                     method = "breslow")$coef
     # }
   }
@@ -114,6 +117,9 @@ tvcure <- function(formula, cureform, offset = NULL, model = "ph", data,
   Basehaz  <- emfit$Basehaz
   incidence_fit <- emfit$incidence_fit
   cat("Coefficient estimation complete, estimating variance...\n")
+
+
+  browser()
 
 # Fang et al. standard errors
 #varfit <- tvvar(X = X, Z = Z, beta = beta, gamma = gamma, nbeta = nbeta, ngamma = ngamma, Time = Time, Status = Status, Basehaz = Basehaz, nobs = nobs)

@@ -7,12 +7,14 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
     progress <- function(n) setTxtProgressBar(pb, n)
     opts <- list(progress = progress)
 
+    X <- cbind(1, X)
+
   # Format data for bootstrap function
     if (survtype=="right") {
-      tempdata <- cbind(Time, Status, X, Z)
+      tempdata <- cbind(Time, Status, 1, X, Z)
     }
     if (survtype=="counting") {
-      tempdata <- cbind(Start, Stop, Status, X, Z)
+      tempdata <- cbind(Start, Stop, Status, 1, X, Z)
     }
     data1 <- subset(tempdata, Status == 1)
     data0 <- subset(tempdata, Status == 0)
@@ -27,13 +29,13 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
   # Sample and Estimate
   bootres <- foreach(i = 1:nboot, .packages = c('survival','logistf'),
                      .options.snow = opts, .errorhandling = 'remove') %dopar% {
-    for(i in 1:10) {
+    for(i in 1:nboot) {
       try({
       id1 <- sample(1:n1, n1, replace = T)
       id0 <- sample(1:n0, n0, replace = T)
       bootdata <- rbind(data1[id1, ], data0[id0, ])
       bootZ <- bootdata[, gnames]
-      bootX <- as.matrix(cbind(rep(1, n), bootdata[, bnames]))
+      bootX <- as.matrix(cbind(bootdata[, bnames]))
       if (survtype=="right") {
         bootsurv <- Surv(bootdata[, 1], bootdata[, 2])
         boottime <- bootdata[, 1]
@@ -57,6 +59,9 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
     } # close for loop
     list(bootfitg = bootfit$gamma, bootfitb = bootfit$latencyfit)
   } # close foreach loop
+
+
+  browser()
 
   # Combine results from bootstraps into matrices
   g_boot <- matrix(rep(0, nboot * ngamma), nrow = nboot)
@@ -82,3 +87,5 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
   varout <- list(g_var = g_var, b_var = b_var, g_sd = g_sd, b_sd = b_sd,
                  vcovg = vcovg, vcovb = vcovb, bootcomp = length(bootres))
 }
+
+# Fix foreach 1:10

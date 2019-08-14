@@ -19,7 +19,7 @@
       if (link == "probit") {
         uncureprob <- matrix(pnorm(gamma %*% t(Z)), ncol = 1)
       }
-      survival <- drop(s^(exp((beta) %*% t(X[, -1]))))
+      survival <- drop(s^(exp((beta) %*% t(X))))
       w <- Status + (1 - Status) * (uncureprob * survival)/((1 -
           uncureprob) + uncureprob * survival)
       # browser()
@@ -52,18 +52,18 @@
       if (model == "ph") {
         if (!is.null(offsetvar)) {
           # if (firthcox) {
-          #   update_beta <- coxphf(survobj ~ X[,-1] + offset(offsetvar + log(w)),
+          #   update_beta <- coxphf(survobj ~ X + offset(offsetvar + log(w)),
           #                         pl=F)$coefficients
           # } else {
-            update_beta <- coxph(survobj ~ X[,-1] + offset(offsetvar + log(w)),
+            update_beta <- coxph(survobj ~ X + offset(offsetvar + log(w)),
                                  subset = w != 0, method = "breslow")$coef
           # }
         } else {
           # if (firthcox) {
-          #   update_beta <- coxphf(survobj ~ X[,-1] + offset(log(w)),pl=F)$coefficients
+          #   update_beta <- coxphf(survobj ~ X + offset(log(w)),pl=F)$coefficients
           # } else {
             #tryCatch(
-              coxit <- coxph(survobj ~ X[, -1] + offset(log(w)), subset = w != 0,
+              coxit <- coxph(survobj ~ X + offset(log(w)), subset = w != 0,
                              method = "breslow")
               #,error = function(e) e
             #)
