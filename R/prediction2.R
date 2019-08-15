@@ -7,12 +7,15 @@
 #' @param xlab A label for the x-axis.
 #' @param ylab A label for the y-axis.
 
-prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "suncure", "uncureprob"), CI = F, nsims = 1000,
-                        xlab = "Time", legendtitle = NULL, ylab = "Predicted Survival Probability", lty = 2) {
+prediction2 <- function(model, variable, values,
+                        type = c("basesurv", "spop", "suncure", "uncureprob"),
+                        CI = F, nsims = 1000,
+                        xlab = "Time", legendtitle = NULL,
+                        ylab = "Predicted Survival Probability", lty = 2) {
+
   require(ggplot2)
   call <- match.call()
-  if (!inherits(model, "tvcure"))
-    stop("Model must be a tvcure object")
+  if (!inherits(model, "tvcure")) stop("Model must be a tvcure object")
   s0 = as.matrix(model$Survival, ncol = 1)
   nobs = nrow(s0)
   beta <- model$beta
@@ -24,9 +27,11 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
   Time <- model$Time[order(model$Time)]
   X <- model$X
   Z <- model$Z
-  if (is.null(legendtitle)) legendtitle <- variable
-  # clstatus <- foreach::getDoParRegistered()
-  # if (foreach::getDoParRegistered() == T) cl <- foreach::getDoSeqName()
+  if (is.null(legendtitle)) {
+    legendtitle <- variable
+  }
+  clstatus <- foreach::getDoParRegistered()
+  if (foreach::getDoParRegistered() == T) cl <- foreach::getDoSeqName()
   if (foreach::getDoParRegistered() == F) cl <- foreach::registerDoSEQ()
   pb <- txtProgressBar(max = nsims, style = 3)
   progress <- function(n) setTxtProgressBar(pb, n)
@@ -36,7 +41,7 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
 
 # Simulate Data -----------------------------------------------------------
 
-  newX <- apply(X[, 2:ncol(X)], 2, median)
+  newX <- apply(X, 2, median)
   newX <- matrix(rep(newX, length(values)), ncol = length(newX), byrow = T)
   colnames(newX) <- bnames
   if (variable %in% bnames) newX[, variable] <- values
@@ -49,7 +54,7 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
   if (variable %in% gnames) newZ[, variable] <- values
   newZ <- as.matrix(newZ)
   nz <- nrow(newZ)
-
+browser()
 
 # No CIs ------------------------------------------------------------------
 
@@ -83,36 +88,42 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
       #            xlim = c(0, nx - 1), ylab = "Probability of Failure", axes = F)
       # box()
       # axis(1, seq(0, 1, 1))
-      # axis(2, seq(round(min(uncureprob), 2), round(max(uncureprob), 2),
-      #             by = ((round(max(uncureprob), 2) - round(min(uncureprob), 2))/2)))
-      # splot <- ggplot(mapping = aes(values, as.vector(uncureprob))) + ylab(ylab) +
-      #   geom_point() + scale_x_discrete(breaks = values, limits = c(min(values), max(values))) # coord_fixed(xlim = )
-      # splot <- ggplot(mapping = aes(values, as.vector(uncureprob))) +
-        # geom_dotplot(binaxis = 'y') + ylab(ylab)
-      xl <- c(min(values) + 0.10, max(values) + 0.10)
-      # yl <- c(min(uncureprob) + 0.10, max(uncureprob) + 0.10)
-      df <- as.data.frame(cbind(values, uncureprob = as.vector(uncureprob)))
-      splot <- ggplot(df, aes(values, uncureprob)) + ylab(ylab) +
-        geom_point() + scale_x_discrete(breaks = values)
-        #scale_y_discrete(limits = yl)# coord_fixed(xlim = )
-      splot <- ggplot(df, aes(values, uncureprob)) + ylab(ylab) +
-        geom_dotplot(mapping = aes(y = uncureprob)) #  + scale_x_discrete(breaks = values)
-        #scale_y_discrete(limits = yl)# coord_fixed(xlim = )
-      splot <- ggplot(mapping = aes(x=values, y= as.vector(uncureprob))) +
-        geom_point() #,ymax)
-        #geom_errorbar(width=.1, aes(ymin = value-ci, ymax=value+ci), colour="red") +
-        #geom_errorbar(width=.1, aes(ymin = value-ci, ymax=value+ci), data=dfwc) +
-        #geom_point(shape=21, size=3, fill="white") +
-      splot <- ggplot(mapping = aes(x=values, y= as.vector(uncureprob))) +
-        geom_point()  + scale_x_continuous(breaks = values) + coord_fixed()
+      # # axis(2, seq(round(min(uncureprob), 2), round(max(uncureprob), 2),
+      # #             by = ((round(max(uncureprob), 2) - round(min(uncureprob), 2))/2)))
+      # # splot <- ggplot(mapping = aes(values, as.vector(uncureprob))) + ylab(ylab) +
+      # #   geom_point() + scale_x_discrete(breaks = values, limits = c(min(values), max(values))) # coord_fixed(xlim = )
+      # # splot <- ggplot(mapping = aes(values, as.vector(uncureprob))) +
+      #   # geom_dotplot(binaxis = 'y') + ylab(ylab)
+      # xl <- c(min(values) + 0.10, max(values) + 0.10)
+      # # yl <- c(min(uncureprob) + 0.10, max(uncureprob) + 0.10)
+      # df <- as.data.frame(cbind(values, uncureprob = as.vector(uncureprob)))
+      # splot <- ggplot(df, aes(values, uncureprob)) + ylab(ylab) +
+      #   geom_point() + scale_x_discrete(breaks = values)
+      #   #scale_y_discrete(limits = yl)# coord_fixed(xlim = )
+      # splot <- ggplot(df, aes(values, uncureprob)) + ylab(ylab) +
+      #   geom_dotplot(mapping = aes(y = uncureprob)) #  + scale_x_discrete(breaks = values)
+      #   #scale_y_discrete(limits = yl)# coord_fixed(xlim = )
+      # splot <- ggplot(mapping = aes(x=values, y= as.vector(uncureprob))) +
+      #   geom_point() #,ymax)
+      #   #geom_errorbar(width=.1, aes(ymin = value-ci, ymax=value+ci), colour="red") +
+      #   #geom_errorbar(width=.1, aes(ymin = value-ci, ymax=value+ci), data=dfwc) +
+      #   #geom_point(shape=21, size=3, fill="white") +
+      # splot <- ggplot(mapping = aes(x=values, y= as.vector(uncureprob))) +
+      #   geom_point()  + scale_x_continuous(breaks = values) + coord_fixed()
+
+      # Make the graph with the 95% confidence interval
+      splot <- ggplot(mapping = aes(x = values, y = as.vector(uncureprob))) + geom_point()
+          geom_line()
+          # geom_errorbar(width=.1) , aes(ymin=value-ci, ymax=value+ci)) +
+          # geom_point(shape=21, size=3, fill="white")
     }
-    ggplot(mapping = aes(values, y = as.vector(uncureprob), ymin = as.vector(uncureprob), ymax = as.vector(uncureprob))) + geom_pointrange(position=position_dodge(width=0.1))
-    ggplot(mapping = aes(values, as.vector(uncureprob))) + geom_point(size = 4) #+
-  geom_errorbar(aes(ymax = U, ymin = L))
-      #geom_line(position=position_dodge(width=0.1)) +
+  #   ggplot(mapping = aes(values, y = as.vector(uncureprob), ymin = as.vector(uncureprob), ymax = as.vector(uncureprob))) + geom_pointrange(position=position_dodge(width=0.1))
+  #   ggplot(mapping = aes(values, as.vector(uncureprob))) + geom_point(size = 4) #+
+  # geom_errorbar(aes(ymax = U, ymin = L))
+  #     #geom_line(position=position_dodge(width=0.1)) +
 
     if (type == "basesurv") {
-      splot <- ggplot(mapping = aes(Time, s0)) + geom_line() +  ylab(ylab)
+      splot <- ggplot(mapping = aes(Time, s0)) + geom_line() +  ylab("Probability of Failure") + xlab(variable)
     }
     if (type == "suncure") {
       scm  <- split(suncure, rep(1:ncol(suncure), each = nrow(suncure)))
@@ -168,8 +179,9 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
     spopsims    <- array(NA, dim = c(nsims, nobs, nrow(newX)))
 
     if (type == "suncure" | type == "spop")
-    foreach (i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %:%
-    	# Take the uncureprob for var j and multiply by suncure[j, k]
+    foreach (i = 1:nsims, .errorhandling = 'remove') %:%
+    	# .options.snow = opts,
+      # Take the uncureprob for var j and multiply by suncure[j, k]
       # foreach(i = 1:nobs, .options.snow = opts, .errorhandling = 'remove') %dopar
       # foreach(i = 1:nobs, .options.snow = opts, .errorhandling = 'remove') %:%
     	# for (j in 1:nobs) {
@@ -207,15 +219,18 @@ browser()
 # Plotting CIs ------------------------------------------------------------
 
     if (type == "uncureprob") {
-      require(plotrix)
-      p1 <- plotCI(values, uncuremean, ui = uncurehi[, i], hi = uncurelo[,])
-      box()
-      axis(1, seq(0, 1, 1))
-      axis(2, seq(round(min(uncurelo), 2), round(max(uncurehi), 2), by = ((round(max(uncurelo), 2) - round(min(uncurehi), 2))/2)))
+      # require(plotrix)
+      # p1 <- plotCI(values, uncuremean, ui = uncurehi[, i], hi = uncurelo[,])
+      # box()
+      # axis(1, seq(0, 1, 1))
+      # axis(2, seq(round(min(uncurelo), 2), round(max(uncurehi), 2), by = ((round(max(uncurelo), 2) - round(min(uncurehi), 2))/2)))
+
+      splot <- ggplot(mapping = aes(x = values, y = as.vector(uncuremean))) + geom_point() +
+        geom_errorbar(width = .1, aes(ymin = uncurelo, ymax = uncurehi)) + scale_x_continuous(breaks = values) + ylab("Probability of Failure") + xlab(variable)
     }
     if (type == "basesurv") {
       splot <- ggplot(mapping = aes(Time, s0mean)) + geom_line() +
-        geom_ribbon(aes(ymin = s0lo, ymax = s0hi), alpha=0.2) + ylab(ylab)
+        geom_ribbon(aes(ymin = s0lo, ymax = s0hi), alpha=0.2) + ylab("Baseline Probability of Survival")
     }
     if (type == "suncure") {
       scm  <- split(suncuremean, rep(1:ncol(suncuremean), each = nrow(suncuremean)))
@@ -247,7 +262,6 @@ browser()
     }
   }
 
-
 # Output ------------------------------------------------------------------
 
   if (CI == F) {
@@ -269,15 +283,10 @@ browser()
   }
 }
 
-# Export uncureprobsims
-# TODO Rewrite s0sim a
-
-# function
-# TODO Order singulate s0 in a logical way
+# done Order s0 in ao logical way
 # TODO - are graphs behaving for suncure and spop
-# Smooth the output of the lines
-# Optimize the speed
-# choose which fucntion to allow
+# done - Optimize the speed
 # create error function if Z and X are not both specified when new
-# Create functionality to just get baselines for population
+# create functionality to just get baselines for population
 # Make it only spit out an image, not just a summary
+# Black and white functionality
