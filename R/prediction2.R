@@ -11,7 +11,11 @@ prediction2 <- function(model, variable, values,
                         type = c("basesurv", "spop", "suncure", "uncureprob"),
                         CI = F, nsims = 1000, bw = F,
                         xlab = "Time", legendtitle = NULL,
-                        ylab = "Predicted Survival Probability", internals = F, lty = 2) {
+                        ylab = "Predicted Survival Probability", internals = F) {
+
+
+# Setup -------------------------------------------------------------------
+
 
   require(ggplot2)
   call <- match.call()
@@ -83,9 +87,6 @@ browser()
     spop    <- spop[order(spop[, 1], decreasing = T), ]
 
     if (type == "uncureprob") {
-      # splot <- ggplot(mapping = aes(x = values, y = as.vector(uncureprob), colour = as.factor(values))) +
-      #   geom_point() + scale_x_continuous(breaks = values) + ylab("Probability of Failure") +
-      #   xlab(variable) + theme(legend.position = "none")
       if (bw == T) {
         splot <- ggplot() + theme_bw()
         splot <- splot + geom_point(mapping = aes(x = values, y = as.vector(uncureprob)))
@@ -96,21 +97,21 @@ browser()
       splot <- splot + scale_x_continuous(breaks = values) + ylab("Probability of Failure") +
         xlab(variable) + theme(legend.position = "none")
     }
-
-    if (type == "basesurv") {
-      splot <- ggplot(mapping = aes(Time, s0)) + geom_line() +  ylab("Probability of Failure") + xlab(variable)
-    }
-    if (type == "suncure") {
-      scm  <- split(suncure, rep(1:ncol(suncure), each = nrow(suncure)))
-      for (i in 1:length(scm)) {
-        scm[[i]] <- cbind(scm[[i]], Time, num = i)
-      }
-      scf <- as.data.frame(do.call(rbind, scm))
-      colnames(scf) <- c("scm", "Time", "num")
-      splot <- ggplot(scf, aes(Time, scm, col = as.factor(num), linetype = as.factor(num))) +
-        geom_line() + labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) +
-        ylab(ylab)
-    }
+#
+#     if (type == "basesurv") {
+#       splot <- ggplot(mapping = aes(Time, s0)) + geom_line() +  ylab("Probability of Failure") + xlab(variable)
+#     }
+    # if (type == "suncure") {
+    #   scm  <- split(suncure, rep(1:ncol(suncure), each = nrow(suncure)))
+    #   for (i in 1:length(scm)) {
+    #     scm[[i]] <- cbind(scm[[i]], Time, num = i)
+    #   }
+    #   scf <- as.data.frame(do.call(rbind, scm))
+    #   colnames(scf) <- c("scm", "Time", "num")
+    #   splot <- ggplot(scf, aes(Time, scm, col = as.factor(num), linetype = as.factor(num))) +
+    #     geom_line() + labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) +
+    #     ylab(ylab)
+    # }
     if (type == "spop") {
       spm  <- split(spop, rep(1:ncol(spop), each = nrow(spop)))
       for (i in 1:length(spm)) {
@@ -153,21 +154,21 @@ browser()
     suncuresims <- array(NA, dim = c(nsims, nobs, nrow(newX)))
     spopsims    <- array(NA, dim = c(nsims, nobs, nrow(newX)))
 
-    if (type == "suncure" | type == "spop")
-    foreach (i = 1:nsims, .errorhandling = 'remove') %:%
-    	# .options.snow = opts,
-      # Take the uncureprob for var j and multiply by suncure[j, k]
-      # foreach(i = 1:nobs, .options.snow = opts, .errorhandling = 'remove') %dopar
-      # foreach(i = 1:nobs, .options.snow = opts, .errorhandling = 'remove') %:%
-    	# for (j in 1:nobs) {
-    		foreach (k = 1:nrow(newX)) %dopar% {
-    			suncuresims[i, , k] <- s0sim[i, ]^ebetaXsim[i, k]
-    		  if (type == "spop") spopsims[i, j, k] <- uncureprobsims[i, k] *
-    		      suncuresims[i, j, k] + (1 - uncureprobsims[i, k])
-    		}
-    	#}
-    # }
-browser()
+    if (type == "suncure" | type == "spop") {
+      foreach (i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %:%
+        # Take the uncureprob for var j and multiply by suncure[j, k]
+        # foreach(i = 1:nobs, .options.snow = opts, .errorhandling = 'remove') %dopar
+        # foreach(j = 1:nobs, .options.snow = opts, .errorhandling = 'remove') %:%
+      	# for (j in 1:nobs) {
+      		foreach (k = 1:nrow(newX)) %dopar% {
+      			suncuresims[i, , k] <- s0sim[i, ]^ebetaXsim[i, k]
+      		  if (type == "spop") spopsims[i, j, k] <- uncureprobsims[i, k] *
+      		      suncuresims[i, j, k] + (1 - uncureprobsims[i, k])
+      		}
+    }
+
+    browser()
+
     suncuremean <- matrix(nrow = nobs, ncol = dim(newZ)) # 284 x 2
     suncurelo   <- matrix(nrow = nobs, ncol = dim(newZ))
     suncurehi  <- matrix(nrow = nobs, ncol = dim(newZ))
@@ -188,8 +189,19 @@ browser()
         spophi[, i]      <- sort(apply(spopsims[, , i], 2, quantile, 0.95), decreasing = T)
       }
     }
-# Plotting CIs ------------------------------------------------------------
+  } # close CI = T else loop
 
+browser()
+
+# Plot Setup --------------------------------------------------------------
+
+if (bw == T) {
+  splot <- ggplot() + theme_bw()
+} else {
+  splot <- ggplot()
+}
+
+# Plot Uncureprob ---------------------------------------------------------
     if (type == "uncureprob") {
       if (bw == T) {
         splot <- ggplot() + theme_bw()
@@ -202,25 +214,53 @@ browser()
       splot <- splot + scale_x_continuous(breaks = values) + ylab("Probability of Failure") +
         xlab(variable) + theme(legend.position = "none")
     }
+
+
+# Basesurv Plot -----------------------------------------------------------
+
     if (type == "basesurv") {
-      splot <- ggplot(mapping = aes(Time, s0mean)) + geom_line() +
-        geom_ribbon(aes(ymin = s0lo, ymax = s0hi), alpha=0.2) +
-        ylab("Baseline Probability of Survival")
-    }
-    if (type == "suncure") {
-      scm  <- split(suncuremean, rep(1:ncol(suncuremean), each = nrow(suncuremean)))
-      sclo <- split(suncurelo, rep(1:ncol(suncurelo), each = nrow(suncurelo)))
-      schi <- split(suncurehi, rep(1:ncol(suncurehi), each = nrow(suncurehi)))
-      for (i in 1:length(scm)) {
-        scm[[i]] <- cbind(scm[[i]], Time, num = i, sclo[[i]], schi[[i]])
+      if (CI == F) {
+        splot <- splot + geom_line(mapping = aes(Time, s0))
+      } else {
+        splot <- splot + geom_line(mapping = aes(Time, s0mean)) +
+          geom_ribbon(aes(x = Time, ymin = s0lo, ymax = s0hi), alpha=0.2)
       }
-      scf <- as.data.frame(do.call(rbind, scm))
-      colnames(scf) <- c("scm", "Time", "num", "sclo", "schi")
-      splot <- ggplot(scf, aes(Time, scm, col = as.factor(num), linetype = as.factor(num))) +
-        geom_line() + geom_ribbon(aes(ymin = sclo, ymax = schi, col = as.factor(num),
-                                      fill = as.factor(num), linetype = as.factor(num)), alpha=0.2) +
-        labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) + ylab(ylab)
+      splot = splot + ylab("Probability of Failure") + xlab(variable)
     }
+
+
+# Suncure Plot ------------------------------------------------------------
+
+    if (type == "suncure") {
+      if (CI == F) {
+        scm  <- split(suncure, rep(1:ncol(suncure), each = nrow(suncure)))
+        for (i in 1:length(scm)) {
+          scm[[i]] <- cbind(scm[[i]], Time, num = i)
+        }
+        scf <- as.data.frame(do.call(rbind, scm))
+        colnames(scf) <- c("scm", "Time", "num")
+      } else {
+        scm  <- split(suncuremean, rep(1:ncol(suncuremean), each = nrow(suncuremean)))
+        sclo <- split(suncurelo, rep(1:ncol(suncurelo), each = nrow(suncurelo)))
+        schi <- split(suncurehi, rep(1:ncol(suncurehi), each = nrow(suncurehi)))
+        for (i in 1:length(scm)) {
+          scm[[i]] <- cbind(scm[[i]], Time, num = i, sclo[[i]], schi[[i]])
+        }
+        scf <- as.data.frame(do.call(rbind, scm))
+        colnames(scf) <- c("scm", "Time", "num", "sclo", "schi")
+      }
+      splot = splot + geom_line(scf, aes(Time, scm, col = as.factor(num), linetype = as.factor(num))) +
+                ylab(ylab) + xlab("Time")
+      if (CI == T) {
+        splot = splot + geom_ribbon(aes(x = Time, ymin = sclo, ymax = schi, col = as.factor(num),
+                                      fill = as.factor(num), linetype = as.factor(num)), alpha=0.2) +
+                labs(fill = legendtitle, linetype = legendtitle, col = legendtitle)
+      }
+    }
+
+# Plot spop ---------------------------------------------------------------
+
+
     if (type == "spop") {
       spm  <- split(spopmean, rep(1:ncol(spopmean), each = nrow(spopmean)))
       splo <- split(spoplo, rep(1:ncol(spoplo), each = nrow(spoplo)))
@@ -235,7 +275,6 @@ browser()
                                       linetype = as.factor(num), fill = as.factor(num)), alpha=0.2) +
         labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) + ylab(ylab)
     }
-  }
 
 # Output ------------------------------------------------------------------
   if (internals == F) {
@@ -261,11 +300,12 @@ browser()
   }
 }
 
-# done Order s0 in ao logical way
+# DONE - Order s0 in ao logical way
 # TODO - are graphs behaving for suncure and spop
-# done - Optimize the speed
+# DONE - Optimize the speed
 # create error function if Z and X are not both specified when new
-# create functionality to just get baselines for population
+# DONE - create functionality to just get baselines for population
 # Make it only spit out an image, not just a summary
 # Black and white functionality
-# lty in function call - why is that there
+# DONE - lty in function call - why is that there
+# Fix spop simulations
