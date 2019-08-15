@@ -9,9 +9,9 @@
 
 prediction2 <- function(model, variable, values,
                         type = c("basesurv", "spop", "suncure", "uncureprob"),
-                        CI = F, nsims = 1000,
+                        CI = F, nsims = 1000, bw = F,
                         xlab = "Time", legendtitle = NULL,
-                        ylab = "Predicted Survival Probability", lty = 2) {
+                        ylab = "Predicted Survival Probability", internals = F, lty = 2) {
 
   require(ggplot2)
   call <- match.call()
@@ -83,8 +83,17 @@ browser()
     spop    <- spop[order(spop[, 1], decreasing = T), ]
 
     if (type == "uncureprob") {
-      splot <- ggplot(mapping = aes(x = values, y = as.vector(uncureprob), colour = as.factor(values))) +
-        geom_point() + scale_x_continuous(breaks = values) + ylab("Probability of Failure") +
+      # splot <- ggplot(mapping = aes(x = values, y = as.vector(uncureprob), colour = as.factor(values))) +
+      #   geom_point() + scale_x_continuous(breaks = values) + ylab("Probability of Failure") +
+      #   xlab(variable) + theme(legend.position = "none")
+      if (bw == T) {
+        splot <- ggplot() + theme_bw()
+        splot <- splot + geom_point(mapping = aes(x = values, y = as.vector(uncureprob)))
+      } else {
+        splot <- ggplot()
+        splot <- splot + geom_point(mapping = aes(x = values, y = as.vector(uncureprob), colour = as.factor(values)))
+      }
+      splot <- splot + scale_x_continuous(breaks = values) + ylab("Probability of Failure") +
         xlab(variable) + theme(legend.position = "none")
     }
 
@@ -182,9 +191,15 @@ browser()
 # Plotting CIs ------------------------------------------------------------
 
     if (type == "uncureprob") {
-      splot <- ggplot(mapping = aes(x = values, y = as.vector(uncuremean), colour = as.factor(values))) +
-        geom_point() + geom_errorbar(width = .1, aes(ymin = uncurelo, ymax = uncurehi)) +
-        scale_x_continuous(breaks = values) + ylab("Probability of Failure") +
+      if (bw == T) {
+        splot <- ggplot() + theme_bw()
+        splot <- splot + geom_point(mapping = aes(x = values, y = as.vector(uncuremean))) +
+                  geom_errorbar(width = .1, mapping = aes(x = values, ymin = uncurelo, ymax = uncurehi))
+      } else {
+        splot <- ggplot(mapping = aes(x = values, y = as.vector(uncuremean), colour = as.factor(values))) +
+          geom_point() + geom_errorbar(width = .1, mapping = aes(x = values, ymin = uncurelo, ymax = uncurehi))
+      }
+      splot <- splot + scale_x_continuous(breaks = values) + ylab("Probability of Failure") +
         xlab(variable) + theme(legend.position = "none")
     }
     if (type == "basesurv") {
@@ -223,23 +238,26 @@ browser()
   }
 
 # Output ------------------------------------------------------------------
-
-  if (CI == F) {
-    structure(list(uncureprob = uncureprob,
-                   s0 = s0, suncure = suncure, spop = spop,
-                   Survival = model$Survival,
-                   link = link, Time = Time, CI = CI,
-                   newX = newX, newZ = newZ, variable = variable, splot = splot),
-              class = "predicttvcure")
-
+  if (internals == F) {
+    return(splot)
   } else {
-    structure(list(uncuremean = uncuremean, uncurelo = uncurelo, uncurehi = uncurehi,
-                   s0mean = s0mean, s0lo = s0lo, s0hi = s0hi,
-                   # scm = scm, sclo = sclo, schi = schi,
-                   # spopmean = spopmean, spoplo = spoplo, spophi = spophi,
-                   link = link, Time = Time, CI = CI,
-                   newX = newX, newz = newZ, variable = variable, splot = splot),
-              class = "predicttvcure")
+    if (CI == F) {
+      structure(list(uncureprob = uncureprob,
+                     s0 = s0, suncure = suncure, spop = spop,
+                     Survival = model$Survival,
+                     link = link, Time = Time, CI = CI,
+                     newX = newX, newZ = newZ, variable = variable, splot = splot),
+                class = "predicttvcure")
+
+    } else {
+      structure(list(uncuremean = uncuremean, uncurelo = uncurelo, uncurehi = uncurehi,
+                     s0mean = s0mean, s0lo = s0lo, s0hi = s0hi,
+                     # scm = scm, sclo = sclo, schi = schi,
+                     spopmean = spopmean, spoplo = spoplo, spophi = spophi,
+                     link = link, Time = Time, CI = CI,
+                     newX = newX, newz = newZ, variable = variable, splot = splot),
+                class = "predicttvcure")
+    }
   }
 }
 
@@ -250,3 +268,4 @@ browser()
 # create functionality to just get baselines for population
 # Make it only spit out an image, not just a summary
 # Black and white functionality
+# lty in function call - why is that there
