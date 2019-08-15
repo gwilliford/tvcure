@@ -83,44 +83,10 @@ browser()
     spop    <- spop[order(spop[, 1], decreasing = T), ]
 
     if (type == "uncureprob") {
-      # p1 <- plot(values, as.vector(uncureprob),
-      #            ylim = c(round(min(uncureprob), 2), round(max(uncureprob), 2)),
-      #            xlim = c(0, nx - 1), ylab = "Probability of Failure", axes = F)
-      # box()
-      # axis(1, seq(0, 1, 1))
-      # # axis(2, seq(round(min(uncureprob), 2), round(max(uncureprob), 2),
-      # #             by = ((round(max(uncureprob), 2) - round(min(uncureprob), 2))/2)))
-      # # splot <- ggplot(mapping = aes(values, as.vector(uncureprob))) + ylab(ylab) +
-      # #   geom_point() + scale_x_discrete(breaks = values, limits = c(min(values), max(values))) # coord_fixed(xlim = )
-      # # splot <- ggplot(mapping = aes(values, as.vector(uncureprob))) +
-      #   # geom_dotplot(binaxis = 'y') + ylab(ylab)
-      # xl <- c(min(values) + 0.10, max(values) + 0.10)
-      # # yl <- c(min(uncureprob) + 0.10, max(uncureprob) + 0.10)
-      # df <- as.data.frame(cbind(values, uncureprob = as.vector(uncureprob)))
-      # splot <- ggplot(df, aes(values, uncureprob)) + ylab(ylab) +
-      #   geom_point() + scale_x_discrete(breaks = values)
-      #   #scale_y_discrete(limits = yl)# coord_fixed(xlim = )
-      # splot <- ggplot(df, aes(values, uncureprob)) + ylab(ylab) +
-      #   geom_dotplot(mapping = aes(y = uncureprob)) #  + scale_x_discrete(breaks = values)
-      #   #scale_y_discrete(limits = yl)# coord_fixed(xlim = )
-      # splot <- ggplot(mapping = aes(x=values, y= as.vector(uncureprob))) +
-      #   geom_point() #,ymax)
-      #   #geom_errorbar(width=.1, aes(ymin = value-ci, ymax=value+ci), colour="red") +
-      #   #geom_errorbar(width=.1, aes(ymin = value-ci, ymax=value+ci), data=dfwc) +
-      #   #geom_point(shape=21, size=3, fill="white") +
-      # splot <- ggplot(mapping = aes(x=values, y= as.vector(uncureprob))) +
-      #   geom_point()  + scale_x_continuous(breaks = values) + coord_fixed()
-
-      # Make the graph with the 95% confidence interval
-      splot <- ggplot(mapping = aes(x = values, y = as.vector(uncureprob))) + geom_point()
-          geom_line()
-          # geom_errorbar(width=.1) , aes(ymin=value-ci, ymax=value+ci)) +
-          # geom_point(shape=21, size=3, fill="white")
+      splot <- ggplot(mapping = aes(x = values, y = as.vector(uncureprob), colour = as.factor(values))) +
+        geom_point() + scale_x_continuous(breaks = values) + ylab("Probability of Failure") +
+        xlab(variable) + theme(legend.position = "none")
     }
-  #   ggplot(mapping = aes(values, y = as.vector(uncureprob), ymin = as.vector(uncureprob), ymax = as.vector(uncureprob))) + geom_pointrange(position=position_dodge(width=0.1))
-  #   ggplot(mapping = aes(values, as.vector(uncureprob))) + geom_point(size = 4) #+
-  # geom_errorbar(aes(ymax = U, ymin = L))
-  #     #geom_line(position=position_dodge(width=0.1)) +
 
     if (type == "basesurv") {
       splot <- ggplot(mapping = aes(Time, s0)) + geom_line() +  ylab("Probability of Failure") + xlab(variable)
@@ -186,9 +152,9 @@ browser()
       # foreach(i = 1:nobs, .options.snow = opts, .errorhandling = 'remove') %:%
     	# for (j in 1:nobs) {
     		foreach (k = 1:nrow(newX)) %dopar% {
-    			# spop[i, j] = uncureprobsims[i, j] * suncuresims[i, j] + (1 - uncureprobsims[i, j])
     			suncuresims[i, , k] <- s0sim[i, ]^ebetaXsim[i, k]
-    		  if (type == "spop") spopsims[i, j, k]    <- uncureprobsims[i, k] * suncuresims[i, j, k] + (1 - uncureprobsims[i, k])
+    		  if (type == "spop") spopsims[i, j, k] <- uncureprobsims[i, k] *
+    		      suncuresims[i, j, k] + (1 - uncureprobsims[i, k])
     		}
     	#}
     # }
@@ -203,9 +169,6 @@ browser()
     foreach(i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %dopar% {
     # for (i in 1:nrow(newX)) {
       if (type == "suncure" | type == "spop") {
-        # suncuremean[, i] <- sort(snow::parApply(cl, suncuresims[, , i], 2, mean), decreasing = T)
-        # suncurelo[, i]   <- sort(snow::parApply(cl, suncuresims[, , i], 2, quantile, 0.05), decreasing = T)
-        # suncurehi[, i]   <- sort(snow::parApply(cl, suncuresims[, , i], 2, quantile, 0.95), decreasing = T)
         suncuremean[, i] <- sort(apply(suncuresims[, , i], 2, mean), decreasing = T)
         suncurelo[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.05), decreasing = T)
         suncurehi[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.95), decreasing = T)
@@ -219,18 +182,15 @@ browser()
 # Plotting CIs ------------------------------------------------------------
 
     if (type == "uncureprob") {
-      # require(plotrix)
-      # p1 <- plotCI(values, uncuremean, ui = uncurehi[, i], hi = uncurelo[,])
-      # box()
-      # axis(1, seq(0, 1, 1))
-      # axis(2, seq(round(min(uncurelo), 2), round(max(uncurehi), 2), by = ((round(max(uncurelo), 2) - round(min(uncurehi), 2))/2)))
-
-      splot <- ggplot(mapping = aes(x = values, y = as.vector(uncuremean))) + geom_point() +
-        geom_errorbar(width = .1, aes(ymin = uncurelo, ymax = uncurehi)) + scale_x_continuous(breaks = values) + ylab("Probability of Failure") + xlab(variable)
+      splot <- ggplot(mapping = aes(x = values, y = as.vector(uncuremean), colour = as.factor(values))) +
+        geom_point() + geom_errorbar(width = .1, aes(ymin = uncurelo, ymax = uncurehi)) +
+        scale_x_continuous(breaks = values) + ylab("Probability of Failure") +
+        xlab(variable) + theme(legend.position = "none")
     }
     if (type == "basesurv") {
       splot <- ggplot(mapping = aes(Time, s0mean)) + geom_line() +
-        geom_ribbon(aes(ymin = s0lo, ymax = s0hi), alpha=0.2) + ylab("Baseline Probability of Survival")
+        geom_ribbon(aes(ymin = s0lo, ymax = s0hi), alpha=0.2) +
+        ylab("Baseline Probability of Survival")
     }
     if (type == "suncure") {
       scm  <- split(suncuremean, rep(1:ncol(suncuremean), each = nrow(suncuremean)))
