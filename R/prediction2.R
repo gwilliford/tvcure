@@ -156,7 +156,7 @@ prediction2 <- function(model, variable, values, type = c("basesurv", "spop", "s
     # Simulate baseline hazard
     s0sim <- matrix(nrow = nsims, ncol = nobs)
     for (j in 1:nsims) {
-      s0sim[j, ] <- as.vector(s0)^exp(Coef_smplb[j, ] %*% t(model$X[, -1]))
+      s0sim[j, ] <- as.vector(s0)^exp(Coef_smplb[j, ] %*% t(model$X))
     }
     s0mean <- sort(apply(s0sim, 2, mean), decreasing = T)
     s0lo   <- sort(apply(s0sim, 2, quantile, 0.05), decreasing = T)
