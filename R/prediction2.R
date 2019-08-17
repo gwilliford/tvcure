@@ -151,29 +151,14 @@ prediction2 <- function(model, variable, values,
     suncuresims <- array(NA, dim = c(nsims, nobs, nrow(newX)))
     spopsims    <- array(NA, dim = c(nsims, nobs, nrow(newX)))
 
-    # if (type == "suncure" | type == "spop") {
-    #   foreach (i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %:%
-    #   	foreach (k = 1:nrow(newX)) %dopar% {
-    #   		suncuresims[i, , k] <-
-    #   		  a <- s0sim[i, ]^ebetaXsim[i, k]
-    #   	}
-    # }
-
-    for (i in 1:nsims) {
-      	for (k in 1:nrow(newX)) {
-      		suncuresims[i, , k] <- s0sim[i, ]^ebetaXsim[i, k]
-      	}
+    if (type == "suncure" | type == "spop") {
+      foreach (i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %:%
+      		foreach (k = 1:nrow(newX)) %dopar% {
+      			suncuresims[i, , k] <- s0sim[i, ]^ebetaXsim[i, k]
+      		  if (type == "spop") spopsims[i, j, k] <- uncureprobsims[i, k] *
+      		      suncuresims[i, j, k] + (1 - uncureprobsims[i, k])
+      		}
     }
-    		  # if (type == "spop") {
-    		  #   spopsims[i, j, k] <- uncureprobsims[i, k] *
-    		  #   suncuresims[i, j, k] + (1 - uncureprobsims[i, k])
-    		  # }
-
-    # for (j in 1:nobs) {
-    # Take the uncureprob for var j and multiply by suncure[j, k]
-        # foreach(i = 1:nobs, .options.snow = opts, .errorhandling = 'remove') %dopar
-        # foreach(j = 1:nobs, .options.snow = opts, .errorhandling = 'remove') %:%
-
 
     browser()
 
