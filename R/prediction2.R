@@ -40,8 +40,6 @@ prediction2 <- function(model, variable, values,
   pb <- txtProgressBar(max = nsims, style = 3)
   progress <- function(n) setTxtProgressBar(pb, n)
   opts <- list(progress = progress)
-  #}
-
 
 # Simulate Data -----------------------------------------------------------
 
@@ -58,7 +56,6 @@ prediction2 <- function(model, variable, values,
   if (variable %in% gnames) newZ[, variable] <- values
   newZ <- as.matrix(newZ)
   nz <- nrow(newZ)
-browser()
 
 # No CIs ------------------------------------------------------------------
 
@@ -154,18 +151,29 @@ browser()
     suncuresims <- array(NA, dim = c(nsims, nobs, nrow(newX)))
     spopsims    <- array(NA, dim = c(nsims, nobs, nrow(newX)))
 
-    if (type == "suncure" | type == "spop") {
-      foreach (i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %:%
-        # Take the uncureprob for var j and multiply by suncure[j, k]
+    # if (type == "suncure" | type == "spop") {
+    #   foreach (i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %:%
+    #   	foreach (k = 1:nrow(newX)) %dopar% {
+    #   		suncuresims[i, , k] <-
+    #   		  a <- s0sim[i, ]^ebetaXsim[i, k]
+    #   	}
+    # }
+
+    for (i in 1:nsims) {
+      	for (k in 1:nrow(newX)) {
+      		suncuresims[i, , k] <- s0sim[i, ]^ebetaXsim[i, k]
+      	}
+    }
+    		  # if (type == "spop") {
+    		  #   spopsims[i, j, k] <- uncureprobsims[i, k] *
+    		  #   suncuresims[i, j, k] + (1 - uncureprobsims[i, k])
+    		  # }
+
+    # for (j in 1:nobs) {
+    # Take the uncureprob for var j and multiply by suncure[j, k]
         # foreach(i = 1:nobs, .options.snow = opts, .errorhandling = 'remove') %dopar
         # foreach(j = 1:nobs, .options.snow = opts, .errorhandling = 'remove') %:%
-      	# for (j in 1:nobs) {
-      		foreach (k = 1:nrow(newX)) %dopar% {
-      			suncuresims[i, , k] <- s0sim[i, ]^ebetaXsim[i, k]
-      		  if (type == "spop") spopsims[i, j, k] <- uncureprobsims[i, k] *
-      		      suncuresims[i, j, k] + (1 - uncureprobsims[i, k])
-      		}
-    }
+
 
     browser()
 
@@ -177,7 +185,7 @@ browser()
     spophi      <- matrix(nrow = nobs, ncol = dim(newZ))
 
     foreach(i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %dopar% {
-    # for (i in 1:nrow(newX)) {
+      #for (k in 1:nrow(newX)) {
       if (type == "suncure" | type == "spop") {
         suncuremean[, i] <- sort(apply(suncuresims[, , i], 2, mean), decreasing = T)
         suncurelo[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.05), decreasing = T)
@@ -190,8 +198,6 @@ browser()
       }
     }
   } # close CI = T else loop
-
-browser()
 
 # Plot Setup --------------------------------------------------------------
 
@@ -231,6 +237,7 @@ if (bw == T) {
 
 # Suncure Plot ------------------------------------------------------------
 
+    # Structure data
     if (type == "suncure") {
       if (CI == F) {
         scm  <- split(suncure, rep(1:ncol(suncure), each = nrow(suncure)))
@@ -249,13 +256,27 @@ if (bw == T) {
         scf <- as.data.frame(do.call(rbind, scm))
         colnames(scf) <- c("scm", "Time", "num", "sclo", "schi")
       }
-      splot = splot + geom_line(scf, aes(Time, scm, col = as.factor(num), linetype = as.factor(num))) +
-                ylab(ylab) + xlab("Time")
-      if (CI == T) {
-        splot = splot + geom_ribbon(aes(x = Time, ymin = sclo, ymax = schi, col = as.factor(num),
-                                      fill = as.factor(num), linetype = as.factor(num)), alpha=0.2) +
-                labs(fill = legendtitle, linetype = legendtitle, col = legendtitle)
+
+      # Plot line
+      if (bw == F) {
+        splot = splot + geom_line(scf, mapping = aes(Time, scm, col = as.factor(num),                                              linetype = as.factor(num)))
+      } else {
+        splot = splot + geom_line(scf, mapping = aes(Time, scm, linetype = as.factor(num)))
       }
+
+      # Add CIs
+      if (CI == T) {
+        if (bw == F) {
+          splot = splot + geom_ribbon(scf, mapping = aes(x = Time, ymin = sclo, ymax = schi, col = as.factor(num),
+                                      fill = as.factor(num), linetype = as.factor(num)), alpha=0.2) +
+            labs(fill = legendtitle, linetype = legendtitle, col = legendtitle)
+        } else {
+          splot = splot + geom_ribbon(scf, mapping = aes(x = Time, ymin = sclo, ymax = schi,
+                                                    linetype = as.factor(num)), alpha=0.2) +
+            labs(linetype = legendtitle)
+        }
+      }
+      splot = splot + ylab(ylab) + xlab(xlab)
     }
 
 # Plot spop ---------------------------------------------------------------
@@ -309,3 +330,4 @@ if (bw == T) {
 # Black and white functionality
 # DONE - lty in function call - why is that there
 # Fix spop simulations
+# Make basseurv nonbw actually be color
