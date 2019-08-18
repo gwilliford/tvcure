@@ -155,9 +155,9 @@ prediction2 <- function(model, variable, values,
       foreach (i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %:%
       		foreach (k = 1:nrow(newX)) %dopar% {
       			suncuresims[i, , k] <- s0sim[i, ]^ebetaXsim[i, k]
-      		  if (type == "spop") spopsims[i, j, k] <- uncureprobsims[i, k] *
-      		      suncuresims[i, j, k] + (1 - uncureprobsims[i, k])
-      		}
+      		  spopsims[i, , k] <- uncureprobsims[i, k] *
+      		      suncuresims[i, , k] + (1 - uncureprobsims[i, k])
+      		  }
     }
 
     browser()
