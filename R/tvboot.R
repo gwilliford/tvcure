@@ -60,9 +60,6 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
     list(bootfitg = bootfit$gamma, bootfitb = bootfit$latencyfit)
   } # close foreach loop
 
-
-  browser()
-
   # Combine results from bootstraps into matrices
   g_boot <- matrix(rep(0, nboot * ngamma), nrow = nboot)
   b_boot <- matrix(rep(0, nboot * (nbeta)), nrow = nboot)

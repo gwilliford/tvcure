@@ -41,8 +41,6 @@ tvcure <- function(formula, cureform, offset = NULL, model = "ph", data,
     data  <- na.action(data[, c(avars)])
     nobs  <- nrow(data)
 
-
-    browser()
     # Create IV matrices
     mf <- model.frame(formula, data)
     X <- model.matrix(attr(mf, "terms"), mf)
@@ -117,9 +115,6 @@ tvcure <- function(formula, cureform, offset = NULL, model = "ph", data,
   Basehaz  <- emfit$Basehaz
   incidence_fit <- emfit$incidence_fit
   cat("Coefficient estimation complete, estimating variance...\n")
-
-
-  browser()
 
 # Fang et al. standard errors
 #varfit <- tvvar(X = X, Z = Z, beta = beta, gamma = gamma, nbeta = nbeta, ngamma = ngamma, Time = Time, Status = Status, Basehaz = Basehaz, nobs = nobs)
