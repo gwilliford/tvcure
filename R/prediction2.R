@@ -83,17 +83,17 @@ prediction2 <- function(model, variable, values,
     suncure <- suncure[order(suncure[, 1], decreasing = T), ]
     spop    <- spop[order(spop[, 1], decreasing = T), ]
 
-    if (type == "uncureprob") {
-      if (bw == T) {
-        splot <- ggplot() + theme_bw()
-        splot <- splot + geom_point(mapping = aes(x = values, y = as.vector(uncureprob)))
-      } else {
-        splot <- ggplot()
-        splot <- splot + geom_point(mapping = aes(x = values, y = as.vector(uncureprob), colour = as.factor(values)))
-      }
-      splot <- splot + scale_x_continuous(breaks = values) + ylab("Probability of Failure") +
-        xlab(variable) + theme(legend.position = "none")
-    }
+    # if (type == "uncureprob") {
+    #   if (bw == T) {
+    #     splot <- ggplot() + theme_bw()
+    #     splot <- splot + geom_point(mapping = aes(x = values, y = as.vector(uncureprob)))
+    #   } else {
+    #     splot <- ggplot()
+    #     splot <- splot + geom_point(mapping = aes(x = values, y = as.vector(uncureprob), colour = as.factor(values)))
+    #   }
+    #   splot <- splot + scale_x_continuous(breaks = values) + ylab("Probability of Failure") +
+    #     xlab(variable) + theme(legend.position = "none")
+    # }
 #
 #     if (type == "basesurv") {
 #       splot <- ggplot(mapping = aes(Time, s0)) + geom_line() +  ylab("Probability of Failure") + xlab(variable)
@@ -109,17 +109,17 @@ prediction2 <- function(model, variable, values,
     #     geom_line() + labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) +
     #     ylab(ylab)
     # }
-    if (type == "spop") {
-      spm  <- split(spop, rep(1:ncol(spop), each = nrow(spop)))
-      for (i in 1:length(spm)) {
-        spm[[i]] <- cbind(spm[[i]], Time, num = i)
-      }
-      spf <- as.data.frame(do.call(rbind, spm))
-      colnames(spf) <- c("spm", "Time", "num")
-      splot <- ggplot(spf, aes(Time, spm, col = as.factor(num), linetype = as.factor(num))) +
-        geom_line() + labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) +
-        ylab(ylab)
-    }
+    # if (type == "spop") {
+    #   spm  <- split(spop, rep(1:ncol(spop), each = nrow(spop)))
+    #   for (i in 1:length(spm)) {
+    #     spm[[i]] <- cbind(spm[[i]], Time, num = i)
+    #   }
+    #   spf <- as.data.frame(do.call(rbind, spm))
+    #   colnames(spf) <- c("spm", "Time", "num")
+    #   splot <- ggplot(spf, aes(Time, spm, col = as.factor(num), linetype = as.factor(num))) +
+    #     geom_line() + labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) +
+    #     ylab(ylab)
+    # }
   } else {
     mu = c(beta, gamma)
     Coef_smpl <- MASS::mvrnorm(n = nsims, mu = mu, Sigma = cov(diag(mu)))
@@ -160,18 +160,16 @@ prediction2 <- function(model, variable, values,
       		  }
     }
 
-    browser()
-
-    suncuremean <- matrix(nrow = nobs, ncol = dim(newZ)) # 284 x 2
+    suncuremean <- matrix(nrow = nobs, ncol = dim(newZ))
     suncurelo   <- matrix(nrow = nobs, ncol = dim(newZ))
-    suncurehi  <- matrix(nrow = nobs, ncol = dim(newZ))
+    suncurehi   <- matrix(nrow = nobs, ncol = dim(newZ))
     spopmean    <- matrix(nrow = nobs, ncol = dim(newZ))
     spoplo      <- matrix(nrow = nobs, ncol = dim(newZ))
     spophi      <- matrix(nrow = nobs, ncol = dim(newZ))
 
     foreach(i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %dopar% {
       #for (k in 1:nrow(newX)) {
-      if (type == "suncure" | type == "spop") {
+      if (type == "suncure") {
         suncuremean[, i] <- sort(apply(suncuresims[, , i], 2, mean), decreasing = T)
         suncurelo[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.05), decreasing = T)
         suncurehi[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.95), decreasing = T)
@@ -219,7 +217,6 @@ if (bw == T) {
       splot = splot + ylab("Probability of Failure") + xlab(variable)
     }
 
-
 # Suncure Plot ------------------------------------------------------------
 
     # Structure data
@@ -244,9 +241,10 @@ if (bw == T) {
 
       # Plot line
       if (bw == F) {
-        splot = splot + geom_line(scf, mapping = aes(Time, scm, col = as.factor(num),                                              linetype = as.factor(num)))
+        splot = splot + geom_line(scf, mapping = aes(Time, scm, col = as.factor(num),                                              linetype = as.factor(num))) + labs(linetype = legendtitle, col = legendtitle)
       } else {
-        splot = splot + geom_line(scf, mapping = aes(Time, scm, linetype = as.factor(num)))
+        splot = splot + geom_line(scf, mapping = aes(Time, scm, linetype = as.factor(num))) +
+          labs(linetype = legendtitle)
       }
 
       # Add CIs
@@ -266,21 +264,57 @@ if (bw == T) {
 
 # Plot spop ---------------------------------------------------------------
 
-
+    # Structure data
     if (type == "spop") {
-      spm  <- split(spopmean, rep(1:ncol(spopmean), each = nrow(spopmean)))
-      splo <- split(spoplo, rep(1:ncol(spoplo), each = nrow(spoplo)))
-      sphi <- split(spophi, rep(1:ncol(spophi), each = nrow(spophi)))
-      for (i in 1:length(spm)) {
-        spm[[i]] <- cbind(spm[[i]], Time, num = i, splo[[i]], sphi[[i]])
+      if (CI == F) {
+        spm  <- split(spop, rep(1:ncol(spop), each = nrow(spop)))
+        for (i in 1:length(spm)) {
+          spm[[i]] <- cbind(spm[[i]], Time, num = i)
+        }
+        spf <- as.data.frame(do.call(rbind, spm))
+        colnames(spf) <- c("spm", "Time", "num")
+      } else {
+        spm  <- split(spopmean, rep(1:ncol(spopmean), each = nrow(spopmean)))
+        splo <- split(spoplo, rep(1:ncol(spoplo), each = nrow(spoplo)))
+        sphi <- split(spophi, rep(1:ncol(spophi), each = nrow(spophi)))
+        for (i in 1:length(spm)) {
+          spm[[i]] <- cbind(spm[[i]], Time, num = i, splo[[i]], sphi[[i]])
+        }
+        spf <- as.data.frame(do.call(rbind, spm))
+        colnames(spf) <- c("spm", "Time", "num", "splo", "sphi")
       }
-      spf <- as.data.frame(do.call(rbind, spm))
-      colnames(spf) <- c("spm", "Time", "num", "splo", "sphi")
-      splot <- ggplot(spf, aes(Time, spm, col = as.factor(num), linetype = as.factor(num))) +
-        geom_line() + geom_ribbon(aes(ymin = splo, ymax = sphi, col = as.factor(num),
-                                      linetype = as.factor(num), fill = as.factor(num)), alpha=0.2) +
-        labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) + ylab(ylab)
+
+      # Plot line
+      if (bw == F) {
+        splot = splot + geom_line(spf, mapping = aes(Time, spm, col = as.factor(num),                                              linetype = as.factor(num))) + labs(linetype = legendtitle, col = legendtitle)
+      } else {
+        splot = splot + geom_line(spf, mapping = aes(Time, spm, linetype = as.factor(num))) +
+          labs(linetype = legendtitle)
+      }
+
+      # Add CIs
+      if (CI == T) {
+        if (bw == F) {
+          splot = splot + geom_ribbon(spf, mapping = aes(x = Time, ymin = splo, ymax = sphi, col = as.factor(num),
+                                      fill = as.factor(num), linetype = as.factor(num)), alpha = 0.2) +
+            labs(fill = legendtitle, linetype = legendtitle, col = legendtitle)
+        } else {
+          splot = splot + geom_ribbon(spf, mapping = aes(x = Time, ymin = splo, ymax = sphi,
+                                                    linetype = as.factor(num)), alpha = 0.2) +
+            labs(linetype = legendtitle)
+        }
+      }
+      splot = splot + ylab(ylab) + xlab(xlab)
     }
+          # splot <- ggplot(spf, aes(Time, spm, col = as.factor(num), linetype = as.factor(num))) +
+          # geom_line() + geom_ribbon(aes(ymin = splo, ymax = sphi, col = as.factor(num),
+          #                             linetype = as.factor(num), fill = as.factor(num)), alpha=0.2) +
+          # labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) + ylab(ylab)
+          #
+          #     splot <- ggplot(spf, aes(Time, spm, col = as.factor(num), linetype = as.factor(num))) +
+          # geom_line() + labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) +
+          # ylab(ylab)
+          #
 
 # Output ------------------------------------------------------------------
   if (internals == F) {
@@ -316,3 +350,4 @@ if (bw == T) {
 # DONE - lty in function call - why is that there
 # Fix spop simulations
 # Make basseurv nonbw actually be color
+# For bw plots, make different shades of grey for CIs
