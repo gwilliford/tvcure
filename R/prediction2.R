@@ -13,7 +13,9 @@ prediction2 <- function(model, variable, values,
                         xlab = "Time", legendtitle = NULL,
                         ylab = "Predicted Survival Probability", internals = F) {
 
+
 # Setup -------------------------------------------------------------------
+
 
   require(ggplot2)
   call <- match.call()
@@ -32,28 +34,12 @@ prediction2 <- function(model, variable, values,
   if (is.null(legendtitle)) {
     legendtitle <- variable
   }
-  clstatus <- getDoParRegistered()
-  if (clstatus == T) {
-    cl <- foreach::getDoParRegistered()
-    pb <- txtProgressBar(max = nsims, style = 3)
-    progress <- function(n) setTxtProgressBar(pb, n)
-    opts <- list(progress = progress)
-  }
-  if (clstatus == F){
-    cl <- foreach::registerDoSEQ()
-    opts <- NULL
-  }
-  # pbf <- function(){
-  #   pb <- txtProgressBar(min = 1, max = nsims - 1, style = 3)
-  #   count <- 0
-  #   function(...) {
-  #     count <- count + length(list(...)) - 1
-  #     setTxtProgressBar(pb, count)
-  #     Sys.sleep(0.01)
-  #     flush.console()
-  #     c(...)
-  #   }
-  # }
+  clstatus <- foreach::getDoParRegistered()
+  if (foreach::getDoParRegistered() == T) cl <- foreach::getDoSeqName()
+  if (foreach::getDoParRegistered() == F) cl <- foreach::registerDoSEQ()
+  pb <- txtProgressBar(max = nsims, style = 3)
+  progress <- function(n) setTxtProgressBar(pb, n)
+  opts <- list(progress = progress)
 
 # Simulate Data -----------------------------------------------------------
 
@@ -166,38 +152,12 @@ prediction2 <- function(model, variable, values,
     spopsims    <- array(NA, dim = c(nsims, nobs, nrow(newX)))
 
     if (type == "suncure" | type == "spop") {
-      cat("Simulating survival probabilities... \n")
-      # clusterExport(cl, c("nsims")) # Export max number of iteration to workers
-      # k <- foreach(i = icount(nsims), .packages = "tcltk", .combine = c) %dopar% {
-      # if(!exists("pb")) pb <- tkProgressBar("Parallel task", min=1, max=nsims)
-      #   setTkProgressBar(pb, i)
-      #   Sys.sleep(0.05)
-      #   log2(i)
-      # }
-    #   testit <- function(x = sort(runif(20)), ...) {
-    #   pb <- txtProgressBar(...)
-    #   for(i in c(0, x, 1)) {Sys.sleep(0.5); setTxtProgressBar(pb, i)}
-    #   Sys.sleep(1)
-    #   close(pb)
-    # }
-
-    # pb <- txtProgressBar(max = nsims, style = 3)
-    # progress <- function(n) setTxtProgressBar(pb, n)
-    # opts <- list(progress = progress)
-      # cat("/n")
-      # if (!exists("pb")) pbf <- progress::progress_bar$new(total = nsims)
-      # a <- txtProgressBar(min = 0, max = nsims)
-      foreach (i = 1:nsims, .errorhandling = 'remove') %:%
-      		foreach (k = 1:nrow(newX), .options.snow = opts) %dopar% {
+      foreach (i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %:%
+      		foreach (k = 1:nrow(newX)) %dopar% {
       			suncuresims[i, , k] <- s0sim[i, ]^ebetaXsim[i, k]
-      			if (type == "spop") {
-      		    spopsims[i, , k] <- uncureprobsims[i, k] *
-      		        suncuresims[i, , k] + (1 - uncureprobsims[i, k])
-      			}
-      		  # if (!exists("pb")) pbf$tick(); Sys.sleep(1 / 100)
-      		  #progBar(ii, nsims)
-      		  #Sys.sleep(1 / 10)
-      		}
+      		  spopsims[i, , k] <- uncureprobsims[i, k] *
+      		      suncuresims[i, , k] + (1 - uncureprobsims[i, k])
+      		  }
     }
 
     suncuremean <- matrix(nrow = nobs, ncol = dim(newZ))
@@ -207,7 +167,7 @@ prediction2 <- function(model, variable, values,
     spoplo      <- matrix(nrow = nobs, ncol = dim(newZ))
     spophi      <- matrix(nrow = nobs, ncol = dim(newZ))
 
-    foreach(i = 1:nsims, .errorhandling = 'remove') %dopar% {
+    foreach(i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %dopar% {
       #for (k in 1:nrow(newX)) {
       if (type == "suncure") {
         suncuremean[, i] <- sort(apply(suncuresims[, , i], 2, mean), decreasing = T)
@@ -381,14 +341,13 @@ if (bw == T) {
 }
 
 # DONE - Order s0 in ao logical way
+# TODO - are graphs behaving for suncure and spop
 # DONE - Optimize the speed
+# create error function if Z and X are not both specified when new
 # DONE - create functionality to just get baselines for population
-# DONE - Make it only spit out an image, not just a summary
-# DONE - Black and white functionality
+# Make it only spit out an image, not just a summary
+# Black and white functionality
 # DONE - lty in function call - why is that there
-# DONE - Fix spop simulations
+# Fix spop simulations
 # Make basseurv nonbw actually be color
-# Fix Internals Output
 # For bw plots, make different shades of grey for CIs
-# DONE - Fix progress bars - does throw an error after
-# Make type function not produce error when type is not specified
