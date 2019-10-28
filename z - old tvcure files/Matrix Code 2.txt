@@ -1,0 +1,107 @@
+Defining X and Z
+	Xi is a vector of covariates for individual i for the hazard function. 
+	Zi is a vector of covariates for individual i for the glm function.
+	Xi is of length px, where px indexes covariates.
+	Zi is of length pz. If X and Z contain the same covariates, pz = px + 1 due to the constant in the logit model.
+	X and Z are reversed from Fang's usage. Beta and gamma are the same.
+	
+Defining time variables
+	Ti is the failure time for an observation
+	Ci is the censoring time for an observation
+	deltai is an censoring/event indicator equal to 1 if the observation is observed to fail.
+	Yi is the last observed time for each observation, which is the minimum of C_i and T_i
+	
+Outputs from the model
+	Beta = p-dimensional vector
+	Gamma = p+1 dimensional vector
+	Hy = K-dimensional vector, where K is the maximum ordered failure time.
+	
+Derived values
+	From model, need to create Hi, i.e. integrated hazard rate at Y for each individual by matching Y to Hy for each obs
+	
+Defining phi
+	phi/psi(Y, delta, Z; theta). Everything before the semicolon are variables, everything after is parameters.
+	Phi and psi are vectors. Each observation has only one value of each that is a function of its covariate matrices, the parameters, and its observed failure time.
+	
+	R code: 
+		
+Six matrices: A1, A2, A3, B1, B2, B3
+
+A1
+	The cells in A1 are defined as a_{kj}^1
+	a_{kj}^1 is composed of two terms
+	The first term is 0 for all combinations of j and k except when j and k are equal.
+	When j and k are equal, the first term is composed of the sum of three components, each of which must be calculated for each observation
+		phi at k(and j) for observation i
+		exp(X'B)
+		I (Y_i >= Y_k) (Thus, the whole summation term drops to 0 after a unit fails)
+		
+	for (i in 1:n) {
+		phi[i]*exp(X'i
+	}
+	
+	
+	
+	
+	
+	K indexes the ordered failure times from 1...n
+	J indexes
+	A1 is only nonzero when 
+	
+	
+# Major notes
+	# Y[j, i, k] are incorrectly indexed - figure this out once you know what format the data is going to be in
+	# p is a placeholder for total number of covariates - this needs to be two different values, p_x and p_z
+# a1 matrix
+	# a1 is an N x N matrix
+	a1   <- matrix(rows = N, cols = N)
+	a1_1 <- matrix(rows = N, cols = N)
+	a1_2 <- matrix(rows = N, cols = N)
+	a1_3 <- matrix(rows = N, cols = N)
+	a1_4 <- matrix(rows = N, cols = N)
+	for (k = 1:N) {
+		for (j = 1:N) {
+			a1_1[i, j] <- (as.numeric(i = j)/N)
+			for (i = 1:N) {
+				a1_2[i, j] <- psi[i]*exp(X[i]'Beta)*as.numeric(Y[i] >= Y[k])
+			}
+			a1_3[i, j] <- # TODO fill this term in
+			for (i = 1:N) {
+				a1_4[i, j] <- phi[i]*exp(X[i]'beta)*as.numeric(Y[i] >= Y[j] & Y[i] >= Y[k])
+			}
+		}
+	}
+	a1[i, j] <- a1_1[i, j] * a1_2[i, j] - a1_3[i, j] * a1_4[i, j] # TODO I think these matrices need to be transposed: actually, maybe not with the double indices
+	
+# a2 matrix
+	# a2 is an N x p matrix
+	a2 <- matrix(rows = N, cols = p)
+	for (k in 1:N) {
+		for (j in 1:p) {
+			for (i in 1:N) {
+				a2[i, j] <- (1/N)*((phi[i] - psi[i]) * exp(X[i]'beta) * as.numeric(Y[i] >= Y[k]) * X[i, j])
+			}
+		}
+	}
+	
+# a3 matrix 
+	# a3 is an N x p+1 matrix
+	a3 <- matrix(rows = N, cols = (p + 1))
+	for (k in 1:N) {
+		for (j in 1:p) {
+			for (i in 1:N) {
+				a3[i, j] <- (-1/N)*(psi[i] * as.numeric(Y[i] >= Y[k] * Z[i, j])
+			}
+		}
+	}
+	
+# b1 matrix
+	
+# b2 matrix
+
+# b3 matrix
+
+
+a2 * d = (N x p) * (n X 1) = n x 1
+   * a1inv = (N x 1) * (N X N) = N X N
+   * A3 = (N X N) *  (N X P + 1) = N X P + 1 
