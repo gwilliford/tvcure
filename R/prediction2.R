@@ -34,9 +34,10 @@ prediction2 <- function(model, variable, values,
   if (is.null(legendtitle)) {
     legendtitle <- variable
   }
-  clstatus <- foreach::getDoParRegistered()
-  if (foreach::getDoParRegistered() == T) cl <- foreach::getDoSeqName()
-  if (foreach::getDoParRegistered() == F) cl <- foreach::registerDoSEQ()
+  # clstatus <- foreach::getDoParRegistered()
+  # if (foreach::getDoParRegistered() == T) cl <- foreach::getDoSeqName()
+  # if (foreach::getDoParRegistered() == F)
+  cl <- foreach::registerDoSEQ()
   pb <- txtProgressBar(max = nsims, style = 3)
   progress <- function(n) setTxtProgressBar(pb, n)
   opts <- list(progress = progress)
@@ -241,7 +242,9 @@ if (bw == T) {
 
       # Plot line
       if (bw == F) {
-        splot = splot + geom_line(scf, mapping = aes(Time, scm, col = as.factor(num),                                              linetype = as.factor(num))) + labs(linetype = legendtitle, col = legendtitle)
+        splot = splot + geom_line(scf, mapping = aes(Time, scm, col = as.factor(num),
+                                                     linetype = as.factor(num))) +
+          labs(linetype = legendtitle, col = legendtitle)
       } else {
         splot = splot + geom_line(scf, mapping = aes(Time, scm, linetype = as.factor(num))) +
           labs(linetype = legendtitle)
@@ -351,3 +354,4 @@ if (bw == T) {
 # Fix spop simulations
 # Make basseurv nonbw actually be color
 # For bw plots, make different shades of grey for CIs
+# Values is acting up for suncure graphs without CIs -

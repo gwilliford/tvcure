@@ -2,9 +2,6 @@
 #' @param format Specifies format of the resulting table. Wide presents incidence and latency results side-by-side with standard errors presented in separate columns. Long presents coefficient estimates side-by-side with standard errors beneath them.
 #' @param digits Number of digits to display past the decimal point
 tvtable <- function(model, format = c("wide"), qi = "se", stars = T, digits = 3) {
-  #modellist <- list(...)
-  #for (j in 1:length(modellist)) {
-    #modname <- modellist[j][[1]]
     modname <- model
     gamma <- round(modname$gamma, digits)
     beta  <- round(modname$beta, digits)
@@ -69,7 +66,6 @@ tvtable <- function(model, format = c("wide"), qi = "se", stars = T, digits = 3)
     fullmat <- rbind(as.matrix(fullmat), emat)
     rownames(fullmat)[nrow(fullmat) - 1] <- "Number of Observations"
     rownames(fullmat)[nrow(fullmat)] <- "Number of Failures"
-    browser()
 
     # if (rownames(test) == rownames(a)) {
     #   for (n in 1:nrow(test)) {
@@ -99,67 +95,33 @@ tvtable <- function(model, format = c("wide"), qi = "se", stars = T, digits = 3)
       fullmat[i, 4] <- ifelse(is.na(fullmat[i, 4]), "", fullmat[i, 4])
     }
 
-    long1 <- as.vector(rbind(fullmat[, 1], fullmat[, 2]))
-    long1 <- long1[1:(length(long1) - 4)]
-    long2 <- as.vector(rbind(fullmat[, 3], fullmat[, 4]))
-    long2 <- long2[1:(length(long2) - 4)]
-    long <- cbind(long1, long2)
-    #long <- matrix(long, ncol = 2)
-    long <- rbind(long, emat[, 1:2])
-    colnames(long) <- c("Incidence Coef.", "Hazard Coef.")
-    longnames <- as.vector(rbind(rownames(fullmat), rep("", length(allnames) + 2)))
-    rownames(long) <- longnames[-c(length(longnames) - 2, length(longnames))]
-    # long <- long[-c(nrow(long), nrow(long) - 2), ]
+    # long1 <- as.vector(rbind(fullmat[, 1], fullmat[, 2]))
+    # long1 <- long1[1:(length(long1) - 4)]
+    # long2 <- as.vector(rbind(fullmat[, 3], fullmat[, 4]))
+    # long2 <- long2[1:(length(long2) - 4)]
+    # long <- cbind(long1, long2)
+    # #long <- matrix(long, ncol = 2)
+    # long <- rbind(long, emat[, 1:2])
+    # colnames(long) <- c("Incidence Coef.", "Hazard Coef.")
+    # longnames <- as.vector(rbind(rownames(fullmat), rep("", length(allnames) + 2)))
+    # rownames(long) <- longnames[-c(length(longnames) - 2, length(longnames))]
+    # # long <- long[-c(nrow(long), nrow(long) - 2), ]
 
-    stacked <- as.matrix(c("", long1, "", long2[3:length(long2)], emat[, 1:2]))
-    # stackmat <- matrix(ncol = 1, nrow = length(stacked) + 2)
-    stackmat <- as.data.frame(stacked[1:(nrow(stacked) - 2), 1])
-    # colnames(stacked) <- c("Incidence Coef.", "Hazard Coef.")
-    stacknames <-
-    rownames(stackmat) <- c("Incidence Coef.",
-                            as.vector(rbind(rownames(fullmat), rep("", length(allnames)))),
-                            "Hazard Coef.",
-                            as.vector(rbind(rownames(fullmat)[2:length(allnames)],
-                            rep("", length(allnames) - 1))), "Number of Observations",
-                            "Number of Failures")
-    stacknames <- c("Incidence Coefficients", longnames[1:(nrow(long) - 4)], "Hazard Coefficients", longnames[1:(nrow(long) - 4)], "Number of Observations", "Number of Failures")
-
-  #}
-  # browser()
-  #   if (format == "wide") {
-  #         matname <- paste("fullmat",j, sep = "")
-  #         matname0 <- paste("fullmat",j-1, sep = "")
-  #     #eval(call("<-", as.name(matname), fullmat))
-  #     #if (j > 1) matname <- cbind(matname, matname0)
-  #     #fullmat <- matname
-  #   }
-  #   if (format == "long") {
-  #     if (j > 1) {
-  #       longold <- longnew
-  #     }
-  #     longnew <- long
-  #     #matname <- paste("rllongmat", j, sep = "")
-  #     #eval(call("<-", as.name(matname), longnew))
-  #     if (j > 1) {
-  #       #matname0 <- paste("longmat", j-1, sep = "")
-  #       #eval(call("<-", as.name(matname0), ))
-  #       #longfull <- merge(as.data.frame(longold), as.data.frame(longnew), all = T)
-  #       #longfull <- Matrix.utils::merge.Matrix(longold, longnew)
-  #       cbind(longold, longnew)
-  #
-  #     }
-  #     browser()
-  #   }
-  # }
-  #
-  # # if length(modellist) > 1 {
-  #   # for(k in 1:length(modellist)) {
-  #
-  #     # fullmat <- cbind()
-  #
-  # #}
+    # stacked <- as.matrix(c("", long1, "", long2[3:length(long2)], emat[, 1:2]))
+    # # stackmat <- matrix(ncol = 1, nrow = length(stacked) + 2)
+    # stackmat <- as.data.frame(stacked[1:(nrow(stacked) - 2), 1])
+    # # colnames(stacked) <- c("Incidence Coef.", "Hazard Coef.")
+    # stacknames <-
+    # rownames(stackmat) <- c("Incidence Coef.",
+    #                         as.vector(rbind(rownames(fullmat), rep("", length(allnames)))),
+    #                         "Hazard Coef.",
+    #                         as.vector(rbind(rownames(fullmat)[2:length(allnames)],
+    #                         rep("", length(allnames) - 1))), "Number of Observations",
+    #                         "Number of Failures")
+    # stacknames <- c("Incidence Coefficients", longnames[1:(nrow(long) - 4)], "Hazard Coefficients", longnames[1:(nrow(long) - 4)], "Number of Observations", "Number of Failures")
 
   if (format == "wide")    return(fullmat)
   if (format == "long")    return(long)
   if (format == "stacked") return(stackmat)
 }
+

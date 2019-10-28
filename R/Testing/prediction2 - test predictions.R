@@ -83,3 +83,9 @@ testpredc <- prediction2(pd, "TRT", c(0:1), type = "suncure")
 testpredc <- prediction2(pd, "TRT", c(0:1), type = "suncure", bw = T)
 testpredc <- prediction2(pd, "TRT", c(0:1), type = "suncure", CI = T, nsims = 100)
 testpredc <- prediction2(pd, "TRT", c(0:1), type = "suncure", CI = T, nsims = 100, bw = T)
+
+tp4 <- prediction2(pd4, "AGE", seq(-30, 30, 10), type = "suncure")
+tp4 <- prediction2(pd4, "AGE", seq(-30, 30, 10), type = "suncure", bw = T)
+tp4 <- prediction2(pd4, "AGE", seq(-30, 30, 10), type = "suncure", CI = T, nsims = 100)
+tp4 <- prediction2(pd4, "AGE", c(-30, 30), type = "spop", CI = T, nsims = 2000)
+

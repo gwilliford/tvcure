@@ -274,3 +274,9 @@ testpred <- prediction2(pd, "TRT", c(0, 1), "spop")
 testpred <- prediction2(pd, "TRT", c(0, 1), "spop", bw = T)
 testpred <- prediction2(pd, "TRT", c(0, 1), "spop", CI = T, nsims = 100)
 testpred <- prediction2(pd, "TRT", c(0, 1), "spop", bw = T, CI = T, nsims = 100)
+
+
+testpred <- prediction2(pd, "TRT", c(0, 1), "suncure", CI = T, nsims = 100);testpred
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+# testpred <- prediction2(pd, "TRT", c(0, 1), "suncure", CI = T, nsims = 100);testpred
+

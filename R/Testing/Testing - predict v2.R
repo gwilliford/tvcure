@@ -63,8 +63,12 @@ system.time(testpreda <- prediction2(pd, "TRT", c(0, 1), "suncure", CI = T, nsim
 
 testpreda <- prediction2(pd, "TRT", c(0, 1), "suncure")
 testpreda <- prediction2(pd, "TRT", c(0, 1), "spop", bw = T)
-testpreda <- prediction2(pd, "TRT", c(0, 1), "spop", CI = T, nsims = 100)
-testpreda <- prediction2(pd, "TRT", c(0, 1), "spop", CI = T, nsims = 100, bw = T)
+testpreda <- prediction2(pd, "TRT", c(0, 1), "spop", CI = T)
 
 ### Test population predictions
+
+testpreda <- prediction2(pd, "TRT", c(0, 1), "suncure", CI = T, nsims = 100)
+
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+testpreda <- prediction2(pd, "TRT", c(0, 1), "suncure", CI = T, nsims = 100)
 
