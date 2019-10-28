@@ -1,0 +1,567 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={Example Code},
+            pdfauthor={George Williford},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\providecommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{Example Code}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{George Williford}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{9/12/2019}
+
+
+\begin{document}
+\maketitle
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(tvcure)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: survival
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: logistf
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: snow
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: doSNOW
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: foreach
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: iterators
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(snow)}
+\KeywordTok{library}\NormalTok{(foreach)}
+\KeywordTok{library}\NormalTok{(doParallel)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: parallel
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'parallel'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:snow':
+## 
+##     clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+##     clusterExport, clusterMap, clusterSplit, makeCluster,
+##     parApply, parCapply, parLapply, parRapply, parSapply,
+##     splitIndices, stopCluster
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(doSNOW)}
+\KeywordTok{library}\NormalTok{(smcure)}
+\KeywordTok{data}\NormalTok{(e1684)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{estimate-model}{%
+\section{Estimate model}\label{estimate-model}}
+
+Here is an example of a model using data on melanoma recurrence. It
+predicts recurrence as a function of a Treatment, Age, and Sex to
+predict both the probability of being cured and the time until
+recurrence for uncured patients. The results for this toy example are
+insignificant, but it should provide some idea of how the software
+works.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{cl <-}\StringTok{ }\KeywordTok{makeCluster}\NormalTok{(}\DecValTok{4}\NormalTok{, }\StringTok{"SOCK"}\NormalTok{); }\KeywordTok{registerDoSNOW}\NormalTok{(cl)}
+\NormalTok{pd <-}\StringTok{ }\KeywordTok{tvcure}\NormalTok{(}\KeywordTok{Surv}\NormalTok{(FAILTIME, FAILCENS) }\OperatorTok{~}\StringTok{ }\NormalTok{TRT }\OperatorTok{+}\StringTok{ }\NormalTok{SEX }\OperatorTok{+}\StringTok{ }\NormalTok{AGE, }\DataTypeTok{cureform =} \OperatorTok{~}\StringTok{ }\NormalTok{TRT }\OperatorTok{+}\StringTok{ }\NormalTok{SEX }\OperatorTok{+}\StringTok{ }\NormalTok{AGE, }\DataTypeTok{data =}\NormalTok{ e1684, }\DataTypeTok{model =} \StringTok{"ph"}\NormalTok{, }\DataTypeTok{parallel =}\NormalTok{ T)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## tvcure started at [1] "2019-09-12 23:08:25 EDT"
+## Estimating coefficients...
+## Initial estimates obtained, beginning em algorithm...
+## Coefficient estimation complete, estimating variance...
+## 
+  |                                                                       
+  |                                                                 |   0%
+  |                                                                       
+  |=                                                                |   1%
+  |                                                                       
+  |=                                                                |   2%
+  |                                                                       
+  |==                                                               |   3%
+  |                                                                       
+  |===                                                              |   4%
+  |                                                                       
+  |===                                                              |   5%
+  |                                                                       
+  |====                                                             |   6%
+  |                                                                       
+  |=====                                                            |   7%
+  |                                                                       
+  |=====                                                            |   8%
+  |                                                                       
+  |======                                                           |   9%
+  |                                                                       
+  |======                                                           |  10%
+  |                                                                       
+  |=======                                                          |  11%
+  |                                                                       
+  |========                                                         |  12%
+  |                                                                       
+  |========                                                         |  13%
+  |                                                                       
+  |=========                                                        |  14%
+  |                                                                       
+  |==========                                                       |  15%
+  |                                                                       
+  |==========                                                       |  16%
+  |                                                                       
+  |===========                                                      |  17%
+  |                                                                       
+  |============                                                     |  18%
+  |                                                                       
+  |============                                                     |  19%
+  |                                                                       
+  |=============                                                    |  20%
+  |                                                                       
+  |==============                                                   |  21%
+  |                                                                       
+  |==============                                                   |  22%
+  |                                                                       
+  |===============                                                  |  23%
+  |                                                                       
+  |================                                                 |  24%
+  |                                                                       
+  |================                                                 |  25%
+  |                                                                       
+  |=================                                                |  26%
+  |                                                                       
+  |==================                                               |  27%
+  |                                                                       
+  |==================                                               |  28%
+  |                                                                       
+  |===================                                              |  29%
+  |                                                                       
+  |====================                                             |  30%
+  |                                                                       
+  |====================                                             |  31%
+  |                                                                       
+  |=====================                                            |  32%
+  |                                                                       
+  |=====================                                            |  33%
+  |                                                                       
+  |======================                                           |  34%
+  |                                                                       
+  |=======================                                          |  35%
+  |                                                                       
+  |=======================                                          |  36%
+  |                                                                       
+  |========================                                         |  37%
+  |                                                                       
+  |=========================                                        |  38%
+  |                                                                       
+  |=========================                                        |  39%
+  |                                                                       
+  |==========================                                       |  40%
+  |                                                                       
+  |===========================                                      |  41%
+  |                                                                       
+  |===========================                                      |  42%
+  |                                                                       
+  |============================                                     |  43%
+  |                                                                       
+  |=============================                                    |  44%
+  |                                                                       
+  |=============================                                    |  45%
+  |                                                                       
+  |==============================                                   |  46%
+  |                                                                       
+  |===============================                                  |  47%
+  |                                                                       
+  |===============================                                  |  48%
+  |                                                                       
+  |================================                                 |  49%
+  |                                                                       
+  |================================                                 |  50%
+  |                                                                       
+  |=================================                                |  51%
+  |                                                                       
+  |==================================                               |  52%
+  |                                                                       
+  |==================================                               |  53%
+  |                                                                       
+  |===================================                              |  54%
+  |                                                                       
+  |====================================                             |  55%
+  |                                                                       
+  |====================================                             |  56%
+  |                                                                       
+  |=====================================                            |  57%
+  |                                                                       
+  |======================================                           |  58%
+  |                                                                       
+  |======================================                           |  59%
+  |                                                                       
+  |=======================================                          |  60%
+  |                                                                       
+  |========================================                         |  61%
+  |                                                                       
+  |========================================                         |  62%
+  |                                                                       
+  |=========================================                        |  63%
+  |                                                                       
+  |==========================================                       |  64%
+  |                                                                       
+  |==========================================                       |  65%
+  |                                                                       
+  |===========================================                      |  66%
+  |                                                                       
+  |============================================                     |  67%
+  |                                                                       
+  |============================================                     |  68%
+  |                                                                       
+  |=============================================                    |  69%
+  |                                                                       
+  |==============================================                   |  70%
+  |                                                                       
+  |==============================================                   |  71%
+  |                                                                       
+  |===============================================                  |  72%
+  |                                                                       
+  |===============================================                  |  73%
+  |                                                                       
+  |================================================                 |  74%
+  |                                                                       
+  |=================================================                |  75%
+  |                                                                       
+  |=================================================                |  76%
+  |                                                                       
+  |==================================================               |  77%
+  |                                                                       
+  |===================================================              |  78%
+  |                                                                       
+  |===================================================              |  79%
+  |                                                                       
+  |====================================================             |  80%
+  |                                                                       
+  |=====================================================            |  81%
+  |                                                                       
+  |=====================================================            |  82%
+  |                                                                       
+  |======================================================           |  83%
+  |                                                                       
+  |=======================================================          |  84%
+  |                                                                       
+  |=======================================================          |  85%
+  |                                                                       
+  |========================================================         |  86%
+  |                                                                       
+  |=========================================================        |  87%
+  |                                                                       
+  |=========================================================        |  88%
+  |                                                                       
+  |==========================================================       |  89%
+  |                                                                       
+  |==========================================================       |  90%
+  |                                                                       
+  |===========================================================      |  91%
+  |                                                                       
+  |============================================================     |  92%
+  |                                                                       
+  |============================================================     |  93%
+  |                                                                       
+  |=============================================================    |  94%
+  |                                                                       
+  |==============================================================   |  95%
+  |                                                                       
+  |==============================================================   |  96%
+  |                                                                       
+  |===============================================================  |  97%
+  |                                                                       
+  |================================================================ |  98%
+  |                                                                       
+  |================================================================ |  99%
+  |                                                                       
+  |=================================================================| 100%
+\end{verbatim}
+
+\hypertarget{summary-of-model}{%
+\section{Summary of model}\label{summary-of-model}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(pd)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Call:
+## tvcure(formula = Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE, 
+##     cureform = ~TRT + SEX + AGE, model = "ph", data = e1684, 
+##     parallel = T)
+## 
+##           GLM Coefficients Standard Error    Z-Score      p-value
+## Intercept       1.14213789    0.184212999  6.2000939 5.642948e-10
+## TRT            -0.57648463    0.268142798 -2.1499165 3.156182e-02
+## SEX            -0.07179275    0.250710502 -0.2863572 7.746046e-01
+## AGE             0.01266512    0.009869363  1.2832761 1.993953e-01
+## 
+##     Hazard Coefficients Standard Error    Z-Score   p-value
+## TRT        -0.139433795    0.162554076 -0.8577687 0.3910202
+## SEX         0.105909978    0.150295591  0.7046779 0.4810107
+## AGE        -0.006588678    0.006769431 -0.9732986 0.3304049
+## 
+## n = 284 with 196 failures
+## Model converged in 10 iterations
+## Variance estimates based on 100 successful boostrap replications
+\end{verbatim}
+
+\hypertarget{create-a-table-can-be-exported-to-latex-using-the-xtable-package}{%
+\section{Create a table (can be exported to latex using the xtable
+package)}\label{create-a-table-can-be-exported-to-latex-using-the-xtable-package}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{tvtable}\NormalTok{(pd, }\DataTypeTok{format =} \StringTok{"wide"}\NormalTok{, }\DataTypeTok{qi =} \StringTok{"se"}\NormalTok{, }\DataTypeTok{stars =}\NormalTok{ T, }\DataTypeTok{digits =} \DecValTok{3}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                        Incidence Coef. Std. Error   Hazard Coef.
+## Intercept              "1.142"         "(0.184)***" ""          
+## TRT                    "-0.576"        "(0.268)*"   "-0.139"    
+## SEX                    "-0.072"        "(0.251) "   "0.106"     
+## AGE                    "0.013"         "(0.01) "    "-0.007"    
+## Number of Observations "284"           ""           ""          
+## Number of Failures     "196"           ""           ""          
+##                        Std. Error
+## Intercept              ""        
+## TRT                    "(0.163) "
+## SEX                    "(0.15) " 
+## AGE                    "(0.007) "
+## Number of Observations ""        
+## Number of Failures     ""
+\end{verbatim}
+
+\hypertarget{plots}{%
+\section{Plots}\label{plots}}
+
+The package can plot several different quantities of interest based on
+the model. The confidence intervals will overlap since the results
+aren't significant for this example.
+
+This code plots the baseline survivor function for the entire
+population.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{testpred1a <-}\StringTok{ }\KeywordTok{prediction2}\NormalTok{(pd, }\DataTypeTok{variable =} \StringTok{"TRT"}\NormalTok{, }\DataTypeTok{values =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\OperatorTok{:}\DecValTok{1}\NormalTok{), }\DataTypeTok{type =} \StringTok{"basesurv"}\NormalTok{, }\DataTypeTok{CI =}\NormalTok{ T, }\DataTypeTok{nsims =} \DecValTok{100}\NormalTok{); testpred1a}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: ggplot2
+\end{verbatim}
+
+\begin{verbatim}
+## 
+  |                                                                       
+  |                                                                 |   0%
+\end{verbatim}
+
+\includegraphics{Example-Code_files/figure-latex/unnamed-chunk-5-1.pdf}
+
+This code plots the probability that an individual is not cured for at
+different values of TRT.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{testpred1d <-}\StringTok{ }\KeywordTok{prediction2}\NormalTok{(pd, }\DataTypeTok{variable =} \StringTok{"TRT"}\NormalTok{, }\DataTypeTok{values =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\OperatorTok{:}\DecValTok{1}\NormalTok{), }\DataTypeTok{type =} \StringTok{"uncureprob"}\NormalTok{, }\DataTypeTok{CI =}\NormalTok{ T, }\DataTypeTok{nsims =} \DecValTok{100}\NormalTok{); testpred1d}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+  |                                                                       
+  |                                                                 |   0%
+\end{verbatim}
+
+\includegraphics{Example-Code_files/figure-latex/unnamed-chunk-6-1.pdf}
+
+The following code plots the survival function for only those
+individuals who are not cured, i.e., those that will fail. In other
+words, conditional on the probability that an individual with TRT = 0
+fails, what is the survivor function for individuals with TRT = 0. This
+code plots the survivor functions for both 0 and 1.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{testpred1b <-}\StringTok{ }\KeywordTok{prediction2}\NormalTok{(pd, }\DataTypeTok{variable =} \StringTok{"TRT"}\NormalTok{, }\DataTypeTok{values =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\OperatorTok{:}\DecValTok{1}\NormalTok{), }\DataTypeTok{type =} \StringTok{"suncure"}\NormalTok{, }\DataTypeTok{CI =}\NormalTok{ T, }\DataTypeTok{nsims =} \DecValTok{100}\NormalTok{); testpred1b}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+  |                                                                       
+  |                                                                 |   0%
+\end{verbatim}
+
+\includegraphics{Example-Code_files/figure-latex/unnamed-chunk-7-1.pdf}
+
+The following code plots the survival function for the entire
+population, both those that will fail and those that won't. In other
+words, what is the survivor function for all individuals when TRT = 0
+(accounting for both the probability of failure and the effect on
+survivor time for uncured patients). This code plots the survivor
+functions for both 0 and 1.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{testpred1c <-}\StringTok{ }\KeywordTok{prediction2}\NormalTok{(pd, }\DataTypeTok{variable =} \StringTok{"TRT"}\NormalTok{, }\DataTypeTok{values =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\OperatorTok{:}\DecValTok{1}\NormalTok{), }\DataTypeTok{type =} \StringTok{"spop"}\NormalTok{, }\DataTypeTok{CI =}\NormalTok{ T, }\DataTypeTok{nsims =} \DecValTok{100}\NormalTok{); testpred1c}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+  |                                                                       
+  |                                                                 |   0%
+\end{verbatim}
+
+\includegraphics{Example-Code_files/figure-latex/unnamed-chunk-8-1.pdf}
+
+
+\end{document}
