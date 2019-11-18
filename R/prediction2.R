@@ -144,12 +144,11 @@ prediction2 <- function(model, variable, values,
     } # close CI = T else loop
 
 # Plot Setup --------------------------------------------------------------
-
-if (bw == T) {
-  splot <- ggplot() + theme_bw()
-} else {
-  splot <- ggplot() + theme(panel.border = element_rect(colour = "black", fill = NA))
-}
+  if (bw == T) {
+    splot <- ggplot() + theme_bw()
+  } else {
+    splot <- ggplot() + theme(panel.border = element_rect(colour = "black", fill = NA))
+  }
 
 # Uncureprob Plot ---------------------------------------------------------
   if (type == "uncureprob") {
@@ -157,7 +156,7 @@ if (bw == T) {
       splot <- ggplot(mapping = aes(x = values, y = as.vector(uncureprob))) + geom_point()
     } else {
       splot <- ggplot(mapping = aes(x = values, y = as.vector(uncuremean))) + geom_point() +
-        geom_errorbar(width = .1, mapping = aes(x = values, ymin = uncurelo, ymax = uncurehi), colour = "black")
+        geom_errorbar(width = (length(values)/10), mapping = aes(x = values, ymin = uncurelo, ymax = uncurehi), colour = "black")
     }
     splot <- splot + scale_x_continuous(breaks = values) + ylab("Probability of Failure") +
       xlab(variable) + theme(legend.position = "none") + theme_bw()
