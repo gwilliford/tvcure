@@ -1,16 +1,10 @@
-  tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
+  tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta,
                    link, emmax, eps, brglm, firthcox, survobj, survtype){
     w <- Status
     n <- length(Status)
-    # if (model == "ph")
-        s <- tvsurv(Time, Status, X, beta, w)$survival
-    # if (model == "aft") {
-    #   if (!is.null(offsetvar))
-    #     Time <- Time/exp(offsetvar)
-    #   error <- drop(log(Time) - beta %*% t(X))
-    #   s <- tvsurv(error, Status, X, beta, w, model)$survival
-    # }
+    s <- tvsurv(Time, Status, X, beta, w)$survival
     convergence <- 1000
+
     i <- 1
     while (convergence > eps & i < emmax) {
       if (link == "logit") {
@@ -49,36 +43,18 @@
       # Update glm
 
       # Update cox
-      if (model == "ph") {
-        if (!is.null(offsetvar)) {
-          # if (firthcox) {
-          #   update_beta <- coxphf(survobj ~ X + offset(offsetvar + log(w)),
-          #                         pl=F)$coefficients
-          # } else {
-            update_beta <- coxph(survobj ~ X + offset(offsetvar + log(w)),
-                                 subset = w != 0, method = "breslow")$coef
-          # }
-        } else {
-          # if (firthcox) {
-          #   update_beta <- coxphf(survobj ~ X + offset(log(w)),pl=F)$coefficients
-          # } else {
-            #tryCatch(
-              coxit <- coxph(survobj ~ X + offset(log(w)), subset = w != 0,
-                             method = "breslow")
-              #,error = function(e) e
-            #)
-          # }
-        }
-        update_a <- tvsurv(Time, Status, X, beta, w)
-        update_s <- update_a$survival
+      if (!is.null(offsetvar)) {
+        # if (firthcox) {
+        #   update_beta <- coxphf(survobj ~ X + offset(offsetvar + log(w)),
+        #                         pl=F)$coefficients
+        # } else {
+          update_beta <- coxph(survobj ~ X + offset(offsetvar + log(w)),
+                               subset = w != 0, method = "breslow")$coef
+        # }
       }
-      # if (model == "aft") {
-      #   update_beta <- optim(rep(0, ncol(X)), smrank, Time = Time, X = X, n = n,
-      #                        w = w, Status = Status, method = "Nelder-Mead",
-      #                        control = list(reltol = 1e-04, maxit = 500))$par
-      #   update_a <- tvsurv(error, Status, X, beta, w)
-      #   update_s <- update_a$survival
-      # }
+      update_a <- tvsurv(Time, Status, X, beta, w)
+      update_s <- update_a$survival
+
       if (!inherits(coxit,"error")){
         update_beta <- coxit$coefficients
         convergence <- sum(c(update_cureg - gamma, update_beta - beta)^2)

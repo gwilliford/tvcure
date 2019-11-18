@@ -3,7 +3,6 @@
 #' @param formula
 #' @param cureform
 #' @param offset
-#' @param model
 #' @param data
 #' @param na.action
 #' @param link
@@ -14,7 +13,7 @@
 #' @param eps
 #' @param nboot Specifies the number of bootstrap samples to draw.
 #' @param parallel If true, bootstraps will be run in parallel. A progress bar displaying the number of completed boostraps will be displayed. This option requires the user to set up a \link{snow} object and register it using the \link{doSNOW} package (see example below).
-tvcure <- function(formula, cureform, offset = NULL, model = "ph", data,
+tvcure <- function(formula, cureform, offset = NULL, data,
                    na.action = na.omit, link = "logit", var = T, brglm = F,
                    firthcox = F, emmax = 1000, eps = 1e-07, nboot = 100,
                    parallel = T){
@@ -30,7 +29,6 @@ tvcure <- function(formula, cureform, offset = NULL, model = "ph", data,
 
   # Data set up ----------------------------------------------------------------
     call <- match.call()
-    model <- match.arg(model)
 
     # Pull variables from data
     xvars <- all.vars(formula)
@@ -76,10 +74,8 @@ tvcure <- function(formula, cureform, offset = NULL, model = "ph", data,
     } else stop("tvcure only accepts survival objects of type \"right\" or \"counting\"")
     gnames <- colnames(Z)
     ngamma <- ncol(Z)
-    if (model == "ph") {
-      bnames <- colnames(X)
-      nbeta <- ncol(X)
-    }
+    bnames <- colnames(X)
+    nbeta <- ncol(X)
     cat("tvcure started at "); print(Sys.time());cat("Estimating coefficients...\n")
 
   # Obtain initial estimates------------------------------------------------------
@@ -93,21 +89,15 @@ tvcure <- function(formula, cureform, offset = NULL, model = "ph", data,
                                     "family = binomial(link = '", link, "'", ")",
                                     ")", sep = "")))$coef
   }
-  if (model == "ph") {
-    # if (firthcox) {
-    #   beta <- coxphf(survobj ~ X + offset(log(w)), pl = F)$coefficients
-    # } else {
-      beta <- coxph(survobj ~ X + offset(log(w)), subset = w!=0,
-                    method = "breslow")$coef
-    # }
-  }
+    beta <- coxph(survobj ~ X + offset(log(w)), subset = w!=0,
+                  method = "breslow")$coef
   cat("Initial estimates obtained, beginning em algorithm...\n")
 
 # Call to EM function -------------------------------------------------------
-  emfit <- tvem(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta, model,
+  emfit <- tvem(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta,
                 link, emmax, eps, brglm, firthcox, survobj, survtype)
   if (emfit$emrun == emmax) {
-    warning("Maximum number of EM iterations reached. Model has not have converged.")
+    warning("Maximum number of EM iterations reached. Estimates have not have converged.")
   }
   gamma <- emfit$gamma
   beta <- emfit$latencyfit
@@ -122,7 +112,7 @@ tvcure <- function(formula, cureform, offset = NULL, model = "ph", data,
 # Bootstrap standard errors --------------------------------------------------
 if (var) {
   varout <- tvboot(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status,
-                   X, Z, gnames, bnames, offsetvar, gamma, beta, model, link, emmax,
+                   X, Z, gnames, bnames, offsetvar, gamma, beta, link, emmax,
                    eps, brglm, firthcox, survobj, nobs, parallel)
 }
 
@@ -160,7 +150,6 @@ if (var) {
   if (survtype == "counting")
     fit$Time <- Stop
   fit$Status <- Status
-  fit$model <- model
   fit$link  <- link
   fit$nfail <- sum(Status)
   fit$nobs  <- nobs
