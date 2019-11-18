@@ -81,44 +81,6 @@ prediction2 <- function(model, variable, values,
     s0      <- s0[order(s0, decreasing = T)]
     suncure <- suncure[order(suncure[, 1], decreasing = T), ]
     spop    <- spop[order(spop[, 1], decreasing = T), ]
-
-    # if (type == "uncureprob") {
-    #   if (bw == T) {
-    #     splot <- ggplot() + theme_bw()
-    #     splot <- splot + geom_point(mapping = aes(x = values, y = as.vector(uncureprob)))
-    #   } else {
-    #     splot <- ggplot()
-    #     splot <- splot + geom_point(mapping = aes(x = values, y = as.vector(uncureprob), colour = as.factor(values)))
-    #   }
-    #   splot <- splot + scale_x_continuous(breaks = values) + ylab("Probability of Failure") +
-    #     xlab(variable) + theme(legend.position = "none")
-    # }
-#
-#     if (type == "basesurv") {
-#       splot <- ggplot(mapping = aes(Time, s0)) + geom_line() +  ylab("Probability of Failure") + xlab(variable)
-#     }
-    # if (type == "suncure") {
-    #   scm  <- split(suncure, rep(1:ncol(suncure), each = nrow(suncure)))
-    #   for (i in 1:length(scm)) {
-    #     scm[[i]] <- cbind(scm[[i]], Time, num = i)
-    #   }
-    #   scf <- as.data.frame(do.call(rbind, scm))
-    #   colnames(scf) <- c("scm", "Time", "num")
-    #   splot <- ggplot(scf, aes(Time, scm, col = as.factor(num), linetype = as.factor(num))) +
-    #     geom_line() + labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) +
-    #     ylab(ylab)
-    # }
-    # if (type == "spop") {
-    #   spm  <- split(spop, rep(1:ncol(spop), each = nrow(spop)))
-    #   for (i in 1:length(spm)) {
-    #     spm[[i]] <- cbind(spm[[i]], Time, num = i)
-    #   }
-    #   spf <- as.data.frame(do.call(rbind, spm))
-    #   colnames(spf) <- c("spm", "Time", "num")
-    #   splot <- ggplot(spf, aes(Time, spm, col = as.factor(num), linetype = as.factor(num))) +
-    #     geom_line() + labs(fill = legendtitle, linetype = legendtitle, col = legendtitle) +
-    #     ylab(ylab)
-    # }
   } else { ## With CIs =========================================================================
       mu = c(beta, gamma)
       Coef_smpl <- MASS::mvrnorm(n = nsims, mu = mu, Sigma = cov(diag(mu)))
@@ -186,28 +148,19 @@ prediction2 <- function(model, variable, values,
 if (bw == T) {
   splot <- ggplot() + theme_bw()
 } else {
-  splot <- ggplot()
+  splot <- ggplot() + theme(panel.border = element_rect(colour = "black", fill = NA))
 }
 
 # Uncureprob Plot ---------------------------------------------------------
   if (type == "uncureprob") {
     if (CI == F) {
-      if (bw == T) {
-        splot <- ggplot(mapping = aes(x = values, y = as.vector(uncureprob))) + geom_point()
-      } else {
-        splot <- splot + ggplot(mapping = aes(x = values, y = as.vector(uncuremean))) + geom_point()
-    }
+      splot <- ggplot(mapping = aes(x = values, y = as.vector(uncureprob))) + geom_point()
     } else {
-      if (bw == T) {
-        splot <- ggplot(mapping = aes(x = values, y = as.vector(uncuremean))) +
-          geom_point() + geom_errorbar(width = .1, mapping = aes(x = values, ymin = uncurelo, ymax = uncurehi))
-      } else {
-        splot <- ggplot(mapping = aes(x = values, y = as.vector(uncuremean),colour = as.factor(values))) +
-          geom_point() + geom_errorbar(width = .1, mapping = aes(x = values, ymin = uncurelo, ymax = uncurehi))
-      }
+      splot <- ggplot(mapping = aes(x = values, y = as.vector(uncuremean))) + geom_point() +
+        geom_errorbar(width = .1, mapping = aes(x = values, ymin = uncurelo, ymax = uncurehi), colour = "black")
     }
-      splot <- splot + scale_x_continuous(breaks = values) + ylab("Probability of Failure") +
-        xlab(variable) + theme(legend.position = "none")
+    splot <- splot + scale_x_continuous(breaks = values) + ylab("Probability of Failure") +
+      xlab(variable) + theme(legend.position = "none") + theme_bw()
   }
 
 # Basesurv Plot -----------------------------------------------------------
@@ -219,7 +172,7 @@ if (bw == T) {
       splot <- splot + geom_line(mapping = aes(Time, s0mean)) +
         geom_ribbon(aes(x = Time, ymin = s0lo, ymax = s0hi), alpha=0.2)
     }
-    splot = splot + ylab("Probability of Failure") + xlab(variable)
+    splot = splot + ylab(ylab) + xlab(variable)# +
   }
 
 # Suncure Plot ------------------------------------------------------------
