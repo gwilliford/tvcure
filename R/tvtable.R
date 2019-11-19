@@ -1,16 +1,18 @@
-#' @param modname modname of class tvcure
+#' @param model A model of class tvcure
 #' @param format Specifies format of the resulting table. Wide presents incidence and latency results side-by-side with standard errors presented in separate columns. Long presents coefficient estimates side-by-side with standard errors beneath them.
+#' @param qi Specifies the quantity of interest to display in the table. Options include "se" (the default), "pvalue", and "zscore".
+#' @param stars Logical value indicating whether significance stars should be printed
 #' @param digits Number of digits to display past the decimal point
-tvtable <- function(model, format = c("wide"), qi = "se", stars = T, digits = 3) {
-    modname <- model
-    gamma <- round(modname$gamma, digits)
-    beta  <- round(modname$beta, digits)
-    gse   <- round(modname$g_sd, digits)
-    bse   <- round(modname$b_sd, digits)
-    gz    <- round(modname$g_zvalue, digits)
-    bz    <- round(modname$b_zvalue, digits)
-    gpval <- round(modname$g_pvalue, digits)
-    bpval <- round(modname$b_pvalue, digits)
+tvtable <- function(model, format = c("wide"), qi = c("se", "pvalue", "zscore"), stars = T, digits = 3) {
+    gamma <- round(model$gamma, digits)
+    beta  <- round(model$beta, digits)
+    gse   <- round(model$g_sd, digits)
+    bse   <- round(model$b_sd, digits)
+    gz    <- round(model$g_zvalue, digits)
+    bz    <- round(model$b_zvalue, digits)
+    gpval <- round(model$g_pvalue, digits)
+    bpval <- round(model$b_pvalue, digits)
+    qi <- match.arg(qi)
     if (stars == T) {
       gstar <- gtools::stars.pval(gpval)
       bstar <- gtools::stars.pval(bpval)
@@ -18,11 +20,11 @@ tvtable <- function(model, format = c("wide"), qi = "se", stars = T, digits = 3)
       gstar <- NULL
       bstar <- NULL
     }
-    gnames <- modname$gnames
-    bnames <- modname$bnames
-    allnames <- unique(c(modname$gnames, modname$bnames))
-    nobs = modname$nobs
-    nfail = modname$nfail
+    gnames <- model$gnames
+    bnames <- model$bnames
+    allnames <- unique(c(model$gnames, model$bnames))
+    nobs = model$nobs
+    nfail = model$nfail
     emat <- matrix(ncol = 4, nrow = 2)
     emat[ , 1] <- c(nobs, nfail)
 
