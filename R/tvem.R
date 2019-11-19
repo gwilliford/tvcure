@@ -16,7 +16,8 @@
       survival <- drop(s^(exp((beta) %*% t(X))))
       w <- Status + (1 - Status) * (uncureprob * survival)/((1 -
           uncureprob) + uncureprob * survival)
-      # browser()
+
+      # Update incidence coefficients
       if (brglm) {
         if (is.null(offsetvar)) {
           incidence_fit <- eval(parse(text = paste("brglm::brglm", "(", "as.integer(w) ~ Z[, -1],",
@@ -40,17 +41,14 @@
       }
       update_cureg <- incidence_fit$coef
 
-      # Update glm
-
-      # Update cox
+      # Update latency coefficients
       if (!is.null(offsetvar)) {
-        # if (firthcox) {
-        #   update_beta <- coxphf(survobj ~ X + offset(offsetvar + log(w)),
-        #                         pl=F)$coefficients
-        # } else {
-          update_beta <- coxph(survobj ~ X + offset(offsetvar + log(w)),
-                               subset = w != 0, method = "breslow")$coef
-        # }
+        coxit <- coxph(survobj ~ X + offset(offsetvar + log(w)),
+                             subset = w != 0, method = "breslow")$coef
+
+      } else {
+        coxit <- coxph(survobj ~ X + offset(log(w)), subset = w != 0,
+                       method = "breslow")
       }
       update_a <- tvsurv(Time, Status, X, beta, w)
       update_s <- update_a$survival
