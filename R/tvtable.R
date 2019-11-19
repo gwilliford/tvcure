@@ -3,7 +3,7 @@
 #' @param qi Specifies the quantity of interest to display in the table. Options include "se" (the default), "pvalue", and "zscore".
 #' @param stars Logical value indicating whether significance stars should be printed
 #' @param digits Number of digits to display past the decimal point
-tvtable <- function(model, format = c("wide"), qi = c("se", "pvalue", "zscore"), stars = T, digits = 3) {
+tvtable <- function(model, format = c("wide", "long"), qi = c("se", "pvalue", "zscore"), stars = T, digits = 3) {
     gamma <- round(model$gamma, digits)
     beta  <- round(model$beta, digits)
     gse   <- round(model$g_sd, digits)
@@ -27,6 +27,7 @@ tvtable <- function(model, format = c("wide"), qi = c("se", "pvalue", "zscore"),
     nfail = model$nfail
     emat <- matrix(ncol = 4, nrow = 2)
     emat[ , 1] <- c(nobs, nfail)
+    format <- match.arg(format)
 
     gsevec <- vector(length = length(gamma))
     bsevec <- vector(length = length(beta))
@@ -97,17 +98,17 @@ tvtable <- function(model, format = c("wide"), qi = c("se", "pvalue", "zscore"),
       fullmat[i, 4] <- ifelse(is.na(fullmat[i, 4]), "", fullmat[i, 4])
     }
 
-    # long1 <- as.vector(rbind(fullmat[, 1], fullmat[, 2]))
-    # long1 <- long1[1:(length(long1) - 4)]
-    # long2 <- as.vector(rbind(fullmat[, 3], fullmat[, 4]))
-    # long2 <- long2[1:(length(long2) - 4)]
-    # long <- cbind(long1, long2)
-    # #long <- matrix(long, ncol = 2)
-    # long <- rbind(long, emat[, 1:2])
-    # colnames(long) <- c("Incidence Coef.", "Hazard Coef.")
-    # longnames <- as.vector(rbind(rownames(fullmat), rep("", length(allnames) + 2)))
-    # rownames(long) <- longnames[-c(length(longnames) - 2, length(longnames))]
-    # # long <- long[-c(nrow(long), nrow(long) - 2), ]
+    long1 <- as.vector(rbind(fullmat[, 1], fullmat[, 2]))
+    long1 <- long1[1:(length(long1) - 4)]
+    long2 <- as.vector(rbind(fullmat[, 3], fullmat[, 4]))
+    long2 <- long2[1:(length(long2) - 4)]
+    long <- cbind(long1, long2)
+    matrix(long, ncol = 2)
+    long <- rbind(long, emat[, 1:2])
+    colnames(long) <- c("Incidence Coef.", "Hazard Coef.")
+    longnames <- as.vector(rbind(rownames(fullmat), rep("", length(allnames) + 2)))
+    rownames(long) <- longnames[-c(length(longnames) - 2, length(longnames))]
+    # long <- long[-c(nrow(long), nrow(long) - 2), ]
 
     # stacked <- as.matrix(c("", long1, "", long2[3:length(long2)], emat[, 1:2]))
     # # stackmat <- matrix(ncol = 1, nrow = length(stacked) + 2)
