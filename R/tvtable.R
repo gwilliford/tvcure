@@ -1,6 +1,6 @@
 #' @param model A model of class tvcure
-#' @param format Specifies format of the resulting table. Wide presents incidence and latency results side-by-side with standard errors presented in separate columns. Long presents coefficient estimates side-by-side with standard errors beneath them.
-#' @param qi Specifies the quantity of interest to display in the table. Options include "se" (the default), "pvalue", and "zscore".
+#' @param format Specifies format of the resulting table. Wide presents incidence and latency results side-by-side with standard errors presented in separate columns. Long presents incidence and latency coefficients side-by-side side-by-side with standard errors beneath them.
+#' @param qi Specifies the quantity of interest to display in addition to coefficients (standard errors, p-values, or z-scores).
 #' @param stars Logical value indicating whether significance stars should be printed
 #' @param digits Number of digits to display past the decimal point
 tvtable <- function(model, format = c("wide", "long"), qi = c("se", "pvalue", "zscore"), stars = T, digits = 3) {
