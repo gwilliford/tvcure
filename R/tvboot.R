@@ -1,13 +1,11 @@
 tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
-                   Z, gnames, bnames, offsetvar, gamma, beta, link, emmax,
+                   Z, gnames, bnames, offset, gamma, beta, link, emmax,
                    eps, brglm, firthcox, survobj, n, parallel) {
 
   # Progress Bar
     pb <- txtProgressBar(max = nboot, style = 3)
     progress <- function(n) setTxtProgressBar(pb, n)
     opts <- list(progress = progress)
-
-    X <- cbind(1, X)
 
   # Format data for bootstrap function
     if (survtype=="right") {
@@ -44,16 +42,15 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
       if (survtype=="counting") {
         bootsurv <- Surv(bootdata[, 1], bootdata[, 2], bootdata[, 3])
         bootstart <- bootdata[, 1]
-        bootstop <- bootdata[, 2]
+        boottime <- bootdata[, 2]
         bootstatus <- bootdata[, 3]
-        boottime <- bootstop
       }
 
-      bootfit <- tvem(Start = bootstart, Stop = bootstop, Status = bootstatus,
-                      Time = boottime, X = bootX, Z = bootZ, offsetvar = offsetvar,
-                      gamma = gamma, beta = beta, link = link, emmax = emmax,
-                      eps = eps, brglm = brglm, firthcox = firthcox,
-                      survobj = bootsurv, survtype = survtype)#, error = function(e) NULL)
+      bootfit <- tvem(Time = boottime, Status = bootstatus,
+                      X = bootX, Z = bootZ, offset,
+                      gamma, beta, link, emmax,
+                      eps, brglm, firthcox,
+                      survobj = bootsurv, survtype)#, error = function(e) NULL)
       break
       }, silent = F) #close try function
     } # close for loop
@@ -62,7 +59,7 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
 
   # Combine results from bootstraps into matrices
   g_boot <- matrix(rep(0, nboot * ngamma), nrow = nboot)
-  b_boot <- matrix(rep(0, nboot * (nbeta)), nrow = nboot)
+  b_boot <- matrix(rep(0, nboot * nbeta), nrow = nboot)
   for (i in 1:length(bootres)) {
     g_boot[i,] <- bootres[[i]]$bootfitg
     b_boot[i,] <- bootres[[i]]$bootfitb
@@ -84,5 +81,3 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
   varout <- list(g_var = g_var, b_var = b_var, g_sd = g_sd, b_sd = b_sd,
                  vcovg = vcovg, vcovb = vcovb, bootcomp = length(bootres))
 }
-
-# Fix foreach 1:10
