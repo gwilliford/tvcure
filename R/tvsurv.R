@@ -1,6 +1,7 @@
 tvsurv <- function(Time, Status, X, beta, w) {
   death_point <- sort(unique(subset(Time, Status == 1)))
   coxexp <- exp((beta) %*% t(X))
+
   lambda <- numeric()
   event <- numeric()
   for (i in 1:length(death_point)) {
