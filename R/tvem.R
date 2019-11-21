@@ -1,5 +1,6 @@
-  tvem <- function(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta,
+  tvem <- function(Time, Status, X, Z, offset, gamma, beta,
                    link, emmax, eps, brglm, firthcox, survobj, survtype){
+
     w <- Status
     n <- length(Status)
     s <- tvsurv(Time, Status, X, beta, w)$survival
@@ -7,33 +8,36 @@
 
     i <- 1
     while (convergence > eps & i < emmax) {
-      if (link == "logit")
+      if (link == "logit") {
         uncureprob <- matrix(exp((gamma) %*% t(Z))/(1 + exp((gamma) %*% t(Z))), ncol = 1)
-      if (link == "probit")
+      }
+      if (link == "probit") {
         uncureprob <- matrix(pnorm(gamma %*% t(Z)), ncol = 1)
+      }
+
       survival <- drop(s^(exp((beta) %*% t(X))))
       w <- Status + (1 - Status) * (uncureprob * survival)/((1 -
           uncureprob) + uncureprob * survival)
 
       # Update incidence coefficients
       if (brglm) {
-        if (is.null(offsetvar)) {
+        if (is.null(offset)) {
           incidence_fit <- eval(parse(text = paste("brglm::brglm", "(", "as.integer(w) ~ Z[, -1],",
                                                     "family = binomial(link = '", link, "'", ")",
                                                    ")", sep = "")))
         } else {
           incidence_fit <- eval(parse(text = paste("brglm::brglm","(",
-                                                   "as.integer(w) ~ Z[, -1] + offset(offsetvar),",
+                                                   "as.integer(w) ~ Z[, -1] + offset(offset),",
                                                    "family = binomial(link='", link, "'", ")",
                                                    ")", sep = "")))
         }
       } else {
-        if (is.null(offsetvar)) {
+        if (is.null(offset)) {
           incidence_fit <- eval(parse(text = paste("glm", "(", "as.integer(w) ~ Z[, -1],",
                                                     "family = binomial(link = '", link, "'", ")",
                                                    ")", sep = "")))
         } else {
-          incidence_fit <- eval(parse(text = paste("glm", "(", "as.integer(w) ~ Z[, -1] + offsetvar(offsetvar),",
+          incidence_fit <- eval(parse(text = paste("glm", "(", "as.integer(w) ~ Z[, -1] + offset(offset),",
                                                     "family = binomial(link = '", link, "'", ")",
                                                    ")", sep = "")))
         }
@@ -41,10 +45,9 @@
       update_cureg <- incidence_fit$coef
 
       # Update latency coefficients
-      if (!is.null(offsetvar)) {
-        coxit <- coxph(survobj ~ X + offset(offsetvar + log(w)),
+      if (!is.null(offset)) {
+        coxit <- coxph(survobj ~ X + offset(offset + log(w)),
                              subset = w != 0, method = "breslow")$coef
-
       } else {
         coxit <- coxph(survobj ~ X + offset(log(w)), subset = w != 0,
                        method = "breslow")
