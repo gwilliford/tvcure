@@ -13,10 +13,12 @@
 #' @param eps
 #' @param nboot Specifies the number of bootstrap samples to draw.
 #' @param parallel If true, bootstraps will be run in parallel. A progress bar displaying the number of completed boostraps will be displayed. This option requires the user to set up a \link{snow} object and register it using the \link{doSNOW} package (see example below).
-tvcure <- function(formula, cureform, offset = NULL, data, subset = NULL,
-                   na.action = na.omit, link = "logit", var = T, brglm = F,
-                   firthcox = F, emmax = 1000, eps = 1e-07, nboot = 100,
-                   parallel = T){
+tvcure <- function(formula, cureform, link = "logit",
+                   data, na.action = na.omit, offset = NULL, subset = NULL,
+                   var = T, nboot = 100, parallel = T,
+                   brglm = F, firthcox = F,
+                   emmax = 1000, eps = 1e-07)
+{
 
   # Preliminaries and error checking--------------------------------------------
     # If parallel is true, ensure that snow cluster is registered
@@ -26,14 +28,12 @@ tvcure <- function(formula, cureform, offset = NULL, data, subset = NULL,
         if (getDoParName() == "doSEQ") stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
       } else stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
     }
-  browser()
 
   # Data set up ----------------------------------------------------------------
     call <- match.call()
     if (!is.null(subset)) {
       data <- subset(data, subset)
     }
-    browser()
 
     # Pull variables from data
     xvars <- all.vars(formula)
@@ -47,18 +47,26 @@ tvcure <- function(formula, cureform, offset = NULL, data, subset = NULL,
     # Create IV matrices
     mf <- model.frame(formula, data)
     X <- model.matrix(attr(mf, "terms"), mf)
-    X <- X[, -1]
+    if (ncol(X) == 2) {
+      X1 <- X[, -1]
+      X1 <- matrix(X1, ncol = 1)
+      colnames(X1) <- colnames(X)[2]
+      X <- X1
+    } else {
+      X <- X[, -1]
+    }
+    bnames <- colnames(X)
+    nbeta <- ncol(X)
+
     mf2 <- model.frame(cureform, data)
     Z <- model.matrix(attr(mf2, "terms"), mf2)
-
-    #colnames(Z) <- c("(Intercept)", xvars)
+    gnames <- colnames(Z)
+    ngamma <- ncol(Z)
 
     # Set up offset variables
     if (!is.null(offset)) {
-      offsetvar <- all.vars(offset)
-      offsetvar <- data[, offsetvar]
-    } else {
-      offsetvar <- NULL
+      offset <- all.vars(offset)
+      offset <- data[, offset]
     }
 
     # Format dependent variable
@@ -77,10 +85,7 @@ tvcure <- function(formula, cureform, offset = NULL, data, subset = NULL,
       Time <- Stop
       survobj <- Surv(Start, Stop, Status)
     } else stop("tvcure only accepts survival objects of type \"right\" or \"counting\"")
-    gnames <- colnames(Z)
-    ngamma <- ncol(Z)
-    bnames <- colnames(X)
-    nbeta <- ncol(X)
+
     cat("tvcure started at "); print(Sys.time());cat("Estimating coefficients...\n")
 
   # Obtain initial estimates------------------------------------------------------
@@ -94,12 +99,11 @@ tvcure <- function(formula, cureform, offset = NULL, data, subset = NULL,
                                     "family = binomial(link = '", link, "'", ")",
                                     ")", sep = "")))$coef
   }
-    beta <- coxph(survobj ~ X + offset(log(w)), subset = w!=0,
-                  method = "breslow")$coef
+  beta <- coxph(survobj ~ X + offset(log(w)), subset = w!=0, method = "breslow")$coef
   cat("Initial estimates obtained, beginning em algorithm...\n")
 
 # Call to EM function -------------------------------------------------------
-  emfit <- tvem(Time, Start, Stop, Status, X, Z, offsetvar, gamma, beta,
+  emfit <- tvem(Time, Status, X, Z, offset, gamma, beta,
                 link, emmax, eps, brglm, firthcox, survobj, survtype)
   if (emfit$emrun == emmax) {
     warning("Maximum number of EM iterations reached. Estimates have not have converged.")
@@ -117,7 +121,7 @@ tvcure <- function(formula, cureform, offset = NULL, data, subset = NULL,
 # Bootstrap standard errors --------------------------------------------------
 if (var) {
   varout <- tvboot(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status,
-                   X, Z, gnames, bnames, offsetvar, gamma, beta, link, emmax,
+                   X, Z, gnames, bnames, offset, gamma, beta, link, emmax,
                    eps, brglm, firthcox, survobj, nobs, parallel)
 }
 
