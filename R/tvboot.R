@@ -1,6 +1,6 @@
 tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
                    Z, gnames, bnames, offset, gamma, beta, link, emmax,
-                   eps, brglm, firthcox, survobj, n, parallel) {
+                   eps, brglm, firthcox, survobj, n, parallel, method) {
 
   # Progress Bar
     pb <- txtProgressBar(max = nboot, style = 3)
@@ -25,7 +25,7 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
   }
 
   # Sample and Estimate
-  bootres <- foreach(i = 1:nboot, .packages = c('survival','logistf'),
+  bootres <- foreach(i = 1:nboot, .packages = c('survival','brglm2'),
                      .options.snow = opts, .errorhandling = 'remove') %dopar% {
     for(i in 1:nboot) {
       try({
@@ -50,7 +50,7 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
                       X = bootX, Z = bootZ, offset,
                       gamma, beta, link, emmax,
                       eps, brglm, firthcox,
-                      survobj = bootsurv, survtype)#, error = function(e) NULL)
+                      survobj = bootsurv, survtype, method)#, error = function(e) NULL)
       break
       }, silent = F) #close try function
     } # close for loop

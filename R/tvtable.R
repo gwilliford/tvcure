@@ -3,15 +3,20 @@
 #' @param qi Specifies the quantity of interest to display in addition to coefficients (standard errors, p-values, or z-scores).
 #' @param stars Logical value indicating whether significance stars should be printed
 #' @param digits Number of digits to display past the decimal point
-tvtable <- function(model, format = c("wide", "long"), qi = c("se", "pvalue", "zscore"), stars = T, digits = 3) {
-    gamma <- round(model$gamma, digits)
-    beta  <- round(model$beta, digits)
-    gse   <- round(model$g_sd, digits)
-    bse   <- round(model$b_sd, digits)
-    gz    <- round(model$g_zvalue, digits)
-    bz    <- round(model$b_zvalue, digits)
-    gpval <- round(model$g_pvalue, digits)
-    bpval <- round(model$b_pvalue, digits)
+tvtable <- function(model, format = c("wide", "long"), qi = c("se", "pvalue", "zscore"), stars = T, digits = 3)
+    if (class == "tvcure") {
+      gamma <- round(model$gamma, digits)
+      beta  <- round(model$beta, digits)
+      gse   <- round(model$g_sd, digits)
+      bse   <- round(model$b_sd, digits)
+      gz    <- round(model$g_zvalue, digits)
+      bz    <- round(model$b_zvalue, digits)
+      gpval <- round(model$g_pvalue, digits)
+      bpval <- round(model$b_pvalue, digits)
+      gnames <- model$gnames
+      bnames <- model$bnames
+      allnames <- unique(c(model$gnames, model$bnames))
+    }
     qi <- match.arg(qi)
     if (stars == T) {
       gstar <- gtools::stars.pval(gpval)
@@ -20,9 +25,6 @@ tvtable <- function(model, format = c("wide", "long"), qi = c("se", "pvalue", "z
       gstar <- NULL
       bstar <- NULL
     }
-    gnames <- model$gnames
-    bnames <- model$bnames
-    allnames <- unique(c(model$gnames, model$bnames))
     nobs = model$nobs
     nfail = model$nfail
     emat <- matrix(ncol = 4, nrow = 2)

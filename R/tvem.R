@@ -1,5 +1,5 @@
   tvem <- function(Time, Status, X, Z, offset, gamma, beta,
-                   link, emmax, eps, brglm, firthcox, survobj, survtype){
+                   link, emmax, eps, brglm, firthcox, survobj, survtype, method){
 
     w <- Status
     n <- length(Status)
@@ -7,6 +7,7 @@
     convergence <- 1000
 
     i <- 1
+    browser()
     while (convergence > eps & i < emmax) {
       if (link == "logit") {
         uncureprob <- matrix(exp((gamma) %*% t(Z))/(1 + exp((gamma) %*% t(Z))), ncol = 1)
@@ -20,28 +21,30 @@
           uncureprob) + uncureprob * survival)
 
       # Update incidence coefficients
-      if (brglm) {
-        if (is.null(offset)) {
-          incidence_fit <- eval(parse(text = paste("brglm::brglm", "(", "as.integer(w) ~ Z[, -1],",
-                                                    "family = binomial(link = '", link, "'", ")",
-                                                   ")", sep = "")))
-        } else {
-          incidence_fit <- eval(parse(text = paste("brglm::brglm","(",
-                                                   "as.integer(w) ~ Z[, -1] + offset(offset),",
-                                                   "family = binomial(link='", link, "'", ")",
-                                                   ")", sep = "")))
-        }
-      } else {
+      # if (brglm) {
+      #   if (is.null(offset)) {
+      #     incidence_fit <- eval(parse(text = paste("brglm::brglm", "(", "as.integer(w) ~ Z[, -1],",
+      #                                               "family = binomial(link = '", link, "'", ")",
+      #                                              ")", sep = "")))
+      #   } else {
+      #     incidence_fit <- eval(parse(text = paste("brglm::brglm","(",
+      #                                              "as.integer(w) ~ Z[, -1] + offset(offset),",
+      #                                              "family = binomial(link='", link, "'", ")",
+      #                                              ")", sep = "")))
+      #   }
+      # } else {
         if (is.null(offset)) {
           incidence_fit <- eval(parse(text = paste("glm", "(", "as.integer(w) ~ Z[, -1],",
-                                                    "family = binomial(link = '", link, "'", ")",
+                                                   "family = binomial(link = '", link, "'", "), ",
+                                                   "method = '", method, "'",
                                                    ")", sep = "")))
         } else {
-          incidence_fit <- eval(parse(text = paste("glm", "(", "as.integer(w) ~ Z[, -1] + offset(offset),",
-                                                    "family = binomial(link = '", link, "'", ")",
-                                                   ")", sep = "")))
+          incidence_fit <- eval(parse(text = paste("glm", "(", "as.integer(w) ~ Z[, -1],",
+                                                   "family = binomial(link = '", link, "'", "), ",
+                                                   "method = '", method, "'",
+                                                   ")", sep = "")))$coef
         }
-      }
+      # }
       update_cureg <- incidence_fit$coef
 
       # Update latency coefficients
@@ -59,7 +62,7 @@
         update_beta <- coxit$coefficients
         convergence <- sum(c(update_cureg - gamma, update_beta - beta)^2)
                        + sum((s - update_s)^2)
-        if (is.infinite(convergence)) stop("EM algorithm failed to converge.")
+        if (is.infinite(convergence) | is.na(convergence)) stop("EM algorithm failed to converge.")
         gamma <- update_cureg
         beta<- update_beta
         s <- update_s

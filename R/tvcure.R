@@ -19,7 +19,6 @@ tvcure <- function(formula, cureform, link = "logit",
                    brglm = F, firthcox = F,
                    emmax = 1000, eps = 1e-07)
 {
-
   # Preliminaries and error checking--------------------------------------------
     # If parallel is true, ensure that snow cluster is registered
     if (parallel == T) {
@@ -34,6 +33,9 @@ tvcure <- function(formula, cureform, link = "logit",
     if (!is.null(subset)) {
       data <- subset(data, subset)
     }
+
+    method <- ifelse(brglm, "brglmFit", "glm.fit")
+    if (brglm) require(brglm2)
 
     # Pull variables from data
     xvars <- all.vars(formula)
@@ -86,25 +88,26 @@ tvcure <- function(formula, cureform, link = "logit",
       survobj <- Surv(Start, Stop, Status)
     } else stop("tvcure only accepts survival objects of type \"right\" or \"counting\"")
 
-    cat("tvcure started at "); print(Sys.time());cat("Estimating coefficients...\n")
+    cat("tvcure started at "); print(Sys.time()); ("Estimating coefficients...\n")
 
   # Obtain initial estimates------------------------------------------------------
   w <- Status
-  if (brglm) {
-    gamma <- eval(parse(text = paste("brglm::brglm", "(", "as.integer(w) ~ Z[, -1],",
-                                    "family = binomial(link = '", link, "'", ")",
-                                    ")", sep = "")))$coef
-  } else {
+  # if (brglm) {
+  #   gamma <- eval(parse(text = paste("brglm::brglm", "(", "as.integer(w) ~ Z[, -1],",
+  #                                   "family = binomial(link = '", link, "'", ")",
+  #                                   ")", sep = "")))$coef
+  # } else {
     gamma <- eval(parse(text = paste("glm", "(", "as.integer(w) ~ Z[, -1],",
-                                    "family = binomial(link = '", link, "'", ")",
-                                    ")", sep = "")))$coef
-  }
+                                     "family = binomial(link = '", link, "'", "), ",
+                                     "method = '", method, "'",
+                                     ")", sep = "")))$coef
+    # }
   beta <- coxph(survobj ~ X + offset(log(w)), subset = w!=0, method = "breslow")$coef
   cat("Initial estimates obtained, beginning em algorithm...\n")
 
 # Call to EM function -------------------------------------------------------
   emfit <- tvem(Time, Status, X, Z, offset, gamma, beta,
-                link, emmax, eps, brglm, firthcox, survobj, survtype)
+                link, emmax, eps, brglm, firthcox, survobj, survtype, method)
   if (emfit$emrun == emmax) {
     warning("Maximum number of EM iterations reached. Estimates have not have converged.")
   }
@@ -122,7 +125,7 @@ tvcure <- function(formula, cureform, link = "logit",
 if (var) {
   varout <- tvboot(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status,
                    X, Z, gnames, bnames, offset, gamma, beta, link, emmax,
-                   eps, brglm, firthcox, survobj, nobs, parallel)
+                   eps, brglm, firthcox, survobj, nobs, parallel, method)
 }
 
 # Final fit details
