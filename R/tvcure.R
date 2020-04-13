@@ -35,7 +35,7 @@ tvcure <- function(formula, cureform, link = "logit",
     }
 
     method <- ifelse(brglm, "brglmFit", "glm.fit")
-    if (brglm) require(brglm2)
+    if (brglm) require(brglm); require(brglm2)
 
     # Pull variables from data
     xvars <- all.vars(formula)
@@ -92,17 +92,18 @@ tvcure <- function(formula, cureform, link = "logit",
 
   # Obtain initial estimates------------------------------------------------------
   w <- Status
-  # if (brglm) {
-  #   gamma <- eval(parse(text = paste("brglm::brglm", "(", "as.integer(w) ~ Z[, -1],",
-  #                                   "family = binomial(link = '", link, "'", ")",
-  #                                   ")", sep = "")))$coef
+  gamma <- eval(parse(text = paste("glm", "(", "as.integer(w) ~ Z[, -1],",
+                                   "family = binomial(link = '", link, "'", "), ",
+                                   "method = '", method, "'",
+                                   ")", sep = "")))$coef
+  # if (firthcox) {
+  #   firthdat <- subset(X, w != 0)
+  #   firthobj <- subset(survobj, w != 0)
+  #   beta <- coxphf::coxphf(firthobj ~ X + offset(log(w)))$coef
   # } else {
-    gamma <- eval(parse(text = paste("glm", "(", "as.integer(w) ~ Z[, -1],",
-                                     "family = binomial(link = '", link, "'", "), ",
-                                     "method = '", method, "'",
-                                     ")", sep = "")))$coef
-    # }
-  beta <- coxph(survobj ~ X + offset(log(w)), subset = w!=0, method = "breslow")$coef
+    uncuremod <- coxph(survobj ~ X + offset(log(w)), subset = w != 0, method = "breslow")
+    beta <- uncuremod$coef
+  # }
   cat("Initial estimates obtained, beginning em algorithm...\n")
 
 # Call to EM function -------------------------------------------------------
@@ -112,10 +113,9 @@ tvcure <- function(formula, cureform, link = "logit",
     warning("Maximum number of EM iterations reached. Estimates have not have converged.")
   }
   gamma <- emfit$gamma
-  beta <- emfit$latencyfit
+  beta <- emfit$beta
   Survival <- emfit$Survival
   Basehaz  <- emfit$Basehaz
-  incidence_fit <- emfit$incidence_fit
   cat("Coefficient estimation complete, estimating variance...\n")
 
 # Fang et al. standard errors
@@ -130,7 +130,10 @@ if (var) {
 
 # Final fit details
   fit <- list()
-  class(fit) <- c("tvcure")
+  class(fit) <- "tvcure"
+  fit$uncuremod <- uncuremod
+  fit$curemod$incidence_fit <- emfit$incidence_fit
+  fit$curemod$latency_fit <- emfit$latency_fit
   fit$gamma <- gamma
   fit$beta <- beta
   fit$X <- X
@@ -152,15 +155,12 @@ if (var) {
   fit$gnames <- gnames
   fit$gnames[1] <- "Intercept"
   fit$bnames <- bnames
-  fit$Survival <- Survival
+  fit$w <- emfit$w
+  fit$Survival <- emfit$Survival
   fit$BaseHaz  <- Basehaz
   fit$uncureprob <- emfit$uncureprob
   # fit$ordBaseHaz <- varfit$ordBasehaz
-
-  if (survtype == "right")
-    fit$Time <- Time
-  if (survtype == "counting")
-    fit$Time <- Stop
+  fit$Time <- Time
   fit$Status <- Status
   fit$link  <- link
   fit$nfail <- sum(Status)
@@ -169,6 +169,8 @@ if (var) {
   fit$emmax <- emmax
   fit$emrun <- emfit$emrun
   fit$var <- var
+  fit$formula <- formula
+  fit$terms <- terms(formula)
   fit
   #print_tvcure(fit, var)
 }
