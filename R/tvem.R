@@ -7,7 +7,6 @@
     convergence <- 1000
 
     i <- 1
-    browser()
     while (convergence > eps & i < emmax) {
       if (link == "logit") {
         uncureprob <- matrix(exp((gamma) %*% t(Z))/(1 + exp((gamma) %*% t(Z))), ncol = 1)
@@ -21,40 +20,37 @@
           uncureprob) + uncureprob * survival)
 
       # Update incidence coefficients
-      # if (brglm) {
-      #   if (is.null(offset)) {
-      #     incidence_fit <- eval(parse(text = paste("brglm::brglm", "(", "as.integer(w) ~ Z[, -1],",
-      #                                               "family = binomial(link = '", link, "'", ")",
-      #                                              ")", sep = "")))
-      #   } else {
-      #     incidence_fit <- eval(parse(text = paste("brglm::brglm","(",
-      #                                              "as.integer(w) ~ Z[, -1] + offset(offset),",
-      #                                              "family = binomial(link='", link, "'", ")",
-      #                                              ")", sep = "")))
-      #   }
-      # } else {
-        if (is.null(offset)) {
-          incidence_fit <- eval(parse(text = paste("glm", "(", "as.integer(w) ~ Z[, -1],",
-                                                   "family = binomial(link = '", link, "'", "), ",
-                                                   "method = '", method, "'",
-                                                   ")", sep = "")))
-        } else {
-          incidence_fit <- eval(parse(text = paste("glm", "(", "as.integer(w) ~ Z[, -1],",
-                                                   "family = binomial(link = '", link, "'", "), ",
-                                                   "method = '", method, "'",
-                                                   ")", sep = "")))$coef
-        }
-      # }
+      if (is.null(offset)) {
+        incidence_fit <- eval(parse(text = paste("glm", "(", "as.integer(w) ~ Z[, -1],",
+                                                 "family = binomial(link = '", link, "'", "), ",
+                                                 "method = '", method, "'",
+                                                 ")", sep = "")))
+      } else {
+        incidence_fit <- eval(parse(text = paste("glm", "(", "as.integer(w) ~ Z[, -1],",
+                                                 "family = binomial(link = '", link, "'", "), ",
+                                                 "method = '", method, "'",
+                                                 ")", sep = "")))
+      }
       update_cureg <- incidence_fit$coef
 
       # Update latency coefficients
-      if (!is.null(offset)) {
-        coxit <- coxph(survobj ~ X + offset(offset + log(w)),
-                             subset = w != 0, method = "breslow")$coef
-      } else {
-        coxit <- coxph(survobj ~ X + offset(log(w)), subset = w != 0,
-                       method = "breslow")
-      }
+      # if (firthcox) {
+      #   if (!is.null(offset)) {
+      #     coxit <- coxphf::coxphf(survobj ~ X + offset(offset + log(w)),
+      #                    subset = w != 0, method = "breslow")$coef
+      #   } else {
+      #     coxit <- coxphf::coxphf(survobj ~ X + offset(log(w)), subset = w != 0,
+      #                    method = "breslow")
+      #   }
+      # } else {
+        if (!is.null(offset)) {
+          coxit <- coxph(survobj ~ X + offset(offset + log(w)),
+                               subset = w != 0, method = "breslow", x = T)
+        } else {
+          coxit <- coxph(survobj ~ X + offset(log(w)), subset = w != 0,
+                         method = "breslow", x = T)
+        }
+      # }
       update_a <- tvsurv(Time, Status, X, beta, w)
       update_s <- update_a$survival
 
@@ -74,7 +70,7 @@
         i <- i + 1
       }
     }
-    em <- list(incidence_fit = incidence_fit, gamma = gamma, latencyfit = beta,
-               Survival = s, Basehaz = basehaz, uncureprob = uncureprob,
+    em <- list(incidence_fit = incidence_fit, gamma = gamma, beta = beta, latency_fit = coxit,
+               Survival = s, Basehaz = basehaz, uncureprob = uncureprob, w = w,
                tau = convergence, emrun = i)
   }
