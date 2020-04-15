@@ -9,45 +9,6 @@ setwd("C:/Users/gwill/Dropbox/Research/Dissertation/Article 1 - Cure Models/V10 
 # Load data
 lhr <- read_dta("LHRIOOct08replication.dta")
 lhr <- plyr::rename(lhr, replace = c("_st" = "st", "_d" = "event", "_t" = "stop", "_t0" = "start"))
-# lhr$capmin <- rowMins(cbind(lhr$cap_1, lhr$cap_2))
-# lhr$capmax <- rowMaxs(cbind(lhr$cap_1, lhr$cap_2))
-# lhr$caprat <- lhr$capmin / lhr$capmax
-# lhr <- lhr %>%
-#   group_by(id) %>%
-#   mutate(
-#     minyear = min(year),
-#     #capminyr = caprat[year == minyear]
-#   ) %>%
-#   ungroup(lhr) %>%
-#   arrange(id, year)
-#
-#
-# lhr <- lhr %>%
-#   group_by(id, year) %>%
-#   mutate(
-#     mincapyr = mean(caprat, na.rm = T)
-#   ) %>%
-#   ungroup(lhr) %>%
-#   group_by(id) %>%
-#   mutate(
-#     mincapid = if_else(year == minyear, mincapyr, 0),
-#     mincapid = max(mincapid, na.rm = T),
-#     capchbeg = (caprat - mincapid)/mincapid
-#   )
-# id <- unique(lhr$id)
-# mincapyr <- lhr$caprat[lhr$year == lhr$minyear]
-# mat <- cbind(id, mincapyr)
-#
-#
-# a <- duplicated(lhr[, c("id", "year")])
-# b <- lhr[a, ] %>% arrange(id, year)
-# flhrcapbet = lhr %>%
-#   group_by(id) %>%
-#   mutate(
-#     ,
-#   )
-# )
-
 
 
 cox <- coxph(Surv(start, stop, event) ~ lndeaths + tie + battletide + thirdpartycfire + archigosFIRC + stakes + onedem5 + twodem5 + index + cfhist + contiguity + capchange, data = lhr); summary(cox)
