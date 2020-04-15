@@ -20,19 +20,18 @@ tvtable <- function(model, format = c("wide", "long"),
       gnames <- model$gnames
       bnames <- model$bnames
       allnames <- unique(c(model$gnames, model$bnames))
-      # Create index of variables in varlist
-      i2 <- match(varlist, allnames)
-      # Order allnames in terms of varlist
-      allnames <- c(allnames[i2], allnames[-i2])
-      # Create a list of variable names by subbing in varnames from varlist
-      names(varlist)[names(varlist) == ""] <- varlist[names(varlist) == ""]
-      varnames <- allnames
-      varnames[allnames %in% varlist] <- names(varlist)
+      if (is.null(varlist)) varnames <- allnames
+      else {
+        # Create index of variables in varlist
+        i2 <- match(varlist, allnames)
+        # Order allnames in terms of varlist
+        allnames <- c(allnames[i2], allnames[-i2])
+        # Create a list of variable names by subbing in varnames from varlist
+        names(varlist)[names(varlist) == ""] <- varlist[names(varlist) == ""]
+        varnames <- allnames
+        varnames[allnames %in% varlist] <- names(varlist)
+      }
 
-      if (is.null(varlist)) varlist <- allnames
-      # } else {
-      #   varlist <- match.arg(varlist)
-      # }
       nobs = model$nobs
       nfail = model$nfail
     }
