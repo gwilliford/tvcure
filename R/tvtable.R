@@ -3,8 +3,11 @@
 #' @param qi Specifies the quantity of interest to display in addition to coefficients (standard errors, p-values, or z-scores).
 #' @param stars Logical value indicating whether significance stars should be printed
 #' @param digits Number of digits to display past the decimal point
-tvtable <- function(model, format = c("wide", "long"), qi = c("se", "pvalue", "zscore"), stars = T, digits = 3)
-    if (class == "tvcure") {
+tvtable <- function(model, format = c("wide", "long"),
+                    qi = c("se", "pvalue", "zscore"), stars = T, digits = 3,
+                    varlist = NULL) {
+    format <- match.arg(format)
+    if ("tvcure" %in% class(model)) {
       gamma <- round(model$gamma, digits)
       beta  <- round(model$beta, digits)
       gse   <- round(model$g_sd, digits)
@@ -13,9 +16,25 @@ tvtable <- function(model, format = c("wide", "long"), qi = c("se", "pvalue", "z
       bz    <- round(model$b_zvalue, digits)
       gpval <- round(model$g_pvalue, digits)
       bpval <- round(model$b_pvalue, digits)
+
       gnames <- model$gnames
       bnames <- model$bnames
       allnames <- unique(c(model$gnames, model$bnames))
+      # Create index of variables in varlist
+      i2 <- match(varlist, allnames)
+      # Order allnames in terms of varlist
+      allnames <- c(allnames[i2], allnames[-i2])
+      # Create a list of variable names by subbing in varnames from varlist
+      names(varlist)[names(varlist) == ""] <- varlist[names(varlist) == ""]
+      varnames <- allnames
+      varnames[allnames %in% varlist] <- names(varlist)
+
+      if (is.null(varlist)) varlist <- allnames
+      # } else {
+      #   varlist <- match.arg(varlist)
+      # }
+      nobs = model$nobs
+      nfail = model$nfail
     }
     qi <- match.arg(qi)
     if (stars == T) {
@@ -25,11 +44,9 @@ tvtable <- function(model, format = c("wide", "long"), qi = c("se", "pvalue", "z
       gstar <- NULL
       bstar <- NULL
     }
-    nobs = model$nobs
-    nfail = model$nfail
-    emat <- matrix(ncol = 4, nrow = 2)
-    emat[ , 1] <- c(nobs, nfail)
-    format <- match.arg(format)
+    emat <- matrix(ncol = 5, nrow = 2)
+    emat[ , 1] <- c("Number of Observations", "Number of Failures")
+    emat[ , 2] <- c(nobs, nfail)
 
     gsevec <- vector(length = length(gamma))
     bsevec <- vector(length = length(beta))
@@ -60,7 +77,9 @@ tvtable <- function(model, format = c("wide", "long"), qi = c("se", "pvalue", "z
       gmat <- as.data.frame(rbind(gamma, gpval))
       bmat <- as.data.frame(rbind(beta, bpval))
     }
+    browser()
 
+    # Combine bmat and gmat
     colnames(gmat) <- gnames
     colnames(bmat) <- bnames
     fullmat <- merge(gmat, bmat, all = T, sort = F)
@@ -68,9 +87,11 @@ tvtable <- function(model, format = c("wide", "long"), qi = c("se", "pvalue", "z
     # fullmat <- fullmat[,allnames]
     fullmat <- t(fullmat)
     fullmat <- fullmat[allnames, ]
+    fullmat <- cbind(varnames, fullmat)
     fullmat <- rbind(as.matrix(fullmat), emat)
-    rownames(fullmat)[nrow(fullmat) - 1] <- "Number of Observations"
-    rownames(fullmat)[nrow(fullmat)] <- "Number of Failures"
+    rownames(fullmat) <- NULL
+    # rownames(fullmat)[nrow(fullmat) - 1] <- "Number of Observations"
+    # rownames(fullmat)[nrow(fullmat)] <- "Number of Failures"
 
     # if (rownames(test) == rownames(a)) {
     #   for (n in 1:nrow(test)) {
@@ -84,32 +105,37 @@ tvtable <- function(model, format = c("wide", "long"), qi = c("se", "pvalue", "z
     # }
 
     if (qi == "se") {
-      colnames(fullmat) <- c("Incidence Coef.", "Std. Error", "Hazard Coef.", "Std. Error")
+      colnames(fullmat) <- c("", "Incidence Coef.", "Std. Error", "Hazard Coef.", "Std. Error")
     }
     if (qi == "pvalue") {
-      colnames(fullmat) <- c("Incidence Coef.", "P-value", "Hazard Coef.", "P-value")
+      colnames(fullmat) <- c("", "P-value", "Hazard Coef.", "P-value")
     }
     if (qi == "zscore") {
-      colnames(fullmat) <- c("Incidence Coef.", "Z-score", "Hazard Coef.", "Z-score")
+      colnames(fullmat) <- c("", "Z-score", "Hazard Coef.", "Z-score")
     }
     #fullmat <- round(fullmat, digits)
     for (i in 1:nrow(fullmat) - 2) {
-      fullmat[i, 1] <- ifelse(is.na(fullmat[i, 1]), "", fullmat[i, 1])
       fullmat[i, 2] <- ifelse(is.na(fullmat[i, 2]), "", fullmat[i, 2])
       fullmat[i, 3] <- ifelse(is.na(fullmat[i, 3]), "", fullmat[i, 3])
       fullmat[i, 4] <- ifelse(is.na(fullmat[i, 4]), "", fullmat[i, 4])
+      fullmat[i, 5] <- ifelse(is.na(fullmat[i, 5]), "", fullmat[i, 5])
     }
 
-    long1 <- as.vector(rbind(fullmat[, 1], fullmat[, 2]))
-    long1 <- long1[1:(length(long1) - 4)]
-    long2 <- as.vector(rbind(fullmat[, 3], fullmat[, 4]))
-    long2 <- long2[1:(length(long2) - 4)]
-    long <- cbind(long1, long2)
-    matrix(long, ncol = 2)
-    long <- rbind(long, emat[, 1:2])
-    colnames(long) <- c("Incidence Coef.", "Hazard Coef.")
-    longnames <- as.vector(rbind(rownames(fullmat), rep("", length(allnames) + 2)))
-    rownames(long) <- longnames[-c(length(longnames) - 2, length(longnames))]
+    # Create long version of table
+    if (format == "long") {
+      long1 <- as.vector(rbind(fullmat[, 2], fullmat[, 3]))
+      long1 <- long1[1:(length(long1) - 4)]
+      long2 <- as.vector(rbind(fullmat[, 4], fullmat[, 5]))
+      long2 <- long2[1:(length(long2) - 4)]
+      long <- cbind(long1, long2)
+      long <- rbind(long, cbind(c("", ""), emat[, 2]))
+      # long <- cbind(rep("", nrow(long)), long)
+      # long <- cbind(c(varlist, "Number of Obs.", "Number of Failures"), long)
+      longnames <- as.vector(rbind(varnames, rep("", length(varnames))))
+      long <- cbind(c(longnames, "Number of Obs.", "Number of Failures"), long)
+      colnames(long) <- c("", "Incidence Coef.", "Hazard Coef.")
+      # rownames(long) <- longnames[-c(length(longnames) - 2, length(longnames))]
+    }
     # long <- long[-c(nrow(long), nrow(long) - 2), ]
 
     # stacked <- as.matrix(c("", long1, "", long2[3:length(long2)], emat[, 1:2]))
