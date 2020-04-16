@@ -7,34 +7,38 @@ tvtable <- function(model, format = c("wide", "long"),
                     qi = c("se", "pvalue", "zscore"), stars = T, digits = 3,
                     varlist = NULL) {
     format <- match.arg(format)
-    if ("tvcure" %in% class(model)) {
-      gamma <- round(model$gamma, digits)
-      beta  <- round(model$beta, digits)
-      gse   <- round(model$g_sd, digits)
-      bse   <- round(model$b_sd, digits)
-      gz    <- round(model$g_zvalue, digits)
-      bz    <- round(model$b_zvalue, digits)
-      gpval <- round(model$g_pvalue, digits)
-      bpval <- round(model$b_pvalue, digits)
+    gamma <- round(model$gamma, digits)
+    beta  <- round(model$beta, digits)
+    gse   <- round(model$g_sd, digits)
+    bse   <- round(model$b_sd, digits)
+    gz    <- round(model$g_zvalue, digits)
+    bz    <- round(model$b_zvalue, digits)
+    gpval <- round(model$g_pvalue, digits)
+    bpval <- round(model$b_pvalue, digits)
 
-      gnames <- model$gnames
-      bnames <- model$bnames
-      allnames <- unique(c(model$gnames, model$bnames))
-      if (is.null(varlist)) varnames <- allnames
-      else {
-        # Create index of variables in varlist
-        i2 <- match(varlist, allnames)
-        # Order allnames in terms of varlist
+    gnames <- model$gnames
+    bnames <- model$bnames
+    allnames <- unique(c(model$gnames, model$bnames))
+    if (is.null(varlist)) varnames <- allnames
+    else {
+      i2 <- match(varlist, allnames)
+      if (sum(is.na(i2)) > 0) stop(paste0("\n\tVariable ", varlist[is.na(i2)], " not found."))
+      if (length(allnames) == length(varlist)) {
+        allnames <- allnames[i2]
+      } else if (length(allnames) > length(varlist)) {
         allnames <- c(allnames[i2], allnames[-i2])
-        # Create a list of variable names by subbing in varnames from varlist
-        names(varlist)[names(varlist) == ""] <- varlist[names(varlist) == ""]
-        varnames <- allnames
-        varnames[allnames %in% varlist] <- names(varlist)
       }
-
-      nobs = model$nobs
-      nfail = model$nfail
+      if (length(allnames) < length(varlist)) {
+        notfound <- varlist[(varlist %in% allnames == F) == T]
+      } else notfound <- NULL
+      if (!is.null(notfound)) stop(paste0("\n\tVariable ", notfound, " not found."))
+      names(varlist)[names(varlist) == ""] <- varlist[names(varlist) == ""]
+      varnames <- allnames
+      varnames[allnames %in% varlist] <- names(varlist)
     }
+    nobs = model$nobs
+    nfail = model$nfail
+
     qi <- match.arg(qi)
     if (stars == T) {
       gstar <- gtools::stars.pval(gpval)
@@ -76,7 +80,6 @@ tvtable <- function(model, format = c("wide", "long"),
       gmat <- as.data.frame(rbind(gamma, gpval))
       bmat <- as.data.frame(rbind(beta, bpval))
     }
-    browser()
 
     # Combine bmat and gmat
     colnames(gmat) <- gnames
@@ -104,13 +107,13 @@ tvtable <- function(model, format = c("wide", "long"),
     # }
 
     if (qi == "se") {
-      colnames(fullmat) <- c("", "Incidence Coef.", "Std. Error", "Hazard Coef.", "Std. Error")
+      colnames(fullmat) <- c(" ", "Incidence Coef.", "Std. Error", "Hazard Coef.", "Std. Error")
     }
     if (qi == "pvalue") {
-      colnames(fullmat) <- c("", "P-value", "Hazard Coef.", "P-value")
+      colnames(fullmat) <- c(" ", "P-value", "Hazard Coef.", "P-value")
     }
     if (qi == "zscore") {
-      colnames(fullmat) <- c("", "Z-score", "Hazard Coef.", "Z-score")
+      colnames(fullmat) <- c(" ", "Z-score", "Hazard Coef.", "Z-score")
     }
     #fullmat <- round(fullmat, digits)
     for (i in 1:nrow(fullmat) - 2) {
@@ -132,7 +135,7 @@ tvtable <- function(model, format = c("wide", "long"),
       # long <- cbind(c(varlist, "Number of Obs.", "Number of Failures"), long)
       longnames <- as.vector(rbind(varnames, rep("", length(varnames))))
       long <- cbind(c(longnames, "Number of Obs.", "Number of Failures"), long)
-      colnames(long) <- c("", "Incidence Coef.", "Hazard Coef.")
+      colnames(long) <- c(" ", "Incidence Coef.", "Hazard Coef.")
       # rownames(long) <- longnames[-c(length(longnames) - 2, length(longnames))]
     }
     # long <- long[-c(nrow(long), nrow(long) - 2), ]

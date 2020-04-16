@@ -14,12 +14,21 @@ tvtable.coxph <- function(model, format = c("wide", "long"),
   if (is.null(varlist)) varnames <- allnames
   else {
     i2 <- match(varlist, allnames)
-    allnames <- c(allnames[i2], allnames[-i2])
+    if (sum(is.na(i2)) > 0) stop(paste0("\n\tVariable ", varlist[is.na(i2)], " not found."))
+
+    if (length(allnames) == length(varlist)) {
+      allnames <- allnames[i2]
+    } else if (length(allnames) > length(varlist)) {
+      allnames <- c(allnames[i2], allnames[-i2])
+    }
+    if (length(allnames) < length(varlist)) {
+      notfound <- varlist[(varlist %in% allnames == F) == T]
+    } else notfound <- NULL
+    if (!is.null(notfound)) stop(paste0("\n\tVariable ", notfound, " not found."))
     names(varlist)[names(varlist) == ""] <- varlist[names(varlist) == ""]
     varnames <- allnames
     varnames[allnames %in% varlist] <- names(varlist)
   }
-
 
   # Summary stats
   nobs = nrow(model$y)
@@ -49,7 +58,6 @@ tvtable.coxph <- function(model, format = c("wide", "long"),
   if (qi == "pvalue") {
     bmat <- as.data.frame(rbind(beta, bpval))
   }
-  browser()
 
   # Combine matrices
   # colnames(bmat) <- bnames
