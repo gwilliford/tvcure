@@ -3,7 +3,7 @@
 #' @param qi Specifies the quantity of interest to display in addition to coefficients (standard errors, p-values, or z-scores).
 #' @param stars Logical value indicating whether significance stars should be printed
 #' @param digits Number of digits to display past the decimal point
-tvtable <- function(model, format = c("wide", "long"),
+tvtable_tvcure <- function(model, format = c("wide", "long"),
                     qi = c("se", "pvalue", "zscore"), stars = T, digits = 3,
                     varlist = NULL) {
     format <- match.arg(format)

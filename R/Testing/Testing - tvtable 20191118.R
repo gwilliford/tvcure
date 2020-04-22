@@ -11,6 +11,10 @@ cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
 pd <- tvcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE,
              cureform = ~ TRT + SEX + AGE,
              data = e1684, parallel = T, nboot = 10)
+cox <- coxph(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE,
+             data = e1684)
+
+
 
 # Test subset functionality
 pda <- tvcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE,
@@ -21,3 +25,18 @@ pda <- tvcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEX + AGE,
 pda <- tvcure(Surv(FAILTIME, FAILCENS) ~ TRT + SEXY + AGE,
              cureform = ~ TRT + SEX + AGE,
              data = e1684, parallel = T, nboot = 10)
+
+
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+pd <- tvcure(Surv(FAILTIME, FAILCENS) ~ AGE,
+             cureform = ~ AGE,
+             data = e1684, parallel = T, nboot = 10)
+
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+pd <- tvcure(Surv(FAILTIME, FAILCENS) ~ SEX,
+             cureform = ~ TRT,
+             data = e1684, parallel = T, nboot = 10)
+
+pd <- tvcure(Surv(FAILTIME, FAILCENS) ~ SEX,
+             cureform = ~ TRT,
+             data = e1684, parallel = T, nboot = 10, firthcox = T)

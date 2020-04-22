@@ -3,7 +3,7 @@ library(mixcure)
 data(goldman.data)
 # cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
 a <- mixcure(Surv(time, cens) ~ transplant, ~ transplant, data = goldman.data)
-b <- tvcure(Surv(time, cens) ~ transplant, ~ transplant, data = goldman.data, var = F, parallel = F)
+b <- tvcure(Surv(time, cens) ~ transplant, ~ transplant, data = goldman.data, var = T, parallel = F)
 d <- residuals(b, data = goldman.data)
 e <- residuals(b, data = goldman.data, type = "M-Martingale")
 plot(e$xm, e$residuals)
@@ -25,7 +25,7 @@ m2 <- tvcure(Surv(start, stop, event) ~  capchange + lndeaths + contiguity + ind
              cureform = ~ lndeaths + battletide + tie + thirdpartycfire +
                stakes +
                twodem5 + index + cfhist + contiguity,
-             data = lhr, var = F, parallel = F, brglm = T); summary(m2)
+             data = lhr, var = T, parallel = F, brglm = T, nboot = 30); summary(m2)
 r2 <- residuals(m2, data = lhr, "Cox-Snell")
 plot(r2$time, r2$residuals)
 r2b <- residuals(m2, data = lhr, "M-Martingale")
@@ -84,7 +84,7 @@ m2 <- tvcure(Surv(start, stop, event) ~  capchange + lndeaths + contiguity + ind
              cureform = ~ lndeaths + battletide + tie + thirdpartycfire +
                stakes +
                twodem5 + index + cfhist + contiguity,
-             data = lhr, var = F, parallel = F, brglm = T); summary(m2)
+             data = lhr, var = T, parallel = F, brglm = T, nboot = 30); summary(m2)
 s <- cox.zph(m2$curemod$latency_fit, terms = F)
 library(survminer)
 ggcoxzph(s)
