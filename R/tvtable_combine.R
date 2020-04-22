@@ -1,0 +1,135 @@
+# tables <- c("cox", "curepart")
+# t1 <- tvtable.coxph(cox, format = "long")
+# t2 <- tvtable(curepart, format = "long")
+# tvtable.combine(c("t1", "t2"))
+
+tvtable_combine <- function(tables, format = c("wide", "long"),
+                          qi = c("se", "pvalue", "zscore"), stars = T, digits = 3,
+                          modnum = T, varlist = NULL) {
+  `%notin%` <- Negate(`%in%`)
+  len <- length(tables)
+  nr <- vector(length = len)
+  # tcol <- vector()
+  allnames <- vector()
+  for (i in 1:len) {
+    tab <- eval(parse(text = tables[i]))
+    assign(paste0("stats", i), tab[c(nrow(tab) - 1):nrow(tab), ])
+    tab <- tab[-c(c(nrow(tab) - 1):nrow(tab)), ]
+    assign(paste0("tab", i), tab)
+    assign(paste0("varnames", i), tab[, 1])
+    if (i == 1) allnames <- tab[, 1]
+    else allnames <- c(allnames, tab[, 1])
+    nr[i] <- nrow(tab)
+    # tcol[i] <- ncol(tab) - 1
+  }
+  maxrow <- max(nr)
+  allnames <- unique(allnames)
+  allnames <- allnames[allnames != ""]
+  allnames <- as.vector(rbind(allnames, rep("", length(allnames))))
+  for (i in 2:len) {
+    tab <- eval(parse(text = paste0("tab", i)))
+    # Get the indices of variables in 2 that are in 1
+    index <- match(eval(parse(text = paste0("varnames", i - 1))), eval(parse(text = paste0("varnames", i))))
+    index <- index[index != 2]
+    index2 <- index + 1
+    vec <- as.vector(rbind(index, index2))
+    # vec <- vec[-length(vec)]
+    matin <- tab[vec, ]
+    indout <- c(1:nrow(tab))
+    indout <- indout[indout %notin% vec == T]
+    matout <- tab[indout, ]
+    assign(paste0("mout", i), rbind(matin, matout))
+  }
+  mout1 <- tab1
+  addnum <- maxrow - nr
+  rn <- as.vector("")
+  for (i in 1:len) {
+    # browser()
+    tab <- eval(parse(text = paste0("mout", i)))
+    if (modnum) {
+      if (ncol(tab) == 2) rni <- paste0("(", i, ") \\newline")
+      if (ncol(tab) == 3) rni <- c(paste0("(", i, ") \\newline"), "")
+      # if (ncol(tab) == 2) {
+      #   colnames(tab)[2] <- paste0("(", i, ") \\newline ", colnames(tab)[2])
+      # } else {
+      #   colnames(tab)[2] <- paste0("(", i, ") \\newline ", colnames(tab)[2])
+      #   colnames(tab)[3] <- paste0("\\hspace{0cm} \\newline ", colnames(tab)[3])
+      # }
+      # cn <- colnames(tab)
+      # tab <- rbind(cn, tab)
+      # row.names(tab) <- NULL
+      # rbind("", tab[, 2]
+      # if (ncol(tab == 2)) {
+      #   rbind(c(paste0("(", i, "))
+      # }
+      rn <- c(rn, rni)
+    }
+    # browser()
+    addmat <- matrix("", nrow = addnum[i], ncol = ncol(tab))
+    tab <- rbind(tab, addmat)
+    tab <- rbind(tab, eval(parse(text = paste0("stats", i))))
+    assign(paste0("ftab", i), tab)
+    if (i == 1) {
+      ftab <- cbind(c(allnames, "Number of Obs.", "Number of Failures."), tab)
+      # ftab <- cbind(c(allnames, "Number of Obs.", "Number of Failures."), tab)
+      # if (ncol(ftab) == 2) colnames(ftab[, "tab"]) <- "Hazard Coef."
+      ftab <- ftab[, -2]
+    } else {
+      ftab <- cbind(ftab, eval(parse(text = paste0("ftab", i)))[, -1])
+    }
+  }
+  browser()
+  if (modnum) {
+    cn <- colnames(ftab)
+    ftab <- rbind(cn, ftab)
+    colnames(ftab) <- rn
+  }
+  colnames(ftab)[1] <- " "
+  ftab
+    # Get the indices of variables in 1 that are not in 2
+    # Get the indices of variables in 2 that are not in 1
+        #match(eval(parse(text = paste0("varnames", i - 1))), allnames)
+}
+
+
+  #   } else stop("Models must be a coxph or tvcure object.")
+  #   assign(paste0("table", i), tabx)
+  #   assign(paste0("varnames", i), tabx[, 1])
+  #   if (i == 1) allnames <- tabx[, 1]
+  #   else allnames <- c(allnames, tabx[, 1])
+  # }
+  # allnames <- unique(allnames)
+  # allnames
+  # browser()
+  #
+  # allnames[order(varlist)]
+  # allnames <- dplyr::select(allnames, -c('""'))
+  # allnames <- allnames[allnames != ""]
+  # index <- allnames %notin% eval(parse(text = paste0("varnames", i)))
+  # missnames <- allnames[index]
+
+
+
+
+varlist <- c("capchange", "tie", "onedem5")
+varnames <- c("Capability Change", "Tie", "Joint Democracy")
+
+#
+#   allnames <- vector()
+#   for (i in 1:len) {
+#     for (i == 1) {
+#       allnames1 <- eval(parse(text = paste0("varnames", i)))
+#     } for (i = 2:len) {
+#       assign(paste0("allnames", i), c(allnames, eval(parse(text = paste0("varnames", i))))
+#       allnames[i] <- c(allnames[i - 1], allnames[i])
+#     }
+#
+#   for (i in 1:len) cbind(eval(parse(text = paste0("allnames", i))))
+#
+#   }
+#
+#
+#
+#
+#
+#   }
