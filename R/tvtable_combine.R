@@ -5,14 +5,14 @@
 
 tvtable_combine <- function(tables, format = c("wide", "long"),
                           qi = c("se", "pvalue", "zscore"), stars = T, digits = 3,
-                          modnum = T, varlist = NULL) {
+                          modnum = T, varlist = NULL,
+                          footnote = NULL) {
   # require(dplyr)
   `%notin%` <- Negate(`%in%`)
   len <- length(tables)
   # nr <- vector(length = len)
   # tcol <- vector()
   allnames <- vector()
-  browser()
   for (i in 1:len) {
       # *** {This code is an artifact of having other functions put obs and fialures in
     tab <- eval(parse(text = tables[i]))
@@ -57,7 +57,6 @@ tvtable_combine <- function(tables, format = c("wide", "long"),
     assign(paste0("mout", i), rbind(matin, matout))
   }
 
-browser()
 
   rn <- as.vector("")
   for (i in 1:len) {
@@ -105,17 +104,18 @@ browser()
     cn <- colnames(ftabfinal)
     ftabfinal <- rbind(cn, ftabfinal)
     rownames(ftabfinal) <- NULL
-    colnames(ftabfinal) <- rn
+    colnames(ftabfinal) <- paste(rn, ftabfinal[1, ])
+    ftabfinal <- ftabfinal[-1, ]
   }
   # browser()
-  browser()
   # index <- ftabfinal[, 1]
   # ftabfinal[1, 1] <- replace(ftabfinal[1, 1], startsWith(ftabfinal[1, 1], "sd_"), "")
 
     # Get the indices of variables in 1 that are not in 2
     # Get the indices of variables in 2 that are not in 1
         #match(eval(parse(text = paste0("varnames", i - 1))), allnames)
-  return(ftabfinal)
+  out <- list(table = ftabfinal, footnote = footnote)
+  return(out)
 }
 
 
@@ -130,7 +130,6 @@ browser()
   # }
   # allnames <- unique(allnames)
   # allnames
-  # browser()
   #
   # allnames[order(varlist)]
   # allnames <- dplyr::select(allnames, -c('""'))
