@@ -92,7 +92,7 @@ prediction3 <- function(model, variable, values,
   } else { ## With CIs =========================================================================
 
     Coef_smplb <- MASS::mvrnorm(n = nsims, mu = beta, Sigma = vcovb)
-    Coef_smplg <- MASS::mvrnorm(n = nsims, mu = gamma, Sigma =  vcovg)
+    Coef_smplg <- MASS::mvrnorm(n = nsims, mu = gamma, Sigma = vcovg)
 
     # Estimate nsims simulated values of uncureprob
     if (link == "logit") {
