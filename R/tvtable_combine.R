@@ -6,42 +6,53 @@
 tvtable_combine <- function(tables, format = c("wide", "long"),
                           qi = c("se", "pvalue", "zscore"), stars = T, digits = 3,
                           modnum = T, varlist = NULL) {
-  require(dplyr)
+  # require(dplyr)
   `%notin%` <- Negate(`%in%`)
   len <- length(tables)
   # nr <- vector(length = len)
   # tcol <- vector()
   allnames <- vector()
+  browser()
   for (i in 1:len) {
+      # *** {This code is an artifact of having other functions put obs and fialures in
     tab <- eval(parse(text = tables[i]))
     assign(paste0("stats", i), tab[c(nrow(tab) - 1):nrow(tab), ])
     tab <- tab[-c(c(nrow(tab) - 1):nrow(tab)), ]
-    assign(paste0("tab", i), tab)
-    assign(paste0("varnames", i), tab[, 1])
-    if (i == 1) allnames <- tab[, 1]
-    else allnames <- c(allnames, tab[, 1])
+      # } ***
+    tabnames <- tab[, 1]
+    for (j in seq(2, nrow(tab), by = 2)) {
+      tabnames[j] <- paste0("sd_", tabnames[j-1])
+    }
+    tab[, 1] <- tabnames
+    assign(paste0("tabnames", i), tabnames)
+    # assign(paste0("varnames", i), tab[, 1])
+    # if (i == 1) allnames <- tab[, 1]
+    # else allnames <- c(allnames, tab[, 1])
+    allnames <- c(allnames, tabnames)
     # nr[i] <- nrow(tab)
     # tcol[i] <- ncol(tab) - 1
+    assign(paste0("tab", i), tab)
   }
   # maxrow <- max(nr)
   allnames <- unique(allnames)
-  allnames <- allnames[allnames != ""]
-  allnames <- as.vector(rbind(allnames, rep("", length(allnames))))
-  for (i in seq(2, length(allnames), by = 2)) {
-    allnames[i] <- paste0("sd_", allnames[i - 1])
-  }
+  # allnames <- allnames[allnames != ""]
+  # allnames <- as.vector(rbind(allnames, rep("", length(allnames))))
+  # for (i in seq(2, length(allnames), by = 2)) {
+  #   allnames[i] <- paste0("sd_", allnames[i - 1])
+  # }
   mout1 <- tab1
   for (i in 2:len) {
     tab <- eval(parse(text = paste0("tab", i)))
+    # assign(paste0("tabnames", i), tab)
     # Get the indices of variables in 2 that are in 1
-    index <- match(eval(parse(text = paste0("varnames", i - 1))), eval(parse(text = paste0("varnames", i))))
-    index <- index[index != 2]
-    index2 <- index + 1
-    vec <- as.vector(rbind(index, index2))
+    index <- match(eval(parse(text = paste0("tabnames", i - 1))), eval(parse(text = paste0("tabnames", i))))
+    # index <- index[index != 2]
+    # index2 <- index + 1
+    # vec <- as.vector(rbind(index, index2))
     # vec <- vec[-length(vec)]
-    matin <- tab[vec, ]
+    matin <- tab[index, ]
     indout <- c(1:nrow(tab))
-    indout <- indout[indout %notin% vec == T]
+    indout <- indout[indout %notin% index == T]
     matout <- tab[indout, ]
     assign(paste0("mout", i), rbind(matin, matout))
   }
@@ -97,8 +108,9 @@ browser()
     colnames(ftabfinal) <- rn
   }
   # browser()
-  index <- ftabfinal[, 1]
-  ftabfinal[, 1] <- replace(ftabfinal[, 1], startsWith(ftabfinal[, 1], "sd_"), "")
+  browser()
+  # index <- ftabfinal[, 1]
+  # ftabfinal[1, 1] <- replace(ftabfinal[1, 1], startsWith(ftabfinal[1, 1], "sd_"), "")
 
     # Get the indices of variables in 1 that are not in 2
     # Get the indices of variables in 2 that are not in 1
