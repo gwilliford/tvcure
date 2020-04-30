@@ -1,4 +1,4 @@
-tvtable_coxph <- function(model, format = c("wide", "long"),
+tvtable.coxph <- function(model, format = c("wide", "long"),
                           qi = c("se", "pvalue", "zscore"), stars = T, digits = 3,
                           varlist = NULL)
 {
