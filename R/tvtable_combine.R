@@ -16,6 +16,7 @@ tvtable_combine <- function(tables, format = c("wide", "long"),
   for (i in 1:len) {
       # *** {This code is an artifact of having other functions put obs and fialures in
     tab <- eval(parse(text = tables[i]))
+    # tab <- tables[i]
     assign(paste0("stats", i), tab[c(nrow(tab) - 1):nrow(tab), ])
     tab <- tab[-c(c(nrow(tab) - 1):nrow(tab)), ]
       # } ***
@@ -114,6 +115,9 @@ tvtable_combine <- function(tables, format = c("wide", "long"),
     # Get the indices of variables in 1 that are not in 2
     # Get the indices of variables in 2 that are not in 1
         #match(eval(parse(text = paste0("varnames", i - 1))), allnames)
+  if (stars) {
+    footnote = paste0(footnote, " *** \n p < .001, ** p < .01, * p < .05, . < .10.")
+  }
   out <- list(table = ftabfinal, footnote = footnote)
   return(out)
 }
