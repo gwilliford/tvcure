@@ -217,8 +217,6 @@ Cure models are prone to issues of non-convergence or unstable coefficient estim
 %	Improves performance of the model
 %	Improves performance in small samples
 
-
-
 % Identification
 % PH assumption 
 Since the semiparametric proportional hazards cure model is dependent on the proportional hazards assumption, verifying that the covariates conform to the proportional hazards assumption is important. 
@@ -227,7 +225,6 @@ Variants of the standard proportional hazards diagnostics used with Cox models h
 
 \subsection{Comparison of parametric and semiparametric duration models}
 \citet{kuk1992, sy2000} conduct Monte Carlo simulations to compare the performance of a Weibull cure model and the semiparametric cure model when at various levels of censoring when the Weibull distribution is known to be an appropriate distribution.\footnote{Both studies use an exponential distribution to model the hazard rate, which is a special case of the Weibull distribution.} Across all levels of censoring, they find that the semiparametric cure model produces more efficient estimates of the incidence parameters, $\gvec$. With low levels of censoring, the semiparametric cure model provides only slightly less efficient estimates of $\bvec$ than the parametric model. However, at high levels of censoring, the semiparametric model tends to actually provide more efficient estimates of $\bvec$ as well.
-
 
 
 \section{Analysis of International Ceasefire Duration}
@@ -252,25 +249,80 @@ A preliminary analysis of the data confirm that many cease-fires are unlikely to
 		\label{fig:lhrkm}
 	\end{figure}
 
+
 %%% Results -----------------------------------------------------------------------------------------------------------------------------------
+Table \ref{tab:reslhr} presents the results of the 
+
+
+
+
+
+
+Root vs. proximate causes
+
+Some cease-fires are inherently unstable and thus prone to being disrupted. Some cease-fires are less likely to see the recurrence of information or commitment problems and thus less likely to break down in the future.
+
+Among the set of ceasefires susceptible to failure, ceasefires breakdown due to proximate causes that lead to the destruction
+
+Descriptions of the measures and data sources used for \ref{appmeas}
 Conflicts that end without resolving uncertainty over the disputants' capabilities or resolve are more likely to recur 
 Whether two states remain at peace in the long term depends on whether the conflict successfully clarifies the range of acceptable outcomes between disputants. 
 - Battle deaths - costs
 - Ties and battle tide
 
-Root vs. proximate causes
-Some cease-fires are inherently unstable and thus prone to being disrupted. Some cease-fires are less likely to see the recurrence of information or commitment problems and thus less likely to break down in the future.
+
+
+Conflicts terminate when states' expectations about the expected utility of continued fighting converge
+
+
+
+Three factors 
+
+
+
+Wars terminate when states successfully identify an agreement that is acceptable to both parties, 
+
+
 
 Size of the bargaining range
-Strength of credible commitments
+- Information
+- Strength of credible commitments
+- Issues
 
 Finally, states that do not interact on a regular basis are unlikely to find themselves involved in highly salient disputes that justify the costs of conflict. 
 % Uncertainty
-% Strenght of Uncertainty
-Second, factors that 
+% Strength of Uncertainty
+
+
+
+
+
+
+
+Changes in capabilities
+If commitment problems are possible, they are more likely to reemerge sooner than later.
+- Exist
+
+
+\footnote{Model 1 is based on Model 1 in \citep{lo2008}. For this analysis, I have omitted the log-time interactions included by \citet{lo2008}. Although the statistical test used by \citet{lo2008} indicate that several variables may violate the PH assumption, examining additional measures reveals that this is not the case. 
+	Although lhr indicate that , my own examination of the results indicate that these variables do not violate the PH assumption.
+
+
+Substantive results
+
+
+When a wide bargaining range exists between disputants at the end of the dispute, the probability of reaching a settlement that 
+
+
+
+
+
+
+
+
+
 
 
 \section{Appendix}
-\include{./tab/descvars}
 \include{./tab/descstats}
 \end{document}

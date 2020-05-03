@@ -41,12 +41,12 @@ prediction3 <- function(model, variable, values,
   # if (foreach::getDoParRegistered() == T) cl <- foreach::getDoSeqName()
   # if (foreach::getDoParRegistered() == F)
   cl <- foreach::registerDoSEQ()
-  pb <- txtProgressBar(max = nsims, style = 3)
-  progress <- function(n) setTxtProgressBar(pb, n)
-  opts <- list(progress = progress)
+  # pb <- txtProgressBar(max = nsims, style = 3)
+  # progress <- function(n) setTxtProgressBar(pb, n)
+  # opts <- list(progress = progress)
 
   # Create dataset for predictions -----------------------------------------------------------
-
+  browser()
   newX <- apply(X, 2, median)
   newX <- matrix(rep(newX, length(values)), ncol = length(newX), byrow = T)
   colnames(newX) <- bnames

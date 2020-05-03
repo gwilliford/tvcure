@@ -7,7 +7,7 @@ tvtable.coxph <- function(model, format = c("wide", "long"),
   bse   <- round(sqrt(diag(model$var)), digits)
   bz    <- round(beta/bse, digits)
   bpval <- round((1 - pnorm(abs(bz))) * 2, digits)
-
+  browser()
   # Variable names
   bnames <- attr(terms(model), "term.labels")
   allnames <- bnames
@@ -94,6 +94,8 @@ tvtable.coxph <- function(model, format = c("wide", "long"),
     long <- cbind(c(longnames, "Number of Obs.", "Number of Failures"), long)
     colnames(long) <- c("", "Hazard Coef.")
   }
+
+  long <- long %>% select(-starts_with("sd_"))
 
   if (format == "wide") return(fullmat)
   if (format == "long") return(long)

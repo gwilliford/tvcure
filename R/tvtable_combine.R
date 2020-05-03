@@ -36,6 +36,47 @@ tvtable_combine <- function(tables, format = c("wide", "long"),
   }
   # maxrow <- max(nr)
   allnames <- unique(allnames)
+
+  # if (is.null(varlist)) {
+  #   varnames <- allnames
+  # } else {
+  #   i2 <- match(varlist, allnames)
+  #     if (length(allnames) < length(varlist)) {
+  #       notfound <- varlist[(varlist %in% allnames == F) == T]
+  #     } else notfound <- NULL
+  # }
+  # else {
+  #   i2 <- match(varlist, allnames)
+
+  #   #if (sum(is.na(i2)) > 0) stop(paste0("\n\tVariable ", varlist[is.na(i2)], " not found."))
+  #   if (length(allnames) == length(varlist)) {
+  #     allnames <- allnames[i2]
+  #   } else if (length(allnames) > length(varlist)) {
+  #     allnames <- c(allnames[i2], -allnames[i2])
+  #   }
+  #   if (length(allnames) < length(varlist)) {
+  #     notfound <- varlist[(varlist %in% allnames == F) == T]
+  #   } else notfound <- NULL
+  #   if (!is.null(notfound)) stop(paste0("\n\tVariable ", notfound, " not found."))
+  #   names(varlist)[names(varlist) == ""] <- varlist[names(varlist) == ""]
+  #   varnames <- allnames
+  #   varnames[allnames %in% varlist] <- names(varlist)
+  # }
+  tab <- eval(parse(text = paste0("tab", i)))
+  # assign(paste0("tabnames", i), tab)
+  # Get the indices of variables in 2 that are in 1
+  index <- match(eval(parse(text = paste0("varnames", i - 1))), eval(parse(text = paste0("varnames", i))))
+  # index <- index[index != 2]
+  # index2 <- index + 1
+  # vec <- as.vector(rbind(index, index2))
+  # vec <- vec[-length(vec)]
+  matin <- tab[index, ]
+  indout <- c(1:nrow(tab))
+  indout <- indout[indout %notin% index == T]
+  matout <- tab[indout, ]
+  assign(paste0("mout", i), rbind(matin, matout))
+
+
   # allnames <- allnames[allnames != ""]
   # allnames <- as.vector(rbind(allnames, rep("", length(allnames))))
   # for (i in seq(2, length(allnames), by = 2)) {
@@ -57,7 +98,6 @@ tvtable_combine <- function(tables, format = c("wide", "long"),
     matout <- tab[indout, ]
     assign(paste0("mout", i), rbind(matin, matout))
   }
-
 
   rn <- as.vector("")
   for (i in 1:len) {
@@ -114,10 +154,20 @@ tvtable_combine <- function(tables, format = c("wide", "long"),
 
     # Get the indices of variables in 1 that are not in 2
     # Get the indices of variables in 2 that are not in 1
+    index <- match(varlist, allnames)
+    for (i in length(index)) ftabfinal[index, 1] <- names(varlist)[i]
+    allnames %in% varlist
+
         #match(eval(parse(text = paste0("varnames", i - 1))), allnames)
   if (stars) {
     footnote = paste0(footnote, " *** \n p < .001, ** p < .01, * p < .05, . < .10.")
   }
+
+  ftabfinal[, 1] <- varnames
+  for (i in seq(2, nrow(ftabfinal) - 2, by = 2)) {
+    ftabfinal[i , 1] <- paste0("")
+  }
+browser()
   out <- list(table = ftabfinal, footnote = footnote)
   return(out)
 }

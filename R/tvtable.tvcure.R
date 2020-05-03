@@ -15,14 +15,14 @@ tvtable.tvcure <- function(model, format = c("wide", "long"),
     bz    <- round(model$b_zvalue, digits)
     gpval <- round(model$g_pvalue, digits)
     bpval <- round(model$b_pvalue, digits)
-
+browser()
     gnames <- model$gnames
     bnames <- model$bnames
     allnames <- unique(c(model$gnames, model$bnames))
     if (is.null(varlist)) varnames <- allnames
     else {
       i2 <- match(varlist, allnames)
-      if (sum(is.na(i2)) > 0) stop(paste0("\n\tVariable ", varlist[is.na(i2)], " not found."))
+      #if (sum(is.na(i2)) > 0) stop(paste0("\n\tVariable ", varlist[is.na(i2)], " not found."))
       if (length(allnames) == length(varlist)) {
         allnames <- allnames[i2]
       } else if (length(allnames) > length(varlist)) {
@@ -152,6 +152,7 @@ tvtable.tvcure <- function(model, format = c("wide", "long"),
     #                         rep("", length(allnames) - 1))), "Number of Observations",
     #                         "Number of Failures")
     # stacknames <- c("Incidence Coefficients", longnames[1:(nrow(long) - 4)], "Hazard Coefficients", longnames[1:(nrow(long) - 4)], "Number of Observations", "Number of Failures")
+    # long <- cbind(rep("", nrow(long)), long)
 
   if (format == "wide")    return(fullmat)
   if (format == "long")    return(long)
