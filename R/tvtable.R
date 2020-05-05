@@ -1,5 +1,5 @@
 tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3,
-                    modnum = F, varlist = NULL, footnote = NULL)
+                    modnames = NULL, varlist = NULL, footnote = NULL)
 {
   # Set up
   # if (format != "long") stop("Only one model may be specified if format is set to wide. /n")
@@ -12,6 +12,7 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
   qi <- match.arg(qi)
 
   tabnames <- list()
+  mn <- list()
   # Extract cell entries and variable names
   for (i in 1:length(models)) {
     model <- models[[i]]
@@ -50,7 +51,7 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
       bn[j] <- as.vector(rbind(paste0("qi_", bn[j - 1])))
     }
     if (nc == 2) {
-      gn = as.vector(rbind(gnames[[i]], ""))
+      gn = as.vector(rbind(gnames, ""))
       for (j in seq(2, length(gn), 2)) {
         gn[j] <- as.vector(rbind(paste0("qi_", gn[j - 1])))
       }
@@ -59,16 +60,42 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
     # rownames(tab) <- bn
     # colnames(tab) <-;
     tab <- cbind(bn, as.vector(rbind(beta, qivec)))
-    colnames(tab)[2] <- "hazard"
+    colnames(tab)[2] <- "Hazard Coef."
     tabnames[[i]] <- bn
     if (nc == 2) {
       g <- cbind(gn, as.vector(rbind(gamma, qivec2)))
-      tab <- merge(tab, g)
+      colnames(g)[1] <- "bn"
+      tab <- merge(tab, g, sort = F, all = T)
       tabnames[[i]] <- c(bn, gn)
-      colnames(tab)[2:3] <- c("incidence", "hazard")
+      colnames(tab)[2:3] <- c("Incidence Coef.", "Hazard Coef.")
     }
     colnames(tab)[1] <- "vn"
     assign(paste0("tab", i), tab)
+
+    if (is.null(modnames)) {
+      if (nc == 1) {
+        mn[[i]] <- paste0("Model " , i)
+      } else {
+        mn[[i]] <- c(paste0("Model ", i), "blank")
+      }
+    } else {
+      if (nc == 1) {
+        mn[[i]] <- modnames[i]
+      } else {
+        mn[[i]] <- c(modnames[i], "blank")
+      }
+    }
+    # if (is.null(modnames)) {
+    #   if (nc == 1) {
+    #     mn[[i]] <- paste0("Model ", i)
+    #   } else {
+    #     mn[[i]] <- c(paste0("Model ", i), "")
+    #   }
+    # } else if (modnames == T) {
+    #     mn[[i]] <- modnames[i]
+    # } else if (modnames == F) {
+    #   mn[[i]] <- NULL
+    # }
 
     #
     # # sumtab <- matrix(nrow = 2, ncol = nc)
@@ -102,13 +129,20 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
 
   # Order by varlist
   allnames <- unique(unlist(tabnames))
-  browser()
   if (is.null(varlist)){
     varnames <- allnames
     varlabs <- allnames
   } else {
     index <- match(varlist, allnames)
+    index2 <- !is.na(index)
+    index3 <- names(varlist[index2])
+    index <- index[!is.na(index)]
     vn <- allnames[index]
+
+    #
+    # names(varlist[index])
+    #
+
     if (length(vn) == 1) c(vn, "")
     vn <- as.vector(rbind(vn, ""))
     for (j in seq(2, length(vn), 2)) {
@@ -116,19 +150,28 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
     }
     nout <- allnames[allnames %notin% vn]
     varnames <- c(vn, nout)
-    ind <- names(varlist[match(vn, varlist)])
+
     varlabs <- varnames
-    names(varlist[ind])
-    varlabs[match(varlist, vn)] <- na.omit(names(varlist[ind]))
-      # vn[match(varlist, vn)]
+    dex <- as.vector(rbind(index3, ""))
+    varlabs[1:length(dex)] <- dex
+    # for (i in f:length(dex)) {
+    #
+    # }
+    # index2 <- match(varnames, varlist)
+    # names(varlist)
+    # varlabs[length(vn)] <- n
+    # varnames[vn] <-
+    #   ind <- names(varlist[
+    #     match(vn, varlist)]
+    #     ff)
+    #   ind[is.na(ind)]
+    #   # vn[match(varlist, vn)]
   }
 
-  browser()
   # Combine tables
   tdf  <- matrix(varnames, ncol = 1)
   colnames(tdf)[1] <- "vn"
   # colnames(ttab)[1] <- names(tab[i])
-  #
   for (i in 1:len) {
     tab <- eval(parse(text = paste0("tab", i)))
     #colnames(tab)[-1] <- c("vn", rep(i)
@@ -144,13 +187,23 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
   ind <- match(varnames, tdf[, 1])
   tdf <- tdf[ind, ]
   tdf[, 1] <- varlabs
-  colnames(tdf)[startsWith(colnames(tdf), "hazard")] <- "Hazard"
-  colnames(tdf)[startsWith(colnames(tdf), "incidence")] <- "Incidence"
+  # colnames(tdf)[1] <- c(" ")
   colnames(tdf)[1] <- c(" ")
-  rownames(tdf) <- NULL
+  cn <- colnames(tdf)
+  ind <- startsWith(cn, "Hazard")
+  cn <- replace(cn, ind, "Hazard")
+  ind2 <- startsWith(cn, "Infcidence")
+  cn <- replace(cn, ind2, "Incidence")
+  cn[1] <- ""
+  # colnames(tdf)[startsWith(colnames(tdf), "incidence")] <- "Incidence"
+  colnames(tdf) <- NULL
   for (j in seq(2, nrow(tdf), 2)) {
     tdf[j, 1] <- ""
   }
+  tdf <- as.matrix(tdf)
+
+  mn2 <- c("", unlist(mn))
+  mn2 <- replace(mn2, mn2 == "blank", "")
 
   # test <- c(1, 2, 3, 4)
   svec <- vector()
@@ -159,9 +212,10 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
   }
   sumtab <- matrix(svec, nrow = 2)
   sumtab <- cbind(c("Number of Observations", "Number of Failures"), sumtab)
-  colnames(sumtab) <- colnames(tdf)
-  tdf <- rbind(tdf, sumtab)
+  # colnames(sumtab) <- colnames(tdf)
 
-  ftab <- list(tab = tdf, class = "tvtable")
-  print(ftab$tab)
+  ftab <- rbind(mn2, cn, tdf, sumtab)
+  rownames(ftab) <- NULL
+  tabout <- list(tab = ftab, class = "tvtable")
+  print(tabout$tab)
 }
