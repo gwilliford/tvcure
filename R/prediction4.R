@@ -39,16 +39,18 @@ prediction3 <- function(model, variable, values,
   type = match.arg(type)
   # clstatus <- foreach::getDoParRegistered()
   # if (foreach::getDoParRegistered() == T) cl <- foreach::getDoSeqName()
-  # if (foreach::getDoParRegistered() == F)
-  cl <- foreach::registerDoSEQ()
+  # # if (foreach::getDoParRegistered() == F)
+  # cl <- foreach::registerDoSEQ()
   # pb <- txtProgressBar(max = nsims, style = 3)
   # progress <- function(n) setTxtProgressBar(pb, n)
   # opts <- list(progress = progress)
 
   # Create dataset for predictions -----------------------------------------------------------
+
   newX <- apply(X, 2, median)
   newX <- matrix(rep(newX, length(values)), ncol = length(newX), byrow = T)
   colnames(newX) <- bnames
+
   if (variable %in% bnames) newX[, variable] <- values
   newX <- as.matrix(newX)
   nx <- nrow(newX)
@@ -91,7 +93,7 @@ prediction3 <- function(model, variable, values,
   } else { ## With CIs =========================================================================
 
     Coef_smplb <- MASS::mvrnorm(n = nsims, mu = beta, Sigma = vcovb)
-    Coef_smplg <- MASS::mvrnorm(n = nsims, mu = gamma, Sigma = vcovg)
+    Coef_smplg <- MASS::mvrnorm(n = nsims, mu = gamma, Sigma =  vcovg)
 
     # Estimate nsims simulated values of uncureprob
     if (link == "logit") {
@@ -118,6 +120,14 @@ prediction3 <- function(model, variable, values,
     suncuresims <- array(NA, dim = c(nsims, nobs, nrow(newX)))
     spopsims    <- array(NA, dim = c(nsims, nobs, nrow(newX)))
 
+    # if (type == "suncure" | type == "spop") {
+    #   foreach (i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %:%
+    #     foreach (k = 1:nrow(newX)) %dopar% {
+    #       suncuresims[i, , k] <- s0sim[i, ]^ebetaXsim[i, k]
+    #       spopsims[i, , k] <- uncureprobsims[i, k] *
+    #         suncuresims[i, , k] + (1 - uncureprobsims[i, k])
+    #     }
+    # }
     if (type == "suncure" | type == "spop") {
       for (i in 1:nsims) {
         for (k in 1:nrow(newX)) {
@@ -128,6 +138,7 @@ prediction3 <- function(model, variable, values,
       }
     }
 
+
     suncuremean <- matrix(nrow = nobs, ncol = dim(newZ))
     suncurelo   <- matrix(nrow = nobs, ncol = dim(newZ))
     suncurehi   <- matrix(nrow = nobs, ncol = dim(newZ))
@@ -135,19 +146,34 @@ prediction3 <- function(model, variable, values,
     spoplo      <- matrix(nrow = nobs, ncol = dim(newZ))
     spophi      <- matrix(nrow = nobs, ncol = dim(newZ))
 
-    for(i in 1:nsims) {
-      #for (k in 1:nrow(newX)) {
-      if (type == "suncure") {
-        suncuremean[, i] <- sort(apply(suncuresims[, , i], 2, mean), decreasing = T)
-        suncurelo[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.05), decreasing = T)
-        suncurehi[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.95), decreasing = T)
-      }
-      if (type == "spop") {
-        spopmean[, i]    <- sort(apply(spopsims[, , i], 2, mean), decreasing = T)
-        spoplo[, i]      <- sort(apply(spopsims[, , i], 2, quantile, 0.05), decreasing = T)
-        spophi[, i]      <- sort(apply(spopsims[, , i], 2, quantile, 0.95), decreasing = T)
-      }
+    browser()
+    # foreach(i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %dopar% {
+    #   #for (k in 1:nrow(newX)) {
+    #   if (type == "suncure") {
+    #     suncuremean[, i] <- sort(apply(suncuresims[, , i], 2, mean), decreasing = T)
+    #     suncurelo[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.05), decreasing = T)
+    #     suncurehi[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.95), decreasing = T)
+    #   }
+    #   if (type == "spop") {
+    #     spopmean[, i]    <- sort(apply(spopsims[, , i], 2, mean), decreasing = T)
+    #     spoplo[, i]      <- sort(apply(spopsims[, , i], 2, quantile, 0.05), decreasing = T)
+    #     spophi[, i]      <- sort(apply(spopsims[, , i], 2, quantile, 0.95), decreasing = T)
+    #   }
+    # }
+    # for(i in 1:nsims) {
+      for (k in 1:nrow(newX)) {
+        if (type == "suncure") {
+          suncuremean[, k] <- sort(apply(suncuresims[, , k], 2, mean), decreasing = T)
+          suncurelo[, k]   <- sort(apply(suncuresims[, , k], 2, quantile, 0.05), decreasing = T)
+          suncurehi[, k]   <- sort(apply(suncuresims[, , k], 2, quantile, 0.95), decreasing = T)
+        }
+        if (type == "spop") {
+          spopmean[, k]    <- sort(apply(spopsims[, , k], 2, mean), decreasing = T)
+          spoplo[, k]      <- sort(apply(spopsims[, , k], 2, quantile, 0.05), decreasing = T)
+          spophi[, k]      <- sort(apply(spopsims[, , k], 2, quantile, 0.95), decreasing = T)
+        }
     }
+
   } # close CI = T else loop
 
   # Plot Setup --------------------------------------------------------------
@@ -156,7 +182,7 @@ prediction3 <- function(model, variable, values,
   } else {
     splot <- ggplot() + theme(panel.border = element_rect(colour = "black", fill = NA))
   }
-  browser()
+
   # Uncureprob Plot ---------------------------------------------------------
   if (type == "uncureprob") {
     if (CI == F) {
@@ -299,4 +325,3 @@ prediction3 <- function(model, variable, values,
     }
   }
 }
-
