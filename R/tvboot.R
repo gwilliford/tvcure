@@ -25,7 +25,7 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
   }
 
   # Sample and Estimate
-  bootres <- foreach(i = 1:nboot, .packages = c('survival','brglm', 'brglm2'),
+  bootres <- foreach(i = 1:nboot, .packages = c('survival', 'brglm2'),
                      .options.snow = opts, .errorhandling = 'remove') %dopar% {
     for(i in 1:nboot) {
       try({

@@ -46,7 +46,6 @@ prediction3 <- function(model, variable, values,
   # opts <- list(progress = progress)
 
   # Create dataset for predictions -----------------------------------------------------------
-  browser()
   newX <- apply(X, 2, median)
   newX <- matrix(rep(newX, length(values)), ncol = length(newX), byrow = T)
   colnames(newX) <- bnames
@@ -120,8 +119,8 @@ prediction3 <- function(model, variable, values,
     spopsims    <- array(NA, dim = c(nsims, nobs, nrow(newX)))
 
     if (type == "suncure" | type == "spop") {
-      foreach (i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %:%
-        foreach (k = 1:nrow(newX)) %dopar% {
+      foreach (i = 1:nsims, .errorhandling = 'remove') %:%
+        foreach (k = 1:nrow(newX)) %do% {
           suncuresims[i, , k] <- s0sim[i, ]^ebetaXsim[i, k]
           spopsims[i, , k] <- uncureprobsims[i, k] *
             suncuresims[i, , k] + (1 - uncureprobsims[i, k])
@@ -135,7 +134,7 @@ prediction3 <- function(model, variable, values,
     spoplo      <- matrix(nrow = nobs, ncol = dim(newZ))
     spophi      <- matrix(nrow = nobs, ncol = dim(newZ))
 
-    foreach(i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %dopar% {
+    foreach(i = 1:nsims, .errorhandling = 'remove') %dopar% {
       #for (k in 1:nrow(newX)) {
       if (type == "suncure") {
         suncuremean[, i] <- sort(apply(suncuresims[, , i], 2, mean), decreasing = T)
@@ -156,7 +155,7 @@ prediction3 <- function(model, variable, values,
   } else {
     splot <- ggplot() + theme(panel.border = element_rect(colour = "black", fill = NA))
   }
-
+  browser()
   # Uncureprob Plot ---------------------------------------------------------
   if (type == "uncureprob") {
     if (CI == F) {

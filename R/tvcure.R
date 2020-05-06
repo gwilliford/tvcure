@@ -15,7 +15,8 @@
 #' @param parallel If true, bootstraps will be run in parallel. A progress bar displaying the number of completed boostraps will be displayed. This option requires the user to set up a \link{snow} object and register it using the \link{doSNOW} package (see example below).
 tvcure <- function(formula, cureform, link = "logit",
                    data, na.action = na.omit, offset = NULL, subset = NULL,
-                   var = T, nboot = 100, parallel = T,
+                   var = T, nboot = 100,
+                   parallel = T,
                    brglm = F, firthcox = F,
                    emmax = 1000, eps = 1e-07)
 {
@@ -35,7 +36,7 @@ tvcure <- function(formula, cureform, link = "logit",
     }
 
     method <- ifelse(brglm, "brglmFit", "glm.fit")
-    if (brglm) require(brglm); require(brglm2)
+    if (brglm) require(brglm2)
 
     # Pull variables from data
     xvars <- all.vars(formula)

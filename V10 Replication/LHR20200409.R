@@ -41,7 +41,7 @@ cureph2 <- tvcure(Surv(start, stop, event) ~  lndeaths + tie + stakes + battleti
                  cureform = ~ lndeaths + battletide + thirdpartycfire +
                    tie + stakes + archigosFIRC + samereg + index +
                    contiguity,
-                 data = lhr, var = T, nboot = 100, brglm = T); summary(cureph2)
+                 data = lhr, var = T, nboot = 10, brglm = T); summary(cureph2)
 
 
 # Cure model - full
