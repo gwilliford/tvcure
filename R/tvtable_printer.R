@@ -4,16 +4,24 @@ footnote <- function(x) {
   rownames(fn) <- NULL
   return(fn)
 }
-tvtable_xtable <- function(tvtable, ...) {
+
+tvtable_xtable <- function(tab, ...) {
   require(xtable)
-  t <- as.data.frame(tvtable$table)
-  if (!is.null(footnote)) {
-    fn <- list(pos = list(0), command = tvtable$footnote)
-    fn$pos[[1]] <- c(nrow(t))
-    fn$command = paste("\\hline \\footnotesize{", tvtable$footnote, "}\n", sep = " ")
-  }
-  x <- list(xtab = xtable(t, ...), fn = fn)
+  t <- as.data.frame(tab)
+  # if (!is.null(footnote)) {
+  #   fn <- list(pos = list(0), command = tab$footnote)
+  #   fn$pos[[1]] <- c(nrow(t))
+  #   fn$command = paste("\\hline \\footnotesize{", tab$footnote, "}\n", sep = " ")
+  # }
+  tvxtab <- xtable(t, ...)
+  # tvxtab <- list(tvxtab = tvxtab, fn = fn)
 }
 printer <- function(x, ...) {
-  xtable::print.xtable(x$xtab, include.rownames = F, add.to.row = x$fn, hline.after = c(-1,0), ...)
+  xtable::print.xtable(x,
+                       booktabs = T,
+                       sanitize.text.function = identity,
+                       include.rownames = F,
+                       include.colnames = F,
+                       # add.to.row = x$fn,
+                       hline.after = c(-1, 2, nrow(x) - 2), ...)
 }

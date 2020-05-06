@@ -5,13 +5,9 @@
 
 tvtable_combine <- function(tables, format = c("wide", "long"),
                           qi = c("se", "pvalue", "zscore"), stars = T, digits = 3,
-                          modnum = T, varlist = NULL,
+                          modnum = T, modlist = NULL, varlist = NULL,
                           footnote = NULL) {
-  # require(dplyr)
-  `%notin%` <- Negate(`%in%`)
-  len <- length(tables)
-  # nr <- vector(length = len)
-  # tcol <- vector()
+
   allnames <- vector()
   for (i in 1:len) {
       # *** {This code is an artifact of having other functions put obs and fialures in

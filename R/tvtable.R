@@ -52,12 +52,10 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
     browser()
     if (stars) {
       bstar <- gtools::stars.pval(bpval)
+      if (nc == 2) gstar <- gtools::stars.pval(gpval)
       for (j in 1:length(qivec)) {
         qivec[j] <- capture.output(cat("(", qivec[j], ")", bstar[j], sep = ""))
-      }
-      if (nc == 2) {
-        gstar <- gtools::stars.pval(gpval)
-        qivec2 <- capture.output(cat("(", qivec2[i], ")", gstar[i], sep = ""))
+        if (nc == 2) qivec2[j] <- capture.output(cat("(", qivec2[j], ")", gstar[j], sep = ""))
       }
     }
 
@@ -75,12 +73,13 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
 
     # Create table
     tab <- cbind(bn, as.vector(rbind(beta, qivec)))
+    colnames(tab)[1] <- "vn"
     colnames(tab)[2] <- "Hazard Coef."
     tabnames[[i]] <- bn
     if (nc == 2) {
       g <- cbind(gn, as.vector(rbind(gamma, qivec2)))
-      colnames(g)[1] <- "bn"
-      tab <- merge(tab, g, sort = F, all = T)
+      colnames(g)[1] <- "vn"
+      tab <- merge(g, tab, by = "vn", sort = F, all = T)
       tabnames[[i]] <- c(bn, gn)
       colnames(tab)[2:3] <- c("Incidence Coef.", "Hazard Coef.")
     }
@@ -90,9 +89,9 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
     # Create model names
     if (is.null(modnames)) {
       if (nc == 1) {
-        mn[[i]] <- paste0("Model " , i)
+        mn[[i]] <- paste0("Model " , i,)
       } else {
-        mn[[i]] <- c(paste0("Model ", i), "blank")
+        mn[[i]] <- paste0("\\", "multicolumn{2}{c}{", "Model ", i, "}")
       }
     } else {
       if (nc == 1) {
