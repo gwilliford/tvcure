@@ -331,25 +331,6 @@ In addition, the \textbf{tvcure} package includes several functions designed to 
 
 \section{Replication Analysis: International Ceasefires}
 
-\begin{comment} %Description of LHR's 7 models
-Model 1 is baseline.
-Model 2 is model 1 with Puppet FIRC instead of FIRC
-Model 3 is baseline with Werner coding instead of Archicgos coding)
-Model 4 is model 1 with agreement stength post-45 instead of normal
-Model 5 is model 1 with a bunch of disaggregated agreement measures added - CBMs are signigicant
-Model 6 restricts the analysis to CBMs
-Model 7 uses a log-logistic specification
-\end{comment}
-
-
-
-\begin{figure}[htbp]\centering
-	\caption{Kaplan-Meier estimate of the duration of international cease-fires from 1914-2001}
-	\includegraphics[width=4in]{lhrkm}
-	\floatfoot{Note: Shaded region represents 95 percent confidence intervals.}
-	\label{fig:lhr_km}
-\end{figure}
-
 % Cox model 
 For the sake of comparison, Table \ref{tab.lhr.cox} presents the results of a standard Cox proportional hazards model of cease-fire duration. Four variables appear to have significant effects on the hazard rate. Democracy has a negative effect on the hazard rate, and thus is associated with a longer peace spell after the end of a conflict. By contrast, battle deaths, existential stakes, and contiguity all have positive effects on the hazard rate.
 
@@ -457,29 +438,6 @@ This dataset has been expanded by \citet{werner2005} and \citet{lo2008} to add a
 	\end{singlespace}
 \end{itemize}
 
-\begin{table}[htbp]\centering
-	\caption{Descriptive Statistics for Cease-Fire Data}
-	\label{tab:descLHR}
-	\begin{tabular*}{6.5 in}{lcccccc}
-		\hline\hline
-		\multicolumn{1}{c}{Variable}  & Obs  & Mean   & Median & Std. Dev. & Min   & Max   \\ \hline
-		Cease-Fire Failure            & 5556 & .0101  & 0      & .010      & 0     & 1     \\
-		Foreign-Imposed Regime Change (Archigos) & 5556 & .155   & 0      & .362      & 0     & 1     \\
-		Foreign-Imposed Regime Change (Werner) & 5556 & .179   & 0      & .383      & 0     & 1     \\
-		Capability Change             & 5546 & .233   & .08    & .478      & 0     & 4.463 \\
-		Descisive Victory             & 5556 & .437   & .256   & .424      & 0     & 1     \\
-		Third Party Intervention      & 5556 & .121   & 0      & .327      & 0     & 1     \\
-		Agreement Strength            & 5556 & 3.816  & 3.667  & 1.95      & 0     & 9.5   \\
-		One Democracy                 & 5556 & .616   & 1      & .487      & 0     & 1     \\
-		Two Democracies               & 5556 & .162   & 0      & .368      & 0     & 1     \\
-		Tied Battle                   & 5556 & .119   & 0      & .323      & 0     & 1     \\
-		Battle Deaths (logged)        & 5534 & 10.345 & 10.249 & 2.447     & 5.288 & 16.2  \\
-		Conflict History              & 5556 & .208   & .085   & .309      & 0     & 1.6   \\
-		Existential Stakes            & 5556 & .562   & 1      & .496      & 0     & 1     \\
-		Contiguous                    & 5556 & .508   & 1      & .5        & 0     & 1     \\
-		Risk Interval                 & 5556 & 20.519 & 20     & 12.78     & 1     & 46    \\ \hline
-	\end{tabular*}
-\end{table}
 
 \end{document}
 

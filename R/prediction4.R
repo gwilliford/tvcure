@@ -52,6 +52,8 @@ prediction3 <- function(model, variable, values,
   colnames(newX) <- bnames
 
   if (variable %in% bnames) newX[, variable] <- values
+  # Create dataset for predictions -----------------------------------------------------------
+    newX <- apply(X, 2, median)
   newX <- as.matrix(newX)
   nx <- nrow(newX)
 
