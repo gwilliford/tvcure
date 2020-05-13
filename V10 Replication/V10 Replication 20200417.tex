@@ -3,6 +3,110 @@
 \usepackage{./sty/notation}
 
 \begin{document}
+	
+	%\footnote{Monogan, Andy, Danny, Amanda, Josh, Doug, Annie, Discussants (PolMeth, SLAMM, Minnesota), Fred Boehmke, Clay Webb, Sara Mitchell}
+	% Previous versions of this paper were presented at POLMETH and SLAMM
+	
+	\begin{comment}
+	$\ti$ = (ti)\\
+	$\di$ = censoring indicator (di)\\
+	$\yi$ = cure indicator (yi)\\
+	$p$ = $\Pr(Y = 1)$\\
+	\textbf{Covariates}\\
+	$\xvec$ = vector of hazard/latency covariates\\
+	$\zvec$ = vector of cure/incidence covariates\\
+	$\xib$ = xib\\
+	$\zig$ = zig\\
+	$\exb$ 
+	$\ezg$
+	%$\XB$ = Xbeta\\
+	%$\ZG$ = Zgamma\\
+	\textbf{Hazard functions}\\
+	$\hu$ = Hazard function for uncured subjects (hu)\\
+	$\ho$ = Baseline hazard function for uncured subjects (ho)\\
+	$\hux$\\
+	$\hox$\\	
+	\textbf{Survivor Functions}\\
+	$\spop$ = Population survivor function (spop)\\
+	$\su$ = Survivor uncured covariates\\
+	$\so$ = Baseline survivor uncured covariates\\
+	$\sux$ = Survivor function for uncured subjects (sux)\\
+	$\sox$ = Baseline survivor function for uncured subjects (sox)\\
+	$\sohat$ = Estimated Baseline survivor function for uncured subjects (sohat) \\
+	\textbf{Estimation Quantities}\\ 
+	$\wi$\\
+	\newpage
+	\end{comment}
+	
+	\begin{center}
+		\textbf{Semiparametric Cure Models and the Duration of Peace After Interstate War}%\footnote{We thank Andy Owsiak, Amanda Murdie, Chad Clay, and Josh Jackson for helpful comments on previous versions of this paper.}
+		
+		
+		George W. Williford
+		
+		The University of Georgia
+		
+		williford@uga.edu
+		
+		\today
+		
+		\vspace{8cm}
+		Prepared for presentation at the International Studies Association Annual Conferences, March 27-31, 2019.
+		
+		
+	\end{center}
+	
+	%\noindent\textbf{Abstract:} 
+	\pagebreak
+	
+	Survival analysis has become one of the fundamental components of the political scientist's methodological toolkit. Over the past few decades these techniques have been widely applied to analyze a diverse array of phenomena including  congressional position taking \citep{box-steffensmeier1997}, the confirmation of executive nominees \citep{ostrander2015}, regime change \citep{gates2016}, cabinet duration \citep{somer-topcu2008}, the duration of peace-agreements \citep{fortna2004b}, and war duration \citep{weisiger2013}. One of the primary advantages of duration modeling techniques is their ability to deal with censored observations. By incorporating information on observations that have yet to fail into the estimation process, these models allow analysts to retain valuable information about the failure process and avoid the potential for bias introduced by the censoring process. 
+	
+	Standard duration models make a key assumption that is often overlooked by many analysts. Survival models typically assume that all subjects eventually experience the event of interest: although some observations are not observed to fail and are thus considered censored, the model still assumes that they will fail at some point in the future. Although this assumption is sometimes justified (e.g., all humans eventually die), for many subjects of interest this assumption is untenable. Conflict recurrence is a prime example of one such subject; although many conflicts will recur in the future, many combatants are unlikely to fight again on any reasonable timescale. 
+	
+	To the extent that some subjects are “immune” to failure, the assumption that all units eventually fail is violated. This has potential consequences for both the accuracy of the coefficient estimates and the inferences derived from duration models. Neglecting violations of this assumption by including observations that are not at risk of failure has the potential to produce biased estimates of covariate effects on the observations that are actually at risk. Moreover, if some observations are at risk of failure while others or not, it is often of interest to model which factors influence whether an observation is at risk.
+	
+	% However, in doing so, standard duration models assume that all censored observations eventually experience the event of interest. Although this assumption is sometimes justified (e.g., all political leaders will eventually lose office and all wars will eventually terminate), in many cases it is not. For example, it is difficult to justify the argument that all peace agreements will eventually fail and result in renewed conflict between the former belligerents. 
+	% TODO Basic description of cure models
+	% Typically, cure models involve the use of mixture models to estimate the latent probability that an individual fails and then adjust the estimates of duration time accordingly. The use of these models 
+	% Bias
+	% Heterogenous Risk
+	% Theoretical
+	
+	% Short description of cure models
+	To deal with these issues, scholars in biostatistics and related fields have developed models known as \textit{cure models}. Cure models are designed to deal with the fact that some subjects under observation may be ``cured'' of a particular disease and therefore immune to failure.\footnote{These individuals are also referred to as ``long-term survivors.''} Typically, cure models involve the use of mixture models to estimate the latent probability that an individual fails and then adjust the estimates of duration time accordingly. 
+	
+	In addition to correcting for potential bias, the use of cure models allows analysts to gain additional theoretical leverage over questions of substantive interest. By jointly modeling whether a unit experiences an event of interest and when that unit fails, scholars can gain additional insight into how a variable influences an outcome of interest: by affecting the probability of eventual failure or by influencing the time until failure.
+	%To deal with these issues, scholars in biostatistics and related fields have developed \textit{cure models}. Cure models extend standard models for duration data to explicitly model the fact that some observations are not susceptible to the event of interest and are thus ``immune'' or ``cured.'' 
+	For example, \citep{svolik2008} uses cure models to examine authoritarian reversals among democratic regimes. This example nicely illustrates how cure models can be used to improve substantive inferences. In part, \citep{svolik2008} tests the effects of various economic variables on both whether a democracy is cured (``consolidated democracies'') or are still at risk of authoritarian reversals (``transitional democracies''). He finds that a country's level of economic development determines whether a democracy is susceptible to a reversal, where highly developed countries are substantially more likely to be consolidated democracies. By contrast, economic recessions do not affect whether a country is susceptible, but does influence the timing of authoritarian reversals among transitional democracies. 
+	
+	% Each of these applications employs parametric cure models. Although these are appropriate under the right conditions, in many cases, the use of parametric estimators may not be appropriate. The use of parametric models is only appropriate when analysts are comfortable making assumptions about the distribution of the failure times and/or the shape of the baseline hazard. Incorrectly imposing a particular parametric form on the data represents a form of specification bias that has the potential to influence the results obtained from a model \citep{box2004a}. Thus, in the absence of strong theoretical expectations about the shape of the baseline hazard, the use of semi-parametric duration models is more appropriate.
+	To date, cure models have seen limited use in political science. In addition to \citep{svolik2008}, cure models have been applied in studies of congressional responses to supreme court rulings \citep{hettinger2005}, the consolidation of democratic regimes \citep{svolik2008}, third-party intervention in civil war \citep{findley2006}, the onset of interstate conflict \citep{clark2003}, and campaign contributions to members of Congress \citep{box2005}.
+	
+	%\citet{hettinger2005} use cure models to examine decisions to Congressional override Supreme Court rulings. They find that the salience of individual cases influences whether Congress overrides the Court, while characteristics of the legal decision (???) affect the timing of such decisions. 
+	% in studies of congressional responses to supreme court rulings \citep{hettinger2005}, the consolidation of democratic regimes \citep{svolik2008}, third-party intervention in civil war \citep{findley2006}, the onset of interstate conflict \citep{clark2003}, and campaign contributions to members of Congress \citep{box2005}. However, each of these studies employs cure models that model the hazard rate parametrically. Although these are appropriate under the right conditions, the use of parametric estimators may not be appropriate for many phenomena of interest. Incorrectly imposing a particular parametric form on the data represents a form of specification bias that has the potential to influence the results obtained from a model \citep{box2004a}. Thus, in the absence of strong theoretical expectations about the shape of the baseline hazard, the use of semiparametric models provides a safer alternative. 
+	
+	This article is designed to introduce readers to cure models, with a particular emphasis on semiparametric cure models. In doing so, it makes several contributions. First, it begins by discussing the potential problems associated with standard duration models and introducing readers to the semiparametric cure model. Second, I introduce a new R package, \textbf{tvcure}, which will be made publicly available upon publication. This software is designed to remedy shortcomings in existing software packages for implementing these models. Unlike existing software, the \textbf{tvcure} package is designed to estimate semiparametric cure models with time-varying covariates. 
+	%In addition, it allows users to implement the Firth correction (Firth 1993) as a means of dealing with perfect predictors, a common problem encountered when dealing with cure models. 
+	%Control for the influence a covariate has on the probability of failure, the 
+	%Control for when
+	%Parametric cure models
+	
+	% Monte Carlo Simulations
+	%Third, I conduct Monte Carlo simulations to evaluate the extent to which cured observations produce bias in the estimated coefficients. By varying the proportion of cured observations in the data, I assess the extent to which these observations may influence the results of a model.
+	%To demonstrate the utility of the ZIP model, I conduct a series of Monte Carlo simulations to evaluate its performance relative to other models with various proportions of cured observations in all data. These simulations demonstrate that the ZIP model consistently outperforms the Cox model at returning unbiased estimates of the original coefficients. In addition, I compare the performance of the ZIP model to a mixture Weibull model. I find that the ZIP model performs comparably when the data contains relatively low proportions of cured observations. Moreover, I find that the ZIP model actually outperforms the Weibull model when the data contains higher proportions of cured subjects, even when the simulated failure times are drawn from a Weibull distribution. %In addition, I assess the performance of the ZIP estimator at various levels of cured or inflated observations in terms of convergence and separation. %TODO Reword this
+	
+	% Application
+	I illustrate the utility of this model by conducting an analysis of international cease-fire agreements using data on international ceasefires from \citet{lo2008}.% \citet{fortna2004b, werner2005, lo2008}. 
+	%Produce sizable changes in the coefficient estimates of several independent variables that influence the inferences drawn from the model. Moreover, by jointly modeling the influence of these covariates on the probability of failure and the time until failure, I demonstrate how cure models can be used to parse between competing hypotheses regarding the effects of several variables on the prospects of successful cease-fire agreements.
+	%Finally, to illustrate the potential for cure models to be applied broadly within political science and other fields, I apply the model to data on the duration of peace after civil conflict.
+	This analysis illustrates how cure models can provide more nuanced understandings of the theoretical mechanisms that lead to peace after war by distinguishing between covariates that affect the probability of peace agreement failure and those that affect the duration of agreements. 
+	%For example, some scholars have argued that third party interventions in civil conflicts increase the duration of peace while they remain in the country but undermine the likelihood of a successful resolution in the long term. 
+	%Cure models can be used to examine this argument by testing whether third party interventions foster permanent peace or merely extend the duration of agreements that are ultimately doomed to fail. 
+	In doing so, cure models can provide greater theoretical leverage over peace agreements by facilitating a deeper understanding of the causal mechanisms that underlie the associations we observe. In addition, these findings may help inform policymakers by illuminating which features of a peace agreement are most important for ensuring long-term stability.
+	
+	%One of the primary advantages of duration modeling techniques over alternatives such as ordinary least squares regression is their ability to deal with censored observations. By incorporating information on observations that have yet to fail into the estimation process, these models allow analysts to retain valuable information about the failure process and avoid the potential for bias introduced by the censoring process. However, in doing so, standard duration models assume that all censored observations eventually experience the event of interest. Although this assumption is sometimes justified (e.g., all political leaders will eventually lose office and all wars will eventually terminate), in many cases it is not. For example, it is difficult to justify the argument that all peace agreements will eventually fail and result in renewed conflict between the former belligerents.%TODO More examples here
+	
+
 \section{Introduction to Mixture Cure Models}
 \begin{comment} Examples of when cure models might be useful
 %In political science, potential examples of phenomena where long-term survivors are prevalent abound. For example, in studies of the duration of international peace agreements, many disputants will not fight each other again (see replication analysis below). In studies of how the United States Senate takes to confirm executive nominees \cite[e.g.][]{ostrander2015}, some executive nominees will never be confirmed. Likewise, in studies of policy adoption among U.S. states, some states may never adopt the particular policy in question. 
@@ -17,7 +121,7 @@ In this formulation, $C_i$ acts as a switch that determines whether an observati
 %In doing so, these observations influence the estimates of both the regression coefficients and the baseline hazard function.
 For observations that are destined to eventually fail, incorporating their values into the likelihood function in this way is desirable. 
 %Leaving out the censored observations introduces bias/ selects on the dv
-%inefficiency
+%inefficiency 
 However, if some of the observations treated as censored are actually unlikely to fail, allowing them to contribute information to the likelihood function potentially creates biased estimates of 
 
 Similar problems emerge when including cured observations in the Cox model. Consider the partial likelihood estimator for the Cox proportional hazards model given by
@@ -326,3 +430,4 @@ When a wide bargaining range exists between disputants at the end of the dispute
 \section{Appendix}
 \include{./tab/descstats}
 \end{document}
+
