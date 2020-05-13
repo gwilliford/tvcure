@@ -1,0 +1,747 @@
+\documentclass[letterpaper, 12pt]{article}
+
+%%%%%Core Packages
+\usepackage{verbatim}%For comments
+\usepackage{amsmath}%For math
+\usepackage[utf8]{inputenc}
+%\usepackage[T1]{fontenc}
+\usepackage{csquotes}%For quotations
+
+%%%%%Page Formatting
+% \usepackage[doublespacing]{setspace} % Control linespacing, use command \doublespacing in text
+\usepackage[margin=1in]{geometry}	% 1 inch margins
+\usepackage{setspace}
+
+%%%%%Paragraph Format
+\usepackage{indentfirst} % Indent after section heads
+
+%%%%%Figure Format
+\usepackage{graphicx, epsfig, epstopdf}%For graphics
+\epstopdfsetup{outdir=./}
+\usepackage{subcaption} % Allows multiple figures in one
+
+%%%Format captions for table and figure
+\usepackage{floatrow}
+\floatsetup[table]{capposition=top}
+\floatsetup[figure]{capposition=top}
+\usepackage{caption}
+\captionsetup[table]{labelfont=bf,textfont=bf,singlelinecheck=off}
+\captionsetup[figure]{labelfont=bf,textfont=bf,singlelinecheck=off}
+
+%%%Format table column width
+%\setlength{\tabcolsep}{18pt}
+
+%Section Formatting
+\usepackage{titlesec}
+\titleformat{\section}
+{\normalfont\normalsize\bfseries\uppercase}{\thesection}{1em}{}
+\titleformat{\subsection}
+{\normalfont\normalsize\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}
+{\normalfont\normalsize\itshape\normalparindent}{\thesubsubsection}{1em}{}
+
+%Table Packages
+%\usepackage{caption}
+%\captionsetup[table]{labelfont=bf,textfont=bf,singlelinecheck=off, tableposition=top}
+%\captionsetup[figure]{labelfont=bf,textfont=bf,singlelinecheck=off}
+\usepackage{booktabs, longtable, threeparttable}
+\usepackage{array}
+\usepackage{dcolumn}
+\newcolumntype{d}[1]{D{.}{\cdot}{3}}
+
+%Center all tables
+\let\originaltable\table
+\let\endoriginaltable\endtable
+\renewenvironment{table}[1][ht]{%
+	\originaltable[#1]
+	\centering}%
+{\endoriginaltable}
+
+%%%%% References
+\usepackage[backend=biber, style=authoryear,sorting=nyt,natbib=true, doi=false,isbn=false,url=false, eprint=false, uniquename=false]{biblatex} % Load citations using biber, use authoryear cites, sort bibliography by name, year, and title, use natbib functionality
+\addbibresource{MyLibrary.bib}
+\AtEveryBibitem{%
+	\clearfield{note}%
+	\clearlist{language}%
+}
+\renewbibmacro{in:}{% Eliminate "In:" before journals and book titles
+	\ifentrytype{article}{}{\printtext{\bibstring{in}\intitlepunct}}}
+\renewbibmacro*{volume+number+eid}{% Format volume and issue
+	\printfield{volume}%
+	\setunit*{\addnbspace}
+	\printfield{number}%
+	\setunit{\addcomma\space}%
+	\printfield{eid}}
+\DeclareFieldFormat[article]{number}{\mkbibparens{#1}}
+
+%%%%% Section Heads
+\usepackage{titlesec}
+\titleformat{\section}{\normalfont\normalsize\bfseries\uppercase}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection}{1em}{}
+\setcounter{secnumdepth}{0} % Suppress Section Numbering
+
+%%%%%Theorem Environment
+\usepackage{ntheorem}%Set theorem style with ntheorem
+\theoremstyle{plain}
+\theoremindent20pt 
+\theoremheaderfont{\normalfont\bfseries}
+\theoremseparator{:}
+\newtheorem{hyp}{Hypothesis}
+%Allow cross referencing between documents
+\usepackage{xr}
+\externaldocument{Appendix}
+\usepackage[affil-it]{authblk}
+
+%%%%%Footnote Formatting
+\interfootnotelinepenalty = 10000 % Don't split footnotes across pages
+\usepackage{hyperref} % For references and urls
+
+%%%%% Notation ----------------------------------------------------------------------------------
+% T = Random variable, t_i = value of T for observation i 
+\newcommand{\ti}{t_i} % last observation time (failure or censoring time) for observation i
+\newcommand{\di}{\delta_i}  % Censoring/event indicator
+\newcommand{\yi}{y_i}			% Cure indicator
+
+% Covariates
+\newcommand{\bvec}{\boldsymbol{\beta}}
+\newcommand{\gvec}{\boldsymbol{\gamma}}
+\newcommand{\xvec}{\mathbf{x}_i} % Vector of hazard covariates for observation i
+\newcommand{\zvec}{\mathbf{z}_i} % Vector of covariates that affect p_i
+\newcommand{\xib}{\mathbf{x}_i\boldsymbol{\beta}}
+\newcommand{\zig}{\mathbf{z}_i\boldsymbol{\gamma}}
+\newcommand{\exb}{\exp(\mathbf{x}_i'\boldsymbol{\beta})}
+\newcommand{\ezg}{\exp(\mathbf{z}_i'\boldsymbol{\gamma})}
+%\newcommand{\XB}{\mathbf{X\bvec}}
+%\newcommand{\ZG}{\mathbf{Z\gvec}}
+
+% Hazard and survivor functions
+\newcommand{\hu}{h(t_i | Y = 1)}	% Hazard function for uncured subjects
+\newcommand{\ho}{h_0(t_i | Y = 1)}	% Baseline hazard function for uncured subjects
+\newcommand{\hux}{h(t_i | Y = 1; \xvec)}	% Hazard function for uncured subjects
+\newcommand{\hox}{h_0(t_i | Y = 1; \xvec)}	% Baseline hazard function for uncured subjects
+\newcommand{\spop}{S_{pop}(t_i)}			% Population survivor function 
+\newcommand{\su}{S(t_i | Y = 1)}	% Survivor function for uncured subjects
+\newcommand{\so}{S_0(t_i | Y = 1)} % Baseline survivor function for uncured subjects
+\newcommand{\sux}{S(t_i | Y = 1; \xvec)}	% Survivor function for uncured subjects with covariates
+\newcommand{\sox}{S_0(t_i | Y = 1; \xvec)} % Baseline survivor function for uncured subjects with covariates
+\newcommand{\sohat}{\hat{S}_0(t | Y = 1; \xvec)} % estimated Baseline survivor function for uncured subjects
+
+%% Cure indicators and cure probability
+\newcommand{\wi}{w_i^{\{m\}}} 	% Conditional expectation of y_i (conditioned on observed data)
+\newcommand{\p}{p_i}			% Probability of failure, p_i = \Pr(y_i = 1 | \zi)
+
+\begin{document}
+%\footnote{Monogan, Andy, Danny, Amanda, Josh, Doug, Annie, Discussants (PolMeth, SLAMM, Minnesota), Fred Boehmke, Clay Webb, Sara Mitchell}
+% Previous versions of this paper were presented at POLMETH and SLAMM
+
+\begin{comment}
+	$\ti$ = (ti)\\
+	$\di$ = censoring indicator (di)\\
+	$\yi$ = cure indicator (yi)\\
+	$p$ = $\Pr(Y = 1)$\\
+\textbf{Covariates}\\
+	$\xvec$ = vector of hazard/latency covariates\\
+	$\zvec$ = vector of cure/incidence covariates\\
+	$\xib$ = xib\\
+	$\zig$ = zig\\
+	$\exb$ 
+	$\ezg$
+	%$\XB$ = Xbeta\\
+	%$\ZG$ = Zgamma\\
+\textbf{Hazard functions}\\
+	$\hu$ = Hazard function for uncured subjects (hu)\\
+	$\ho$ = Baseline hazard function for uncured subjects (ho)\\
+	$\hux$\\
+	$\hox$\\	
+\textbf{Survivor Functions}\\
+	$\spop$ = Population survivor function (spop)\\
+	$\su$ = Survivor uncured covariates\\
+	$\so$ = Baseline survivor uncured covariates\\
+	$\sux$ = Survivor function for uncured subjects (sux)\\
+	$\sox$ = Baseline survivor function for uncured subjects (sox)\\
+	$\sohat$ = Estimated Baseline survivor function for uncured subjects (sohat) \\
+\textbf{Estimation Quantities}\\ 
+	$\wi$\\
+\newpage
+\end{comment}
+
+\begin{center}
+\textbf{Semiparametric Cure Models and the Duration of Peace After Interstate War}%\footnote{We thank Andy Owsiak, Amanda Murdie, Chad Clay, and Josh Jackson for helpful comments on previous versions of this paper.}
+
+
+George W. Williford
+
+The University of Georgia
+
+williford@uga.edu
+
+\today
+
+\vspace{8cm}
+Prepared for presentation at the International Studies Association Annual Conferences, March 27-31, 2019.
+
+
+\end{center}
+
+%\noindent\textbf{Abstract:} 
+\pagebreak
+
+Survival analysis has become one of the fundamental components of the political scientist's methodological toolkit. Over the past few decades these techniques have been widely applied to analyze a diverse array of phenomena including  congressional position taking \citep{box-steffensmeier1997}, the confirmation of executive nominees \citep{ostrander2015}, regime change \citep{gates2016}, cabinet duration \citep{somer-topcu2008}, the duration of peace-agreements \citep{fortna2004b}, and war duration \citep{weisiger2013}. One of the primary advantages of duration modeling techniques is their ability to deal with censored observations. By incorporating information on observations that have yet to fail into the estimation process, these models allow analysts to retain valuable information about the failure process and avoid the potential for bias introduced by the censoring process. 
+
+Standard duration models make a key assumption that is often overlooked by many analysts. Survival models typically assume that all subjects eventually experience the event of interest: although some observations are not observed to fail and are thus considered censored, the model still assumes that they will fail at some point in the future. Although this assumption is sometimes justified (e.g., all humans eventually die), for many subjects of interest this assumption is untenable. Conflict recurrence is a prime example of one such subject; although many conflicts will recur in the future, many combatants are unlikely to fight again on any reasonable timescale. 
+
+To the extent that some subjects are “immune” to failure, the assumption that all units eventually fail is violated. This has potential consequences for both the accuracy of the coefficient estimates and the inferences derived from duration models. Neglecting violations of this assumption by including observations that are not at risk of failure has the potential to produce biased estimates of covariate effects on the observations that are actually at risk. Moreover, if some observations are at risk of failure while others or not, it is often of interest to model which factors influence whether an observation is at risk.
+
+% However, in doing so, standard duration models assume that all censored observations eventually experience the event of interest. Although this assumption is sometimes justified (e.g., all political leaders will eventually lose office and all wars will eventually terminate), in many cases it is not. For example, it is difficult to justify the argument that all peace agreements will eventually fail and result in renewed conflict between the former belligerents. 
+% TODO Basic description of cure models
+% Typically, cure models involve the use of mixture models to estimate the latent probability that an individual fails and then adjust the estimates of duration time accordingly. The use of these models 
+% Bias
+% Heterogenous Risk
+% Theoretical
+
+% Short description of cure models
+To deal with these issues, scholars in biostatistics and related fields have developed models known as \textit{cure models}. Cure models are designed to deal with the fact that some subjects under observation may be ``cured'' of a particular disease and therefore immune to failure.\footnote{These individuals are also referred to as ``long-term survivors.''} Typically, cure models involve the use of mixture models to estimate the latent probability that an individual fails and then adjust the estimates of duration time accordingly. 
+
+In addition to correcting for potential bias, the use of cure models allows analysts to gain additional theoretical leverage over questions of substantive interest. By jointly modeling whether a unit experiences an event of interest and when that unit fails, scholars can gain additional insight into how a variable influences an outcome of interest: by affecting the probability of eventual failure or by influencing the time until failure.
+%To deal with these issues, scholars in biostatistics and related fields have developed \textit{cure models}. Cure models extend standard models for duration data to explicitly model the fact that some observations are not susceptible to the event of interest and are thus ``immune'' or ``cured.'' 
+For example, \citep{svolik2008} uses cure models to examine authoritarian reversals among democratic regimes. This example nicely illustrates how cure models can be used to improve substantive inferences. In part, \citep{svolik2008} tests the effects of various economic variables on both whether a democracy is cured (``consolidated democracies'') or are still at risk of authoritarian reversals (``transitional democracies''). He finds that a country's level of economic development determines whether a democracy is susceptible to a reversal, where highly developed countries are substantially more likely to be consolidated democracies. By contrast, economic recessions do not affect whether a country is susceptible, but does influence the timing of authoritarian reversals among transitional democracies. 
+
+% Each of these applications employs parametric cure models. Although these are appropriate under the right conditions, in many cases, the use of parametric estimators may not be appropriate. The use of parametric models is only appropriate when analysts are comfortable making assumptions about the distribution of the failure times and/or the shape of the baseline hazard. Incorrectly imposing a particular parametric form on the data represents a form of specification bias that has the potential to influence the results obtained from a model \citep{box2004a}. Thus, in the absence of strong theoretical expectations about the shape of the baseline hazard, the use of semi-parametric duration models is more appropriate.
+To date, cure models have seen limited use in political science. In addition to \citep{svolik2008}, cure models have been applied in studies of congressional responses to supreme court rulings \citep{hettinger2005}, the consolidation of democratic regimes \citep{svolik2008}, third-party intervention in civil war \citep{findley2006}, the onset of interstate conflict \citep{clark2003}, and campaign contributions to members of Congress \citep{box2005}.
+
+%\citet{hettinger2005} use cure models to examine decisions to Congressional override Supreme Court rulings. They find that the salience of individual cases influences whether Congress overrides the Court, while characteristics of the legal decision (???) affect the timing of such decisions. 
+% in studies of congressional responses to supreme court rulings \citep{hettinger2005}, the consolidation of democratic regimes \citep{svolik2008}, third-party intervention in civil war \citep{findley2006}, the onset of interstate conflict \citep{clark2003}, and campaign contributions to members of Congress \citep{box2005}. However, each of these studies employs cure models that model the hazard rate parametrically. Although these are appropriate under the right conditions, the use of parametric estimators may not be appropriate for many phenomena of interest. Incorrectly imposing a particular parametric form on the data represents a form of specification bias that has the potential to influence the results obtained from a model \citep{box2004a}. Thus, in the absence of strong theoretical expectations about the shape of the baseline hazard, the use of semiparametric models provides a safer alternative. 
+
+This article is designed to introduce readers to cure models, with a particular emphasis on semiparametric cure models. In doing so, it makes several contributions. First, it begins by discussing the potential problems associated with standard duration models and introducing readers to the semiparametric cure model. Second, I introduce a new R package, \textbf{tvcure}, which will be made publicly available upon publication. This software is designed to remedy shortcomings in existing software packages for implementing these models. Unlike existing software, the \textbf{tvcure} package is designed to estimate semiparametric cure models with time-varying covariates. 
+%In addition, it allows users to implement the Firth correction (Firth 1993) as a means of dealing with perfect predictors, a common problem encountered when dealing with cure models. 
+%Control for the influence a covariate has on the probability of failure, the 
+%Control for when
+%Parametric cure models
+
+% Monte Carlo Simulations
+%Third, I conduct Monte Carlo simulations to evaluate the extent to which cured observations produce bias in the estimated coefficients. By varying the proportion of cured observations in the data, I assess the extent to which these observations may influence the results of a model.
+%To demonstrate the utility of the ZIP model, I conduct a series of Monte Carlo simulations to evaluate its performance relative to other models with various proportions of cured observations in all data. These simulations demonstrate that the ZIP model consistently outperforms the Cox model at returning unbiased estimates of the original coefficients. In addition, I compare the performance of the ZIP model to a mixture Weibull model. I find that the ZIP model performs comparably when the data contains relatively low proportions of cured observations. Moreover, I find that the ZIP model actually outperforms the Weibull model when the data contains higher proportions of cured subjects, even when the simulated failure times are drawn from a Weibull distribution. %In addition, I assess the performance of the ZIP estimator at various levels of cured or inflated observations in terms of convergence and separation. %TODO Reword this
+
+% Application
+I illustrate the utility of this model by conducting an analysis of international cease-fire agreements using data on international ceasefires from \citet{lo2008}.% \citet{fortna2004b, werner2005, lo2008}. 
+%Produce sizable changes in the coefficient estimates of several independent variables that influence the inferences drawn from the model. Moreover, by jointly modeling the influence of these covariates on the probability of failure and the time until failure, I demonstrate how cure models can be used to parse between competing hypotheses regarding the effects of several variables on the prospects of successful cease-fire agreements.
+%Finally, to illustrate the potential for cure models to be applied broadly within political science and other fields, I apply the model to data on the duration of peace after civil conflict.
+This analysis illustrates how cure models can provide more nuanced understandings of the theoretical mechanisms that lead to peace after war by distinguishing between covariates that affect the probability of peace agreement failure and those that affect the duration of agreements. 
+%For example, some scholars have argued that third party interventions in civil conflicts increase the duration of peace while they remain in the country but undermine the likelihood of a successful resolution in the long term. 
+%Cure models can be used to examine this argument by testing whether third party interventions foster permanent peace or merely extend the duration of agreements that are ultimately doomed to fail. 
+In doing so, cure models can provide greater theoretical leverage over peace agreements by facilitating a deeper understanding of the causal mechanisms that underlie the associations we observe. In addition, these findings may help inform policymakers by illuminating which features of a peace agreement are most important for ensuring long-term stability.
+
+%One of the primary advantages of duration modeling techniques over alternatives such as ordinary least squares regression is their ability to deal with censored observations. By incorporating information on observations that have yet to fail into the estimation process, these models allow analysts to retain valuable information about the failure process and avoid the potential for bias introduced by the censoring process. However, in doing so, standard duration models assume that all censored observations eventually experience the event of interest. Although this assumption is sometimes justified (e.g., all political leaders will eventually lose office and all wars will eventually terminate), in many cases it is not. For example, it is difficult to justify the argument that all peace agreements will eventually fail and result in renewed conflict between the former belligerents.%TODO More examples here
+
+\section{Introduction to Mixture Cure Models}
+\begin{comment} Examples of when cure models might be useful
+%In political science, potential examples of phenomena where long-term survivors are prevalent abound. For example, in studies of the duration of international peace agreements, many disputants will not fight each other again (see replication analysis below). In studies of how the United States Senate takes to confirm executive nominees \cite[e.g.][]{ostrander2015}, some executive nominees will never be confirmed. Likewise, in studies of policy adoption among U.S. states, some states may never adopt the particular policy in question. 
+\end{comment}
+\begin{comment} Bias Extensions
+To illustrate the potential for long-term survivors to influence the estimates, consider the general formula for the likelihood function of a parametric survival model given by
+\begin{align}
+L =&\prod_{i=1}^n\{f(t)\}^{C_i}\{S(t)\}^{1-C_i}.
+\label{Eqn: Generic Censored Likelihood Function}
+\end{align}
+In this formulation, $C_i$ acts as a switch that determines whether an observation contributes to the overall likelihood function via the failure density or the survivor function. Thus, while censored observations do not fail, they still contribute information to the likelihood function. 
+%In doing so, these observations influence the estimates of both the regression coefficients and the baseline hazard function.
+For observations that are destined to eventually fail, incorporating their values into the likelihood function in this way is desirable. 
+%Leaving out the censored observations introduces bias/ selects on the dv
+%inefficiency
+However, if some of the observations treated as censored are actually unlikely to fail, allowing them to contribute information to the likelihood function potentially creates biased estimates of 
+
+Similar problems emerge when including cured observations in the Cox model. Consider the partial likelihood estimator for the Cox proportional hazards model given by
+\begin{align}
+L_p=\prod_{i=1}^N\bigg[\frac{\exp(\mathbf{x_i\beta)}}{\sum_{j\epsilon R(t)}\exp(\mathbf{x_j\beta})}\bigg]^{C_i},
+\label{Eqn: Cox Partial Likelihood}
+\end{align}
+where $R(t)$ denotes the \textit{risk set}, i.e., the complete set of observations that are at risk of experiencing failure at time $t$. In this formula, $C_i$ acts as a switch that determines whether a given unit contributes directly to the overall likelihood function.  Although right-censored units do not contribute a unique product term to the overall likelihood function, the denominator is calculated with respect to all observations in the risk-set in a given period. Thus, units that are right-censored but still under observation at time $t$ contribute information to the denominator and are thus considered in the estimation of the overall likelihood of failure in a given period. As a result, estimating a model on a dataset that contains a large number of long-term survivors will inflate the size of the denominator, thereby decreasing the contribution of each observed failure to the overall likelihood function. 
+%This causes the overall estimate of the hazard to fall for all observed failure, and ultimately creates the potential for downward biased coefficients.
+%Consider the following general form of the likelihood function for discrete data
+%\begin{align}
+%L = \prod_{i=1}^{n}\{f(t_j)\}^{C_i}\{S(t_j)\}^{1-C_i}\label{}
+%\end{align}
+%where $t_j$ denotes a discrete interval of time from $t_1...t_n$, $f(t_j)$ is the unconditional failure rate, and $S(t_j)$ is the survivor function. Formulated in this way, it is easy to see that observations that are censored at $t_j$ ($C_i=0$) contribute only to the estimation of the survivor function at $t_j$, while observations that fail in a given period ($C_i=1$) contribute only to the estimation of the failure rate.
+%Observations that are right-censored (i.e. $C_i=0$ for all $t_j$). 
+\end{comment}
+\begin{comment} Censoring}
+%The first and most common cause of observing a zero is censoring. 
+%because they dropout of a study, 
+%Alternatively, a unit may no longer be at risk of experiencing the event.
+%Observations are considered right-censored if they experience the event after the period of observation ends.
+%Censoring emerges because...
+% Instead, mixture models assume that whether an individual experiences the event is a function of a latent variable $Y_i$ that equals one if a unit will eventually experience the event of interest and zero if not. Although we cannot directly observe $Y_i$, we can estimate the probability that an observation belongs to the class that will eventually fail. Let $\di$ be a failure or censoring indicator coded 1 if the individual experiences the event and 0 if not.
+\end{comment}
+\begin{comment} Examples of cure models in other fields
+% Cure models have been applied widely in fields including public health \citep{steele2003}, finance \citep{hujer2004}, criminology \citep{schmidt1988, schmidt1989}, medicine \citep{yu2004}, and management science \citep{deleonardis2014}.
+\end{comment}
+
+% Assumptions
+	% Independent/noninformative/random censoring and independent of Y
+
+% From: beger2017, The presence of a large sub-population which is not at risk for an event, will in practice inflate estimates of the survival fraction, and reduce hazard estimates for all subjects. This is the case because the underlying risk is estimated based on subjects that genuinely will fail and those that are cured. Hence, such a model will over predict the hazard for subjects that are not at risk (cured), and under predict for those who are at risk of eventually experiencing the event of interest.
+
+% The Problem wiht Cured Subjects
+%In many cases, the assumption that all individuals will fail is theoretically sound. In studies of mortality, all individuals will eventually die. Similarly, in studies of leader tenure, all leaders will eventually leave office in one manner or another.
+%Studies of tenure duration are justified in assuming that all cabinets will eventually fail.
+
+%In other cases, however, the assumption that all units will eventually experience the event of interest may not be tenable. For example, in the study of time until cancer relapse, many individuals will not experience a recurrence \citet[e.g.][]{sposto2002}.  In biostatistics and related fields, these observations are often referred to as \textit{cured} individuals, since they have cannot experience the event of interest again. In other contexts, these observations are often referred to as \textit{long-term survivors}.
+
+Standard survival models make the assumption that all units eventually fail. However, this assumption is unrealistic in some cases where some observations are not expected to fail. To fix ideas, let $Y$ be an indicator coded 1 if the individual will eventually experience the event and 0 if it will not. Although cases that are observed to fail must belong to the class of uncured individuals $Y = 1$, censored cases may belong to either class. Let $p$ represent the probability that an individual will eventually experience the event, $\Pr(Y = 1)$. The probability that an individual is ``cured'' is thus given by $1-p$. Let $T$ indicate the time until the event occurs, which is only defined for individuals who experience the event ($Y = 1$), and let $f(t | Y = 1)$ represent the conditional failure density, $h(t | Y = 1)$ represent the conditional hazard rate, and $\su$ represent the conditional survival function of $T$ for uncured individuals. Let $\di$ represent a failure or censoring indicator coded 1 if the individual experiences the event and 0 if it is censored. 
+\begin{comment} Old notation
+%To fix ideas, let $T$ denote a positive continuous random variable describing survival times and $t$ denote a particular realized value of $T$. Let $f(t)$ represent the unconditional probability of failure at time $t$ [$\Pr(T_i=t)$] and $S(t)$ represent the survivor function defined as the probability that a unit survives at least until time $t$ $[\Pr(T_i\geq t)]$. Additionally, let $\delta_i$ be an indicator variable equal to one if a unit is observed to fail during the observation period and zero otherwise. 
+%We assume an independent, noninformative, random censoring model and that censoring is statistically independent of Y.
+\end{comment}
+
+% Bias
+
+Including cured subjects in statistical analyses has the potential to produce bias in the coefficient estimates. The fundamental problem with cured observations lies in the fact that cured individuals are observationally indistinguishable from censored individuals, and therefore cannot be removed from the dataset. Although censored subjects (including cured subjects) do not contribute directly to the estimate of the failure rate in survival models, they do contribute to the estimation of the baseline hazard rate in parametric models and the risk set in Cox models. Normally this is considered good practice, since failure to incorporate information from these observations introduces the potential for selection bias and needlessly discards useful information (i.e. individuals with a particular covariate profile last \textit{at least} until the censoring period). However, if some units are not destined to fail, using them to estimate the duration of events that will fail introduces the potential for bias. In essence, this can be thought of as a form of unobserved heterogeneity which may result in biased coefficient estimates for those units that actually are at risk. In practice, including these subjects in the dataset inflates the estimates of the survival times (and deflates the estimates of the hazard rate), since cured subjects will have long survival times that exceed the failure times of any of the other observations in the dataset.
+%(in the baseline hazard rate or the number of units actually at risk
+
+In order to account for these problems, researchers have developed cure models (also known as or models for long-term survivors). The most common method of dealing with these issues in social scientific applications is through mixture models or split-population models.
+%Introduced by \citet{anscombe1961}, 
+These models assume that the sample is composed of individuals drawn from two separate theoretical subpopulations, one which is at risk of experiencing the event of interest and one which is not.\footnote{An alternative class of models known as \textit{nonmixture} cure models corrects for these problems by imposing an upper bound on the cumulative hazard rate. Although these models have been used widely in biostatistics, they have seen limited applications in social scientific fields and are not considered further here.}
+\begin{comment}%More content for the footnote
+%\textit{bounded cumulative hazard} models. These models impose an asymptote on the integrated hazard rate. This has the effect of imposing an upward bound on the survivor function, helping to correct the bias associated with estimating}
+%These models can be considered as members of a  broader class of mixture models, which also includes so-called \textit{``zero-inflated models''} such as the zero-inflated Poisson \citep{lambert1992} and zero-inflated ordered probit models \citep{harris2007, bagozzi2015}.  In a similar fashion, each of these assumes that some observations are drawn from a latent subclass that has no risk of experiencing the event of interest and estimates a model that incorporates this heterogeneity.
+\end{comment}
+%These models estimate the probability that an individual will eventually fail and weight their contributions to the estimation of duration times accordingly. Because some individuals that are not long-term survivors are not observed to fail during the observation period due to right-censoring, we cannot directly observe which subpopulation an individual belongs to.
+Mixture cure models correct for the presence of cured observations by positing a marginal survival function for the full population of individuals of the form 
+\begin{align}
+S_{pop}(t) = pS(t|Y = 1) + 1 - p.\label{eq_spop}
+\end{align}
+%Cure models assume that separate processes determine whether an event will occur, known as the incidence, and when it will occur, known as the latency.
+The probability of failure, $p$, is typically referred to as the incidence, while the conditional survival function is typically known as the latency. Here, $p$ is used to weight the contributions of different subjects to the survival function. Note that if $p = 1$ for all observations in the dataset, the cure model reduces to a standard survival model. 
+
+% Covariates
+Covariates can be incorporated into \eqref{eq_spop} by modeling $p$ as a function of covariates $z$ and their associated coefficients $\gamma$ and modeling $\su$ as a function of covariates $x$ and coefficients $\beta$. The incidence, $p$, is typically modeled using a logit link function, producing
+\begin{align}
+p(\mathbf{z}) = \Pr(Y = 1;\mathbf{z}) = \frac{\ezg}{1 + \ezg}.
+\end{align}
+However, $p$ may also be modeled using alternative link functions appropriate for binary response models, such as the probit or complementary log-log links.
+Since covariates are allowed to influence both the incidence and latency components of the model, analysts can examine the effect of a particular covariate on both components of the model separately. This enables us to determine what effect a particular covariate has on both the probability of failure (or cure) and the effect of that same covariate on the hazard rate, conditional on it's effect on the probability of failure.
+ 
+The latency component can be modeled using either parametric or semiparametric models for $\su$. Parametric cure models involve specifying a parametric distribution for the hazard rate. Various parametric distributions have been used by previous scholars, including the Weibull, log-logistic \citep{hettinger2005}, log-normal, etc. %TODO - Citations here
+Once a parametric distribution has been chosen, a likelihood function can be constructed of the form 
+\begin{align}
+\L = \prod_{i=1}^n[p_if(t_i|Y = 1)]^{\delta_i}\{(1-p_i)+p_i\su\}^{1-\delta_i}.
+\end{align}
+Since parametric approaches are discussed at length elsewhere (e.g. \cite[][Chapter 9]{box2004a}, \cite{beger2017}), they are not expounded upon further here. 
+
+Although parametric approaches are easier to estimate, it is difficult to verify that a particular parametric distribution is appropriate.
+Moreover, using an inappropriate distribution constitutes misspecification bias. As such, without strong theory or evidence to support the use of a particular distribution, semiparametric approaches that leave the baseline hazard unspecified are a safer alternative. 
+%\subsection{Discrete Time Cure Models}
+To address this problem, \citet{kuk1992} developed the semiparametric cure model. Their model uses a standard Cox proportional hazards model to model the latency component of \eqref{eq_spop} by assuming that $\hux = \ho\exp(\xvec'\bvec)$, where $\mathbf{x_i}$ is a vector of covariates for individual $i$, $\bvec$ is a vector of unknown regression parameters, and $\ho$ is the conditional baseline hazard function. For individuals that will eventually fail, the conditional survival function in \eqref{eq_spop} is given by
+\begin{align}
+\su = \so^{\exb}\label{eq_scond}
+\end{align}
+where $\so$ is the conditional baseline survival function.
+%\begin{align}
+%S(t | x) = \so^{\exp(\xib)}
+%\end{align}
+
+%\begin{align}
+%S(t | \xvec, \zvec) = \p S_{u0}(t)^{exp(xib)} + 1 - p
+%\end{align}
+
+% Time-Varying Covariates
+The mixture cure model presented in can easily be extended to allow for the use of time-varying covariates and stratification. Time-varying covariates can be incorporated by using the ``counting process'' or ``start-stop'' data structure to include one observation for each subject in the riskset at each of the observed failure times, $t_{(j)}$ \citep[see, e.g.,][Chapter 7]{box2004a}. However, incorporating time-varying covariates in the model fundamentally changes the interpretation of the incidence portion of the model. Rather than merely identifying which individuals are and are not immune, the inclusion of time-varying covariates introduces introduces the possibility that subjects may be immune at some times and not at others \citep{beger2017}. Instead, it may be preferable to include only time-invariant covariates in the incidence component of the model \citep{dirick2017}.
+%TODO - fill in chapter for BSJ cite
+%TODO - Time-varying immunity - in addition, it may make sense to include
+%TODO - Simultaneity bias
+	\begin{comment} Where zi is a vector of covariates for a subject at a given time. For interpretation, it is important
+	to note that with time-varying covariates, the risk (or cured) estimate for a subject is particular to a
+	given time point rather than being constant over all time periods in the spell.2 Depending on the
+	covariates, the risk estimate for a subject can thus fluctuate over time. To ease interpretation, it might
+	be convenient to restrict covariates in the logit risk model to slow-moving, stable covariates in order to
+	produce stable risk estimates for subjects.
+	\end{comment}
+
+\section{Estimation of the Semiparametric Cure Model}
+% Full likelihood
+Since the distribution of $\su$ is left unspecified, maximizing the full likelihood of the semiparametric cure model using standard Newton-Raphson type algorithms is not possible. Standard Cox proportional hazards models make use of the partial likelihood method to eliminate $\su$ from the likelihood. However, due to the more complex form of the semiparametric PH cure model, this is not possible.
+	% Partial likelihood
+	%Note also that, since $\wi$ depends on $\so$, the baseline function is involved in the estimation of b and \bvec.
+
+As such, semiparametric cure models require an estimation technique that can maximize the full-likelihood and provide estimates of $\su$. \citet{peng2000, sy2000} suggested using an expectation-maximization (EM) algorithm.\footnote{Other scholars have suggested alternative estimation strategies using Markov Chain Monte Carlo simulations \citep{kuk1992}, multiple imputation \citep{lam2005}, and Bayesian techniques \citep{}.}% these are not considered further here. 
+The complete data log-likelihood is given by
+\begin{align}
+\L_C(\bvec, \gvec, H_0) =& \prod_{i = 1}^{n} p_i^{y_i} (1 - p_i)^{1-y_i} \prod_{i = 1}^{n} \{\hux^{\di\yi}\sux^{\yi} \},\label{eq_lik_full}
+%\{h_0(t_i | Y = 1)\exp(\xib) \}^{\di\yi} \times \exp(-\yi H_0(t_i|Y=1)\exp(\xib).\label{eq_LC}
+\end{align}
+where the first product term contains the parameters related to the incidence component of the model and the second contains the parameters related to the latency component. The log of \eqref{eq_lik_full} can be expressed as the sum of two likelihood functions, $\l_{C1}$ and $\l_{C2}$, given by
+\begin{align}
+\l_1(\bvec) =& \sum_{i = 1}^{n}\bigg\{\yi \log(\p) + (1-\yi)\log[1-\p] \bigg\} \label{eq_lik_l1},\\
+\l_2(\gvec, \su) =& \sum_{i = 1}^{n}\bigg\{\yi\di\log\hux + \yi\log[\sux] \bigg\}\label{eq_lik_l2}.
+%l1 = SUM[y * log(p) + (1-y)log(1-p)]
+%l2 = SUM{(dy)log(hazard) + ylog[S(t)]}
+\end{align}
+
+The E-Step of the EM algorithm takes the conditional expectation of the complete log-likelihood function with respect to the unobserved $y_i$ values for the given current estimates of $\bvec$, $\gvec$, and $\so$.\footnote{Initial estimates for $w_i$ are derived by setting all censored cases to 0 and all uncensored cases to 1.} Although $y_i$ is not observed, the expectation of $\yi$ conditional on the observed data and current parameter estimates is sufficient to conduct this step since \eqref{eq_lik_l1} and \eqref{eq_lik_l2} are linear functions of $\yi$.
+%Although $y_i$ is unobserved, the conditional expectation of $y_i$ is enough to maximize \eqref{eq_lik_l1} and \eqref{eq_lik_l2}\ since both are linear functions of $y_i$. The conditional expectation of $y_i$ is
+%Doing so produces the following equations. Let $\Theta$ denote the parameters to be estimated % This needs to be reworded, too close to Sy and Taylor
+%For uncensored individuals, $\yi$ is observed, and the expected value is equal to 1.
+%\begin{align}
+%E(Y_i | \di = 1, \ti, \xvec, \zvec) = \yi = 1.\label{eq_expecy_uncens}
+%\end{align}
+%For censored individuals, the conditional expectation of $\yi$ is given by the probability that individual $i$ is uncured (i.e. the probability of surviving until time t) time the probability of being uncured divided by the probability of being cured + the above).
+%\begin{align}
+%E(\yi|\di = 0, \ti, \xvec, \zvec) = \bigg(\frac{p_i\sox)}{1-p_i + p_i\sox}\bigg)\label{eq_expecy_cens}
+%\end{align}
+%Equations \eqref{eq_expecy_uncens} and \eqref{eq_expecy_cens} can be combined to produce 
+Let $\wi$ denote the conditional expectation of $\yi$ given the current parameter estimates $\Theta^{\{m\}} = (\bvec^{\{m\}})$, given by
+\begin{align}
+\wi = E(\yi|\di, \ti, \xvec, \zvec) = \delta_i + (1-\delta_i)\bigg(\frac{p_i\sox}{1-p_i + p_i\sox}\bigg).
+\end{align}
+For uncensored individuals ($\di = 1$), the value of $\yi$ is known and $\wi$ reduces to 1. For censored individuals, $\wi$ reduces to the probability of the $i^{th}$ censored individual being uncured.  Put otherwise, for censored individuals, $\wi$ ``represents a fractional allocation to the susceptible group,'' \citep[][p. 229]{sy2000}. Substituting $\wi$ for $\yi$ in \eqref{eq_lik_l1} and \eqref{eq_lik_l2} produces
+\begin{align}
+\l_1(\bvec) =& \sum_{i = 1}^{n}\bigg\{\wi \log(\p) + (1-\wi)\log[1-\p] \bigg\} \label{eq_lik_l1w},\\
+\l_2(\gvec, \su) =& \sum_{i = 1}^{n}\bigg\{\wi\di\log\hux + \wi\log[\sux] \bigg\}\label{eq_lik_l2w}.
+\end{align}
+
+The M-step involves maximizing the log-likelihood functions of \eqref{eq_lik_l1w} and \eqref{eq_lik_l2w} with respect to the unknown parameters $\bvec$, $\gvec$, and $\so$ using the current values of $\wi$. Since \eqref{eq_lik_l1w} does not depend on the value of $\bvec$ or $\so$, estimates of $\gvec$ can be obtained by maximizing \eqref{eq_lik_l1w} using standard binomial regression routines. Similarly, since \eqref{eq_lik_l2w} does not depend on the value of $\gvec$, estimates of $\bvec$ and $\so$ can be obtained by maximizing \eqref{eq_lik_l2w} using standard Cox PH routines \citep{peng2003, cai2012}, where $\so$ is estimated using \citet{breslow1972}'s version of the Cox PH model, given by
+\begin{align}
+\hat{S}_0(t| Y = 1) = \exp\bigg(-\sum_{j:t_{(j)}\leq t}\frac{d_{t_{(j)}}}{\sum_{i \epsilon R(t_{(j)})}\wi\exp(\xvec'\hat{\bvec}) }\bigg),\label{eq_so} 
+\end{align}
+where $d_{t_{(j)}}$ is the number of events at time $t_{(j)}$ and $R(t_{(j)})$ is the set of observations that are at risk of failure at $t_{(j)}$.\footnote{This constitutes using a modified version of the Nelson-Aalen estimator to estimate the baseline cumulative hazard and then estimating the survivor function using $\so = \exp-\hat{H_0(t|Y=1)}$.}
+\begin{comment}
+% Estimating the survival function
+Once estimates of $\bvec$ have been obtained, estimates of the conditional baseline survival function, $\so$, are obtained using profile likelihood methods. This typically involves using a modification of \citet{breslow1972}'s likelihood for the Cox PH model.\footnote{\citet{sy2000} demonstrate that $\su$ can also be estimated using the nonparametric full likelihood method of \citet{kalbfleisch1980}.} 
+\end{comment}
+
+% zero tail constraints
+The estimator defined in \eqref{eq_so} may not approach 0 for $t$ greater than the maximum observed failure time, $t_{(k)}$. \citet{taylor1995} characterizes this as an identifiability problem in which the tail of the $\su$ distribution is difficult to estimate. \citet{taylor1995} suggested imposing the constraint that $\so$ = 0 for $t > t_{(k)}.$ This constraint is achieved by setting $\wi = 0$ for observations where $t > t_{(k)}$ in the E-step. This effectively eliminates the identifiability problem and leads to more stable parameter estimates and faster convergence \citep{taylor1995}. In addition, this constraint may lead to less biased estimates of $\bvec$ and $\gvec$ in the presence of high levels of censoring. Substantively, this constraint implies that most of the subjects left at the end of the observation period are members of the cured group and are unlikely to fail in the future. Put otherwise, the use of the semiparametric PH mixture cure model may not be appropriate when the follow-up period of a study is not long enough for most of the susceptible individuals to have already failed. % ill-beahved likelihood function
+Once the estimates of $\bvec$, $\gvec$, and $\so$ are obtained, the E-step is repeated using the newly obtained estimates to re-estimate the value of $\wi$. Estimation proceeds by iterating between the E and M steps until the values of the parameters converge. 
+
+%\subsection{Variance Estimation}
+% Cai et al.: Because of the complexity of the estimating equation in the EM algorithm, the standard errors of estimated parameters are not directly available. In order to obtain the variance of β̂ and b̂, this package randomly draws bootstrap samples with replacement by ‘sample’ function in R. The default number of bootstrap is set to be 100. We show that there is little difference in standard errors when using 100, 200 and 500 bootstrap samples in the illustrated examples (Tables 1 and 2), which means that 100 is enough for those two datasets.
+% Variance Estimation
+\citet{fang2005} demonstrate that the maximum likelihood estimates of $\su$ are consistent and asymptotically normally distributed.
+Since estimates of the variance of the estimated parameters are not directly available from the EM algorithm, alternate methods of estimating the standard errors are necessary for hypothesis testing. 
+Various authors have derived approximations of the standard errors, including \citet{peng2000, sy2000, fang2005, xu2014}. However, since
+%peng2000 use an approximation 
+%sy2000 derive an approximation using the observed information matrix 
+%fang2005 profile likelihood approach
+%xu2014
+	%However, since these numerical instability
+	%Cannot be easily be adapted to accommodate variations or extensions of the semiparametric PH mixture cure model.
+	%sy2000 method underestimates variance when the number of failures is few or there is heavy censoring
+As such, most existing software packages use a nonparametric bootstrap with replacement to estimate the standard errors \citep[e.g.][]{peng2003, cai2012}. 
+% question: bootstrapping --- clusters? --- no, b/c only one contributes at any given time --- what about logit?
+
+\subsection{Extensions}
+The semiparametric PH cure model can be extended to accommodate a number of other issues that are common with survival data. Stratification can be used to allow the conditional baseline hazard to vary by groups of observations \citep{peng2003}. In addition, analysts can allow covariates to have a non-linear additive effect on the incidence component by using generalized additive models in place of a binomial generalized linear model for $\gvec$ \citep{peng2003, ramires2018}. Non-linear effects may also be incorporated using the univariate transformations of the covariates \citep[see][]{therneau2000}. 
+
+\citet{wu2014} develop a version of the semiparametric PH mixture cure model that allow analysts to incorporate information on the cure status of some subjects when a subset of the censored subjects is available. In addition, variants of the semiparametric PH mixture model have been developed that can accommodate interval-censored data \citep{liu2009, hu2013, lam2013}, frailty terms \citep{price2001, peng2008, peng2008a}, and covariate and time-dependent censoring \citep{lu2004a, othus2009}.
+%We assume an independent, noninformative, random censoring model and that censoring is statistically independent of Y. 
+
+\subsection{Issues and Diagnostics}
+% Convergence / separation /problems in small samples
+Cure models are prone to issues of non-convergence or unstable coefficient estimates, particularly in small samples or in samples in which there are very few failures or very few cured observations (although the constraint on the survivor function discussed above improves the performance of the cure model in this regard \citep{taylor1995, sy2000}). In addition, cure models may be prone to complete or quasicomplete separation (i.e. infinite coefficient estimates) in either the incidence or latency components. This is particularly likely in small samples and when there are very few failures or very few cured subjects \citep{sy2000}. Although this is difficult to deal with without omitting covariates from the model, the use of Bayesian priors to ameliorate these issues is an area of active research \citep{han2017}. 
+% Event size
+%In datasets with few failures, the parameter estimates of $\bvec$ may be unstable \citep{sy2000}. 
+%Model specification
+%May also be unstable if there are few cured individuals that survive censoring until the end of the observation period to get a reasonable estimate of the incidence proportion. % THis is common in social science, as most observations are right-censored
+%The zero-tail constraint also improves the performance of the model in regard to both of these
+%Zero-tail constraint 
+%	Improves performance of the model
+%	Improves performance in small samples
+
+
+
+% Identification
+% PH assumption 
+Since the semiparametric proportional hazards cure model is dependent on the proportional hazards assumption, verifying that the covariates conform to the proportional hazards assumption is important. 
+% Diagnostics
+Variants of the standard proportional hazards diagnostics used with Cox models have not yet been fully developed for cure models, although the development of residual-based methods for assessing model fit is an area of active research \citep{peng2017, ramires2018}. Instead, the use of graphical techniques such as log-log survivor plots may be used to assess whether a covariate's effect is proportional over time. Covariates that do not meet this assumption may be dealt with in the usual ways, e.g. by stratifying on the offending covariate or by incorporating interactions with the log of time. Although the proportional hazards assumption holds for the conditional survivor function, it does not necessarily hold for the population survival function, $\spop$.
+		
+\subsection{Comparison of parametric and semiparametric duration models}
+\citet{kuk1992, sy2000} conduct Monte Carlo simulations to compare the performance of a Weibull cure model and the semiparametric cure model when at various levels of censoring when the Weibull distribution is known to be an appropriate distribution.\footnote{Both studies use an exponential distribution to model the hazard rate, which is a special case of the Weibull distribution.} Across all levels of censoring, they find that the semiparametric cure model produces more efficient estimates of the incidence parameters, $\gvec$. With low levels of censoring, the semiparametric cure model provides only slightly less efficient estimates of $\bvec$ than the parametric model. However, at high levels of censoring, the semiparametric model tends to actually provide more efficient estimates of $\bvec$ as well.
+
+\section{Software}
+%Existing options
+	% Parametric
+		Several options exist for estimating parametric cure models in R and Stata. The \textbf{flexsurvcure} package \citep{amdahl2017} can be used to estimate parametric mixture and non-mixture cure models using a wide variety of parametric distributions. The \textbf{spduration} package \citep{beger2017a}, described in \citep{beger2017a}, can be used to estimate 1parametric mixture models using the Weibull or log-logistic distributions, and can incorporate the use of time-varying covariates. Parametric mixture and non-mixture cure models can also be estimated in Stata using the user-written \textit{strsmix} and \textit{strsnmix} commands \citep{lambert2007}.
+		
+	% Semiparametric
+		Several options exist for estimating semiparametric cure models in R. The \textbf{smcure} package \citep{cai2012a}, described in \citep{cai2012}, allows for the estimation of semiparametric cure models. The \textbf{rcure} package \citep{han2017} builds on \textbf{smcure} to incorporate the use of a weakly informative prior on the incidence portion of the model to reduce the potential for separation and produce more stable bootstrap estimates. The \textbf{intercure} package \citep{brettas2016} will estimate the semiparametric non-mixture cure models and semiparametric mixture frailty cure models for interval censored data. 
+		% The \textbf{nltm} package will estimate semiparametric non-mixture cure models. 
+		% nltm was removed from CRAN for not keeping the package well-maintained, archived versions are available
+		% semicure is defunct and was superseded by R
+		% miCoPTCM
+		% Gorcure
+		% NPHMC
+		% CR
+		% geecure
+		% thregI
+
+I introduce a new R package, \textbf{tvcure}, designed to estimate the semiparametric PH mixture cure model with time-varying covariates. The primary contribution of the \textbf{tvcure} package is the ability to estimate the semiparametric PH mixture cure model using time-varying covariates, which is not currently supported by any other software package. In addition, the \textbf{tvcure} package provides a number of additional features designed to enhance the usability of these models.
+	%Modeling choices
+	% Latency - PH or AFT
+	% Link Functions
+	For the incidence component, the package supports the use of the logit, probit, and complementary log-log link functions. % alternatives not supported currently cauchit, log
+	% Future: Can incorporate the use of Offsets
+	In addition, the tvcure function can incorporate the use of stratification to allow for the estimation of separate conditional baseline hazard functions for different groups. 
+
+Estimation is performed using the EM algorithm described above. The standard errors of $\bvec$ and $\gvec$ are estimated using the nonparametric bootstrap with stratified random sampling. 
+%The \textbf{tvcure} package follows prior packages in using the nonparametric bootstrap using stratified random sampling to estimate the standard errors for both $\bvec$ and $\gvec$. 
+Since this procedure requires rerunning the EM algorithm multiple times, the bootstrapping method can require a significant amount of time to complete. To ameliorate this issue, the \textbf{tvcure} package supports the use of parallel processing, allowing R to estimate multiple bootstrap replications simultaneously on separate processor cores. 
+
+In addition, the \textbf{tvcure} package includes several functions designed to facilitate the interpretation and presentation of results. The package includes a prediction function for computing and plotting various quantities of interest for different covariate profiles, including the probability of failure, probability of cure, conditional survivor function, conditional baseline survivor function, and the marginal survivor population. At present, these functions are not capable of estimating confidence intervals for these quantities. However, the functionality to do so using simulation-based methods, as employed by \citet{beger2017}, is currently in development. In addition, a function designed to help produce publication ready tables in conjunction with the \textbf{xtable} package is included. These functions were used to create all results tables and predicted probabilities presented in the replication analysis.
+
+%\section{Monte Carlo Simulations}
+
+\section{Replication Analysis: International Ceasefires}
+
+\begin{comment} %Description of LHR's 7 models
+Model 1 is baseline.
+Model 2 is model 1 with Puppet FIRC instead of FIRC
+Model 3 is baseline with Werner coding instead of Archicgos coding)
+Model 4 is model 1 with agreement stength post-45 instead of normal
+Model 5 is model 1 with a bunch of disaggregated agreement measures added - CBMs are signigicant
+Model 6 restricts the analysis to CBMs
+Model 7 uses a log-logistic specification
+\end{comment}
+
+
+
+\begin{figure}[htbp]\centering
+	\caption{Kaplan-Meier estimate of the duration of international cease-fires from 1914-2001}
+	\includegraphics[width=4in]{lhrkm}
+	\floatfoot{Note: Shaded region represents 95 percent confidence intervals.}
+	\label{fig:lhr_km}
+\end{figure}
+
+% Cox model 
+For the sake of comparison, Table \ref{tab.lhr.cox} presents the results of a standard Cox proportional hazards model of cease-fire duration. Four variables appear to have significant effects on the hazard rate. Democracy has a negative effect on the hazard rate, and thus is associated with a longer peace spell after the end of a conflict. By contrast, battle deaths, existential stakes, and contiguity all have positive effects on the hazard rate.
+
+\begin{table}
+	\caption{Cox proportional hazards estimates for incidence and hazard of intrastate cease-fires} 
+	\label{tab.lhr.cox}
+	\include{coxtab}
+	Note: *** p \textless 0.001, ** p \textless 0.01, * p \textless 0.05, . p \textless 0.10
+\end{table}
+
+% Introduction to Table 1
+Table \ref{tab.lhr.cure} presents the results of a semiparametric cure model. For the sake of this replication, all variables are included in both equations to limit the extent to which inferences are dependent on model specification. (The variable for foreign imposed regime change is omitted from the hazard component of the model due to the fact that it perfectly predicts failure in the hazard equation (i.e., quasi-complete separation). This provides strong evidence that foreign-imposed regime change is associated with lower hazard rates.) It should be noted, however, that researchers can choose to selectively include different independent variables in each model if they choose to do so. 
+
+\begin{table}
+	\caption{Semiparametric cure model estimates for incidence and hazard of duration of intrastate cease-fires} 
+	\label{tab.lhr.cure}
+	\include{lhrtab}
+	Note: *** p \textless 0.001, ** p \textless 0.01, * p \textless 0.05, . p \textless 0.10
+\end{table}
+
+% Incidence interpretation
+Columns 1 and 2 present the coefficient estimates for the incidence equation and their standard errors. Positive coefficient estimates indicate that a covariate is associated with a higher probability of failure. Capability change has a positive and significant effect on the incidence, suggesting that dyads that experience a rapid change in relative power are much more likely to experience relative conflict. Wars that end in ties also have a higher probability of recurring. This suggests that wars that do not lead to a decisive victor are more likely to recur since they have not adequately resolved the information problem underlying conflict \citep{fearon1995}. Battle deaths also have a negative effect on the incidence of war recurrence which is significant at the 0.1 level. This suggests that more costly conflicts are better at conveying information to the disputing parties and are therefore less likely to recur, further supporting the information mechanism. Finally, conflict history has a significant positive effect on the incidence, indicating that states that have fought more in the past are less likely to remain at peace.
+
+% Latency interpretation
+Columns 3 and 4 of Table \ref{tab.lhr.cure} present the estimated hazard coefficients and their standard errors. Positive hazard coefficients indicate that a covariate is associated with a higher hazard rate, and hence, a lower survival time. Only one variable, capability change, has a significant effect on the hazard rate. Intriguingly, capability changes are associated with lower hazard rates, which is the opposite of the expectation established in the previous literature. Notably, several of the variables found to have an effect on the duration of peace previously do not have a significant effect in the cure model (contiguity, existential stakes, or democracy). Likewise, most of the variables found to have a significant effect in the cure model did not have an effect in the standard Cox model.
+
+To further illustrate how cure models can improve substantive inferences, I examine the results for the capability change variable more closely. 
+% Capability Change Substantive effects
+Power shifts are central to rationalist explanations of conflict. As states gain power relative to their allies, their ability to elicit a favorable outcome in war increases. This incentivizes them to renegotiate the terms of an agreement. This, in turn, makes it difficult for them to credibly commit to future agreements \citep{fearon1995, powell2006}. Although existing studies have found evidence that power shifts decrease the duration of cease-fires \citep{werner1999, werner2005}, other studies have failed to replicate this finding \citep{fortna2003, lo2008}.
+
+The results from the cure model tell a different story, and may explain, in part, why previous studies have produced conflicting results. On the one hand, shifts in capabilities are associated with a higher probability of failure. To illustrate this effect, Figure \ref{fig:lhr.cap.pp} plots the predicted probability of failure from 0 to 5.%\footnote{Although the observed range of this variable goes up to 4.46, values above 1 are extremely rare, and the effects become indistinguishable above 1. Focusing on the range from 0 to 1 allows the visualization of the effects within this range more clearly.} 
+As illustrated, the predicted probability of failure approaches 1 as capabability changes approach 1, indicating a 100 percent relative difference in the two states capabilities over the previous year.
+%abs(((cap_1-lagcap_1)/lagcap_1) - ((cap_2-lagcap_2)/lagcap_2))
+
+\begin{figure}[htbp]\centering
+	\caption{Predicted Probability of Failure at Different Levels of Capability Change}
+	\includegraphics[width = 3in]{cappred}
+	\label{fig:lhr.cap.pp}
+\end{figure}
+
+However, capability change also has a significant negative effect on the hazard and may actually extend the duration of peace among those states that are destined to fail. Figure \ref{fig:lhr.cap.surv} plots the conditional survival curve, i.e. the probability of surviving at least until time $t$ for individuals who are susceptible to failure, across different levels of capability change. Higher levels of capability change shift the survival curve upwards by a substantial margin, as high as 80 percent after roughly 21,500 days (60 years). 
+
+\begin{figure}[htbp]\centering
+	\caption{Conditional Survivor Function at Different Levels of Capability Change}
+	\includegraphics[width = 3in]{capsurv}
+	\label{fig:lhr.cap.surv}
+\end{figure}
+
+This finding suggests that states are unlikely to experience conflict when power shifts are small. However, if they do, those conflicts will occur quickly, which may suggest that other exogenous shocks that lead to uncertainty about capabilities or resolve are at play. By contrast, large power shocks make conflict recurrence likely, but also tend to extent the duration of peace before such conflicts occur. This finding is admittedly puzzling, but may lie in the fact that power shifts are unlikely to produce conflict instantaneously. Rather, the effect of power shifts depends on the rising power's expectations about the future \citep{bas2017}. If states expect that a power shift is temporary, they have incentives to capitalize on it immediately and fight while they have the upper hand. However, if states expect to continue gaining military power relative to their enemy, they actually have incentives to wait. As their power grows, their ability to win a conflict increases and their expected benefits from renegotiating an agreement increases. Moreover, if one state experiences an extended period of relative growth, the other's uncertainty about the other state's power will be diminished and may be more likely to accept a negotiated settlement.
+% Timing
+
+% latex table generated in R 3.4.1 by xtable 1.8-2 package
+% Fri Apr 20 12:45:16 2018
+\begin{comment}
+\begin{table}[ht]
+	\centering
+	\begin{tabular}{rlrrrr}
+		\hline
+		& Parameter & Estimate & Std. Error & t value & Pr($>$$|$t$|$) \\ 
+		\hline
+		1 & Dur\_(Intercept) & 4.00 & 0.24 & 16.84 & 0.00 \\ 
+		2 & Dur\_polity2 & 0.21 & 0.03 & 6.78 & 0.00 \\ 
+		3 & log(alpha) & -0.03 & 0.12 & -0.27 & 0.79 \\ 
+		4 & Risk\_(Intercept) & 6.53 & 3.26 & 2.01 & 0.04 \\ 
+		5 & Risk\_polity2 & 0.90 & 0.41 & 2.20 & 0.03 \\ 
+		\hline
+	\end{tabular}
+\end{table}
+\end{comment}
+
+\section{Conclusion}
+In this article, I introduce readers to the semi-parametric cure model.%  based on the counting process formulation of the Cox proportional hazards model. By exploiting a convenient equivalence between the Cox model and Poisson regression, I demonstrate that the zero-inflated Poisson model can be used to estimate a semi-parametric proportional hazards model.
+%Semiparametric cure models allow users to estimate without making rigorous parametric assumptions about the shape of the underlying baseline hazard rate. 
+	%In addition, this model can be easily estimated in popular software programs using preexisting packages and commands. Moreover, this model can easily accommodate more complex data structures such as time-varying covariates and repeated events.
+Cure models allow users to model failure time in a more accurate way in the presence of immune or cured subjects by jointly modeling whether an event occurs and the timing of such events. In doing so, cure models have the potential reduce bias and provide greater substantive leverage over questions of theoretical interest.
+%I use simulation studies to compare the performance of the ZIP estimator against a standard Cox model and an alternative parametric cure model. Relative to the Cox model, I find that the ZIP model provides more accurate estimates of the hazard coefficients. In addition, I assess the performance of each of these models with various proportions of observations that are cured. As the proportion of cured observations increases, the Cox model performs even worse than in the initial simulations. In addition, at higher levels of cured observations I find that the ZIP model outperforms a mixture Weibull model, even when the initial duration times were drawn from a Weibull distribution. This suggests that the use of the ZIP model may be warranted even in cases where analysts are comfortable making parametric assumptions about the shape of the baseline hazard. Moreover, this suggests that using a semi-parametric cure model is of even greater importance when we cannot confidently make assumptions about the shape of the baseline hazard. 
+
+I also introduce new software in the form of the \textbf{tvcure} R package, designed to implement the semiparametric cure model with time varying covariates. Finally, I apply the model to data on international cease-fires demonstrates the potential inferential advantages of semiparametric cure models model over the standard Cox model. In future iterations of this paper, I plan to conduct additional replication analyses on studies in American politics and comparative politics to demonstrate the potential for semiparametric cure models to be applied widely within political science.
+
+\newpage
+\section{References}
+\printbibliography[heading = none]
+
+\newpage
+\section{Appendix}
+%\section{Replication Analysis: Interstate Ceasefires}
+%\subsection{Codebook and Descriptive Statistics\label{sect_lhr_descriptives}}
+The original version of the data used in this analysis comes from an expanded version of Page Fortna's Cease-Fire Data Set \citep{fortna2003, fortna2004b}.
+%Fortna's dataset covers the period from 1946-1998.
+This dataset has been expanded by \citet{werner2005} and \citet{lo2008} to add additional variables and cases. The measurement of all independent variables is described below. Table \ref{tab:descLHR} presents the descriptive statistics for all variables.
+\begin{itemize}
+	\begin{singlespace}
+		\item \underline{Foreign Imposed Regime Change (FIRC)} is a dummy variable coded 1 if the conflict ended with the victor instituting regime change in the losing state.%\footnote{Data for this particular model come from \citet{werner1999}. LHR also test additional models using data from the ARCHIGOS dataset \citep{goemans2009}.}
+		\item \underline{Agreement Strength} is a 10 point additive index of the strength of a cease-fire agreement. See \citet{fortna2004b} for more information on the provisions included in this measure. %TODO Add the specific measures here.
+		\item \underline{Battle Deaths} measures the natural log of the combined number of casualties for both disputants in the previous conflict. Data come from \citet{clodfelter2002}. 
+		\item \underline{Battle Consistency} is a measure of how long the winner of the previous war had been dominating the conflict prior to victory. This measure ranges from 0 to 1, with 0 indicating the previous war ended in a stalemate and 1 indicating that the victor of the previous war held the upper hand for the entirety of the previous conflict. 
+		\item \underline{Third Party Intervention} is a dummy coded 1 if the cease-fire came about only as a result of significant third party pressure.
+		\item \underline{Tie} is a dummy variable coded 1 if the previous conflict results in a draw. Data for this variable come from the Correlates of War project.
+		\item \underline{Existential Stakes} is a dummy variable coded 1 if the existence of one of the disputants was threatened by the previous conflict. This variable is based on the International Crisis Behavior (ICB) dataset, Version 7.0, [CITATION] and supplemented by additional coding by LHR. %TODO Citation
+		\item \underline{Capability Change} is a summed measure of the change in capabilities in both disputants over their capabilities in the previous year.
+		\item \underline{Conflict History} accounts for the history of conflict between the two disputants by taking the ratio of the number of MIDs previously fought by the two disputants to the age of the dyad.
+		\item \underline{One Democracy} is a dummy variable coded one if at least one state has a Polity score of 6 or higher.
+		\item \underline{Two Democracies} is a dummy variable coded one if both states have a Polity score of 6 or higher.
+		\item \underline{Contiguity} is a dummy variable coded one if the disputants are contiguous states, defined by the COW Direct Contiguity Data Set version 3.0 \citep{stinnett2002}.
+	\end{singlespace}
+\end{itemize}
+
+\begin{table}[htbp]\centering
+	\caption{Descriptive Statistics for Cease-Fire Data}
+	\label{tab:descLHR}
+	\begin{tabular*}{6.5 in}{lcccccc}
+		\hline\hline
+		\multicolumn{1}{c}{Variable}  & Obs  & Mean   & Median & Std. Dev. & Min   & Max   \\ \hline
+		Cease-Fire Failure            & 5556 & .0101  & 0      & .010      & 0     & 1     \\
+		Foreign-Imposed Regime Change (Archigos) & 5556 & .155   & 0      & .362      & 0     & 1     \\
+		Foreign-Imposed Regime Change (Werner) & 5556 & .179   & 0      & .383      & 0     & 1     \\
+		Capability Change             & 5546 & .233   & .08    & .478      & 0     & 4.463 \\
+		Descisive Victory             & 5556 & .437   & .256   & .424      & 0     & 1     \\
+		Third Party Intervention      & 5556 & .121   & 0      & .327      & 0     & 1     \\
+		Agreement Strength            & 5556 & 3.816  & 3.667  & 1.95      & 0     & 9.5   \\
+		One Democracy                 & 5556 & .616   & 1      & .487      & 0     & 1     \\
+		Two Democracies               & 5556 & .162   & 0      & .368      & 0     & 1     \\
+		Tied Battle                   & 5556 & .119   & 0      & .323      & 0     & 1     \\
+		Battle Deaths (logged)        & 5534 & 10.345 & 10.249 & 2.447     & 5.288 & 16.2  \\
+		Conflict History              & 5556 & .208   & .085   & .309      & 0     & 1.6   \\
+		Existential Stakes            & 5556 & .562   & 1      & .496      & 0     & 1     \\
+		Contiguous                    & 5556 & .508   & 1      & .5        & 0     & 1     \\
+		Risk Interval                 & 5556 & 20.519 & 20     & 12.78     & 1     & 46    \\ \hline
+	\end{tabular*}
+\end{table}
+
+\end{document}
+
+
+\begin{comment} % Measurement
+# Structural factors that enable self-enforcing agreements
+# Factors that result in changes to self-enforcing agreements
+
+\begin{itemize}
+\begin{singlespace}
+\item \underline{Foreign Imposed Regime Change (FIRC)} is a dummy variable coded 1 if the conflict ended with the victor instituting regime change in the losing state.%\footnote{Data for this particular model come from \citet{werner1999}. LHR also test additional models using data from the ARCHIGOS dataset \citep{goemans2009}.}
+\item \underline{Agreement Strength} is a 10 point additive index of the strength of a cease-fire agreement. See \citet{fortna2004b} for more information on the provisions included in this measure. %TODO Add the specific measures here.
+\item \underline{Battle Deaths} measures the natural log of the combined number of casualties for both disputants in the previous conflict. Data come from \citet{clodfelter2002}. 
+\item \underline{Battle Consistency} is a measure of how long the winner of the previous war had been dominating the conflict prior to victory. This measure ranges from 0 to 1, with 0 indicating the previous war ended in a stalemate and 1 indicating that the victor of the previous war held the upper hand for the entirety of the previous conflict. 
+\item \underline{Third Party Intervention} is a dummy coded 1 if the cease-fire came about only as a result of significant third party pressure.
+\item \underline{Tie} is a dummy variable coded 1 if the previous conflict results in a draw. Data for this variable come from the Correlates of War project.
+\item \underline{Existential Stakes} is a dummy variable coded 1 if the existence of one of the disputants was threatened by the previous conflict. This variable is based on the International Crisis Behavior (ICB) dataset, Version 7.0, [CITATION] and supplemented by additional coding by LHR. %TODO Citation
+\item \underline{Capability Change} is a summed measure of the change in capabilities in both disputants over their capabilities in the previous year.
+\item \underline{Conflict History} accounts for the history of conflict between the two disputants by taking the ratio of the number of MIDs previously fought by the two disputants to the age of the dyad.
+\item \underline{One Democracy} is a dummy variable coded one if at least one state has a Polity score of 6 or higher.
+\item \underline{Two Democracies} is a dummy variable coded one if both states have a Polity score of 6 or higher.
+\item \underline{Contiguity} is a dummy variable coded one if the disputants are contiguous states, defined by the COW Direct Contiguity Data Set version 3.0 \citep{stinnett2002}.
+\end{singlespace}
+\end{itemize}
+\end{comment}
+
+%%%%%%For the Appendix
+%Model results table
+\begin{comment}
+Table \ref{tab_sim_60_10_haz} presents the estimated hazard coefficients ($\beta_i$) for each of the models run. 
+\begin{table}
+\caption{Average Estimates of Hazard Coefficients for Simulated Datasets}
+\label{tab_sim_60_10_haz}
+\input{"tab_sim_60_10_lat.tex"}
+\end{table}
+
+\begin{table}
+\caption{Average Estimates of Latency Coefficients for Simulated Datasets}
+\label{tab_sim_60_10_lat}
+\input{tab_sim_60_10_lat}
+\end{table}
+\end{comment}
+
+\end{document}
+%%%%% Working through derivation of log-likelihood: based primarily on Sy and Talor
+
+% Full likelihood function and components
+L = PROD(A*B)PROD(C*D)
+L1 = PROD(A*B)
+L2 = PROD(C*D)
+
+% Derive full log-likelihood
+% Log of the product is the sum of the logs
+ll = log[PROD(A*B)] + log[PROD(C*D)]
+ll = {SUM[log(A)] + SUM(log(B))} + {SUM(log(C)) + SUM(log(D))}
+ll = SUM[log(A)] + SUM(log(B)) + SUM(log(C)) + SUM(log(D))
+
+% Define A, B, C, D and take the logs
+A = p^y
+log(A) = y * log(p)
+
+B = (1-p)^{1-y}
+log(B) = (1-y)log(1-p)
+
+C = {hazard}^dy
+log(C) = (dy)log(hazard)
+
+D = exp(-yHexp(ZB))
+log(D) = -yH
+% S(t) = exp(-H(t))
+log(D) = -y(-log[S(t)])
+log(D) = y(log(S(t)))
+
+% Plug in A, B, C, and D
+ll = SUM[y * log(p)] + SUM[(1-y)log(1-p)] + SUM[(dy)log(hazard)] + SUM(ylog(S))
+
+% Combine the first two sums and last two sums to create l1 and l2
+l1 = SUM[y * log(p) + (1-y)log(1-p)]
+l2 = SUM{(dy)log(hazard) + ylog[S(t)]} % The y in dy dissapears in Peng and Dear - I think this has to do with the switch to wi
+
+Derived in this way, l1 is contingent on gamma and y
+l2 is contingent on beta, H0 or S0 and y
+
+%%%%% Expectation step
+E(y | observed, params) =  wi = delta + (1-delta) [pSu / 1-p + p*S]
+
+E(lc1) = SUM[w * log(pi) + (1-w)log(1-pi)]
+E(lc2) = SUM[d * w * log(hazard) + w * log(S(t))] % how does w end up inside - different articles differ on this
+
+%%%%% Maximization step
+% The M-step in the EM algorithm is to maximize (5) and (6) with respect to the unknown parameters.
+
+	% LM
+	
+	% Coxph
+
+	% Survivor function
+	\sohat = \exp\bigg(
+	-\sum_{}^{}\frac{d}{\sum_{den}^{max}w(i)^{m}\exp(bx)}
+	)
+	
+	s0t converge
