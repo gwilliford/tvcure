@@ -1,174 +1,11 @@
-\documentclass[letterpaper, 12pt]{article}
-
-%%%%%Core Packages
-\usepackage{verbatim}%For comments
-\usepackage{amsmath}%For math
-\usepackage[utf8]{inputenc}
-%\usepackage[T1]{fontenc}
-\usepackage{csquotes}%For quotations
-
-%%%%%Page Formatting
-% \usepackage[doublespacing]{setspace} % Control linespacing, use command \doublespacing in text
-\usepackage[margin=1in]{geometry}	% 1 inch margins
-\usepackage{setspace}
-
-%%%%%Paragraph Format
-\usepackage{indentfirst} % Indent after section heads
-
-%%%%%Figure Format
-\usepackage{graphicx, epsfig, epstopdf}%For graphics
-\epstopdfsetup{outdir=./}
-\usepackage{subcaption} % Allows multiple figures in one
-
-%%%Format captions for table and figure
-\usepackage{floatrow}
-\floatsetup[table]{capposition=top}
-\floatsetup[figure]{capposition=top}
-\usepackage{caption}
-\captionsetup[table]{labelfont=bf,textfont=bf,singlelinecheck=off}
-\captionsetup[figure]{labelfont=bf,textfont=bf,singlelinecheck=off}
-
-%%%Format table column width
-%\setlength{\tabcolsep}{18pt}
-
-%Section Formatting
-\usepackage{titlesec}
-\titleformat{\section}
-{\normalfont\normalsize\bfseries\uppercase}{\thesection}{1em}{}
-\titleformat{\subsection}
-{\normalfont\normalsize\bfseries}{\thesubsection}{1em}{}
-\titleformat{\subsubsection}
-{\normalfont\normalsize\itshape\normalparindent}{\thesubsubsection}{1em}{}
-
-%Table Packages
-%\usepackage{caption}
-%\captionsetup[table]{labelfont=bf,textfont=bf,singlelinecheck=off, tableposition=top}
-%\captionsetup[figure]{labelfont=bf,textfont=bf,singlelinecheck=off}
-\usepackage{booktabs, longtable, threeparttable}
-\usepackage{array}
-\usepackage{dcolumn}
-\newcolumntype{d}[1]{D{.}{\cdot}{3}}
-
-%Center all tables
-\let\originaltable\table
-\let\endoriginaltable\endtable
-\renewenvironment{table}[1][ht]{%
-	\originaltable[#1]
-	\centering}%
-{\endoriginaltable}
-
-%%%%% References
-\usepackage[backend=biber, style=authoryear,sorting=nyt,natbib=true, doi=false,isbn=false,url=false, eprint=false, uniquename=false]{biblatex} % Load citations using biber, use authoryear cites, sort bibliography by name, year, and title, use natbib functionality
-\addbibresource{MyLibrary.bib}
-\AtEveryBibitem{%
-	\clearfield{note}%
-	\clearlist{language}%
-}
-\renewbibmacro{in:}{% Eliminate "In:" before journals and book titles
-	\ifentrytype{article}{}{\printtext{\bibstring{in}\intitlepunct}}}
-\renewbibmacro*{volume+number+eid}{% Format volume and issue
-	\printfield{volume}%
-	\setunit*{\addnbspace}
-	\printfield{number}%
-	\setunit{\addcomma\space}%
-	\printfield{eid}}
-\DeclareFieldFormat[article]{number}{\mkbibparens{#1}}
-
-%%%%% Section Heads
-\usepackage{titlesec}
-\titleformat{\section}{\normalfont\normalsize\bfseries\uppercase}{\thesection}{1em}{}
-\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection}{1em}{}
-\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection}{1em}{}
-\setcounter{secnumdepth}{0} % Suppress Section Numbering
-
-%%%%%Theorem Environment
-\usepackage{ntheorem}%Set theorem style with ntheorem
-\theoremstyle{plain}
-\theoremindent20pt 
-\theoremheaderfont{\normalfont\bfseries}
-\theoremseparator{:}
-\newtheorem{hyp}{Hypothesis}
-%Allow cross referencing between documents
-\usepackage{xr}
-\externaldocument{Appendix}
-\usepackage[affil-it]{authblk}
-
-%%%%%Footnote Formatting
-\interfootnotelinepenalty = 10000 % Don't split footnotes across pages
-\usepackage{hyperref} % For references and urls
-
-%%%%% Notation ----------------------------------------------------------------------------------
-% T = Random variable, t_i = value of T for observation i 
-\newcommand{\ti}{t_i} % last observation time (failure or censoring time) for observation i
-\newcommand{\di}{\delta_i}  % Censoring/event indicator
-\newcommand{\yi}{y_i}			% Cure indicator
-
-% Covariates
-\newcommand{\bvec}{\boldsymbol{\beta}}
-\newcommand{\gvec}{\boldsymbol{\gamma}}
-\newcommand{\xvec}{\mathbf{x}_i} % Vector of hazard covariates for observation i
-\newcommand{\zvec}{\mathbf{z}_i} % Vector of covariates that affect p_i
-\newcommand{\xib}{\mathbf{x}_i\boldsymbol{\beta}}
-\newcommand{\zig}{\mathbf{z}_i\boldsymbol{\gamma}}
-\newcommand{\exb}{\exp(\mathbf{x}_i'\boldsymbol{\beta})}
-\newcommand{\ezg}{\exp(\mathbf{z}_i'\boldsymbol{\gamma})}
-%\newcommand{\XB}{\mathbf{X\bvec}}
-%\newcommand{\ZG}{\mathbf{Z\gvec}}
-
-% Hazard and survivor functions
-\newcommand{\hu}{h(t_i | Y = 1)}	% Hazard function for uncured subjects
-\newcommand{\ho}{h_0(t_i | Y = 1)}	% Baseline hazard function for uncured subjects
-\newcommand{\hux}{h(t_i | Y = 1; \xvec)}	% Hazard function for uncured subjects
-\newcommand{\hox}{h_0(t_i | Y = 1; \xvec)}	% Baseline hazard function for uncured subjects
-\newcommand{\spop}{S_{pop}(t_i)}			% Population survivor function 
-\newcommand{\su}{S(t_i | Y = 1)}	% Survivor function for uncured subjects
-\newcommand{\so}{S_0(t_i | Y = 1)} % Baseline survivor function for uncured subjects
-\newcommand{\sux}{S(t_i | Y = 1; \xvec)}	% Survivor function for uncured subjects with covariates
-\newcommand{\sox}{S_0(t_i | Y = 1; \xvec)} % Baseline survivor function for uncured subjects with covariates
-\newcommand{\sohat}{\hat{S}_0(t | Y = 1; \xvec)} % estimated Baseline survivor function for uncured subjects
-
-%% Cure indicators and cure probability
-\newcommand{\wi}{w_i^{\{m\}}} 	% Conditional expectation of y_i (conditioned on observed data)
-\newcommand{\p}{p_i}			% Probability of failure, p_i = \Pr(y_i = 1 | \zi)
 
 \begin{document}
 %\footnote{Monogan, Andy, Danny, Amanda, Josh, Doug, Annie, Discussants (PolMeth, SLAMM, Minnesota), Fred Boehmke, Clay Webb, Sara Mitchell}
-% Previous versions of this paper were presented at POLMETH and SLAMM
-
-\begin{comment}
-	$\ti$ = (ti)\\
-	$\di$ = censoring indicator (di)\\
-	$\yi$ = cure indicator (yi)\\
-	$p$ = $\Pr(Y = 1)$\\
-\textbf{Covariates}\\
-	$\xvec$ = vector of hazard/latency covariates\\
-	$\zvec$ = vector of cure/incidence covariates\\
-	$\xib$ = xib\\
-	$\zig$ = zig\\
-	$\exb$ 
-	$\ezg$
-	%$\XB$ = Xbeta\\
-	%$\ZG$ = Zgamma\\
-\textbf{Hazard functions}\\
-	$\hu$ = Hazard function for uncured subjects (hu)\\
-	$\ho$ = Baseline hazard function for uncured subjects (ho)\\
-	$\hux$\\
-	$\hox$\\	
-\textbf{Survivor Functions}\\
-	$\spop$ = Population survivor function (spop)\\
-	$\su$ = Survivor uncured covariates\\
-	$\so$ = Baseline survivor uncured covariates\\
-	$\sux$ = Survivor function for uncured subjects (sux)\\
-	$\sox$ = Baseline survivor function for uncured subjects (sox)\\
-	$\sohat$ = Estimated Baseline survivor function for uncured subjects (sohat) \\
-\textbf{Estimation Quantities}\\ 
-	$\wi$\\
-\newpage
-\end{comment}
+% Previous versions of this paper were presented at POLMETH and SLAMM and ISA
+% International Studies Association Annual Conferences, March 27-31, 2019.
 
 \begin{center}
-\textbf{Semiparametric Cure Models and the Duration of Peace After Interstate War}%\footnote{We thank Andy Owsiak, Amanda Murdie, Chad Clay, and Josh Jackson for helpful comments on previous versions of this paper.}
-
+\textbf{Semiparametric Cure Models and the Duration of Peace After Interstate War}
 
 George W. Williford
 
@@ -179,7 +16,7 @@ williford@uga.edu
 \today
 
 \vspace{8cm}
-Prepared for presentation at the International Studies Association Annual Conferences, March 27-31, 2019.
+
 
 
 \end{center}
