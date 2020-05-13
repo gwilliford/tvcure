@@ -97,6 +97,39 @@
 \interfootnotelinepenalty = 10000 % Don't split footnotes across pages
 \usepackage{hyperref} % For references and urls
 
+%%%%% Notation ----------------------------------------------------------------------------------
+% T = Random variable, t_i = value of T for observation i 
+\newcommand{\ti}{t_i} % last observation time (failure or censoring time) for observation i
+\newcommand{\di}{\delta_i}  % Censoring/event indicator
+\newcommand{\yi}{y_i}			% Cure indicator
+
+% Covariates
+\newcommand{\bvec}{\boldsymbol{\beta}}
+\newcommand{\gvec}{\boldsymbol{\gamma}}
+\newcommand{\xvec}{\mathbf{x}_i} % Vector of hazard covariates for observation i
+\newcommand{\zvec}{\mathbf{z}_i} % Vector of covariates that affect p_i
+\newcommand{\xib}{\mathbf{x}_i\boldsymbol{\beta}}
+\newcommand{\zig}{\mathbf{z}_i\boldsymbol{\gamma}}
+\newcommand{\exb}{\exp(\mathbf{x}_i'\boldsymbol{\beta})}
+\newcommand{\ezg}{\exp(\mathbf{z}_i'\boldsymbol{\gamma})}
+%\newcommand{\XB}{\mathbf{X\bvec}}
+%\newcommand{\ZG}{\mathbf{Z\gvec}}
+
+% Hazard and survivor functions
+\newcommand{\hu}{h(t_i | Y = 1)}	% Hazard function for uncured subjects
+\newcommand{\ho}{h_0(t_i | Y = 1)}	% Baseline hazard function for uncured subjects
+\newcommand{\hux}{h(t_i | Y = 1; \xvec)}	% Hazard function for uncured subjects
+\newcommand{\hox}{h_0(t_i | Y = 1; \xvec)}	% Baseline hazard function for uncured subjects
+\newcommand{\spop}{S_{pop}(t_i)}			% Population survivor function 
+\newcommand{\su}{S(t_i | Y = 1)}	% Survivor function for uncured subjects
+\newcommand{\so}{S_0(t_i | Y = 1)} % Baseline survivor function for uncured subjects
+\newcommand{\sux}{S(t_i | Y = 1; \xvec)}	% Survivor function for uncured subjects with covariates
+\newcommand{\sox}{S_0(t_i | Y = 1; \xvec)} % Baseline survivor function for uncured subjects with covariates
+\newcommand{\sohat}{\hat{S}_0(t | Y = 1; \xvec)} % estimated Baseline survivor function for uncured subjects
+
+%% Cure indicators and cure probability
+\newcommand{\wi}{w_i^{\{m\}}} 	% Conditional expectation of y_i (conditioned on observed data)
+\newcommand{\p}{p_i}			% Probability of failure, p_i = \Pr(y_i = 1 | \zi)
 
 \begin{document}
 %\footnote{Monogan, Andy, Danny, Amanda, Josh, Doug, Annie, Discussants (PolMeth, SLAMM, Minnesota), Fred Boehmke, Clay Webb, Sara Mitchell}
