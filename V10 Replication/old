@@ -71,9 +71,6 @@ In doing so, cure models can provide greater theoretical leverage over peace agr
 
 %One of the primary advantages of duration modeling techniques over alternatives such as ordinary least squares regression is their ability to deal with censored observations. By incorporating information on observations that have yet to fail into the estimation process, these models allow analysts to retain valuable information about the failure process and avoid the potential for bias introduced by the censoring process. However, in doing so, standard duration models assume that all censored observations eventually experience the event of interest. Although this assumption is sometimes justified (e.g., all political leaders will eventually lose office and all wars will eventually terminate), in many cases it is not. For example, it is difficult to justify the argument that all peace agreements will eventually fail and result in renewed conflict between the former belligerents.%TODO More examples here
 
-
-
-
 \section{Software}
 %Existing options
 	% Parametric
@@ -115,7 +112,7 @@ For the sake of comparison, Table \ref{tab.lhr.cox} presents the results of a st
 \begin{table}
 	\caption{Cox proportional hazards estimates for incidence and hazard of intrastate cease-fires} 
 	\label{tab.lhr.cox}
-	\include{coxtab}
+
 	Note: *** p \textless 0.001, ** p \textless 0.01, * p \textless 0.05, . p \textless 0.10
 \end{table}
 
@@ -125,7 +122,7 @@ Table \ref{tab.lhr.cure} presents the results of a semiparametric cure model. Fo
 \begin{table}
 	\caption{Semiparametric cure model estimates for incidence and hazard of duration of intrastate cease-fires} 
 	\label{tab.lhr.cure}
-	\include{lhrtab}
+
 	Note: *** p \textless 0.001, ** p \textless 0.01, * p \textless 0.05, . p \textless 0.10
 \end{table}
 
@@ -145,7 +142,7 @@ As illustrated, the predicted probability of failure approaches 1 as capababilit
 
 \begin{figure}[htbp]\centering
 	\caption{Predicted Probability of Failure at Different Levels of Capability Change}
-	\includegraphics[width = 3in]{cappred}
+	%\includegraphics[width = 3in]{cappred}
 	\label{fig:lhr.cap.pp}
 \end{figure}
 
@@ -153,31 +150,12 @@ However, capability change also has a significant negative effect on the hazard 
 
 \begin{figure}[htbp]\centering
 	\caption{Conditional Survivor Function at Different Levels of Capability Change}
-	\includegraphics[width = 3in]{capsurv}
+	%\includegraphics[width = 3in]{capsurv}
 	\label{fig:lhr.cap.surv}
 \end{figure}
 
 This finding suggests that states are unlikely to experience conflict when power shifts are small. However, if they do, those conflicts will occur quickly, which may suggest that other exogenous shocks that lead to uncertainty about capabilities or resolve are at play. By contrast, large power shocks make conflict recurrence likely, but also tend to extent the duration of peace before such conflicts occur. This finding is admittedly puzzling, but may lie in the fact that power shifts are unlikely to produce conflict instantaneously. Rather, the effect of power shifts depends on the rising power's expectations about the future \citep{bas2017}. If states expect that a power shift is temporary, they have incentives to capitalize on it immediately and fight while they have the upper hand. However, if states expect to continue gaining military power relative to their enemy, they actually have incentives to wait. As their power grows, their ability to win a conflict increases and their expected benefits from renegotiating an agreement increases. Moreover, if one state experiences an extended period of relative growth, the other's uncertainty about the other state's power will be diminished and may be more likely to accept a negotiated settlement.
 % Timing
-
-% latex table generated in R 3.4.1 by xtable 1.8-2 package
-% Fri Apr 20 12:45:16 2018
-\begin{comment}
-\begin{table}[ht]
-	\centering
-	\begin{tabular}{rlrrrr}
-		\hline
-		& Parameter & Estimate & Std. Error & t value & Pr($>$$|$t$|$) \\ 
-		\hline
-		1 & Dur\_(Intercept) & 4.00 & 0.24 & 16.84 & 0.00 \\ 
-		2 & Dur\_polity2 & 0.21 & 0.03 & 6.78 & 0.00 \\ 
-		3 & log(alpha) & -0.03 & 0.12 & -0.27 & 0.79 \\ 
-		4 & Risk\_(Intercept) & 6.53 & 3.26 & 2.01 & 0.04 \\ 
-		5 & Risk\_polity2 & 0.90 & 0.41 & 2.20 & 0.03 \\ 
-		\hline
-	\end{tabular}
-\end{table}
-\end{comment}
 
 \section{Conclusion}
 In this article, I introduce readers to the semi-parametric cure model.%  based on the counting process formulation of the Cox proportional hazards model. By exploiting a convenient equivalence between the Cox model and Poisson regression, I demonstrate that the zero-inflated Poisson model can be used to estimate a semi-parametric proportional hazards model.
@@ -190,9 +168,7 @@ I also introduce new software in the form of the \textbf{tvcure} R package, desi
 
 \newpage
 \section{References}
-\printbibliography[heading = none]
-
-
+%\printbibliography[heading = none]
 
 \end{document}
 
@@ -200,8 +176,6 @@ I also introduce new software in the form of the \textbf{tvcure} R package, desi
 \begin{comment} % Measurement
 # Structural factors that enable self-enforcing agreements
 # Factors that result in changes to self-enforcing agreements
-
-
 
 %%%%%%For the Appendix
 %Model results table
