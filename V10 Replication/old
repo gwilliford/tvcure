@@ -414,29 +414,6 @@ I also introduce new software in the form of the \textbf{tvcure} R package, desi
 \section{References}
 \printbibliography[heading = none]
 
-\newpage
-\section{Appendix}
-%\section{Replication Analysis: Interstate Ceasefires}
-%\subsection{Codebook and Descriptive Statistics\label{sect_lhr_descriptives}}
-The original version of the data used in this analysis comes from an expanded version of Page Fortna's Cease-Fire Data Set \citep{fortna2003, fortna2004b}.
-%Fortna's dataset covers the period from 1946-1998.
-This dataset has been expanded by \citet{werner2005} and \citet{lo2008} to add additional variables and cases. The measurement of all independent variables is described below. Table \ref{tab:descLHR} presents the descriptive statistics for all variables.
-\begin{itemize}
-	\begin{singlespace}
-		\item \underline{Foreign Imposed Regime Change (FIRC)} is a dummy variable coded 1 if the conflict ended with the victor instituting regime change in the losing state.%\footnote{Data for this particular model come from \citet{werner1999}. LHR also test additional models using data from the ARCHIGOS dataset \citep{goemans2009}.}
-		\item \underline{Agreement Strength} is a 10 point additive index of the strength of a cease-fire agreement. See \citet{fortna2004b} for more information on the provisions included in this measure. %TODO Add the specific measures here.
-		\item \underline{Battle Deaths} measures the natural log of the combined number of casualties for both disputants in the previous conflict. Data come from \citet{clodfelter2002}. 
-		\item \underline{Battle Consistency} is a measure of how long the winner of the previous war had been dominating the conflict prior to victory. This measure ranges from 0 to 1, with 0 indicating the previous war ended in a stalemate and 1 indicating that the victor of the previous war held the upper hand for the entirety of the previous conflict. 
-		\item \underline{Third Party Intervention} is a dummy coded 1 if the cease-fire came about only as a result of significant third party pressure.
-		\item \underline{Tie} is a dummy variable coded 1 if the previous conflict results in a draw. Data for this variable come from the Correlates of War project.
-		\item \underline{Existential Stakes} is a dummy variable coded 1 if the existence of one of the disputants was threatened by the previous conflict. This variable is based on the International Crisis Behavior (ICB) dataset, Version 7.0, [CITATION] and supplemented by additional coding by LHR. %TODO Citation
-		\item \underline{Capability Change} is a summed measure of the change in capabilities in both disputants over their capabilities in the previous year.
-		\item \underline{Conflict History} accounts for the history of conflict between the two disputants by taking the ratio of the number of MIDs previously fought by the two disputants to the age of the dyad.
-		\item \underline{One Democracy} is a dummy variable coded one if at least one state has a Polity score of 6 or higher.
-		\item \underline{Two Democracies} is a dummy variable coded one if both states have a Polity score of 6 or higher.
-		\item \underline{Contiguity} is a dummy variable coded one if the disputants are contiguous states, defined by the COW Direct Contiguity Data Set version 3.0 \citep{stinnett2002}.
-	\end{singlespace}
-\end{itemize}
 
 
 \end{document}
