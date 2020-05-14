@@ -12,110 +12,157 @@ lhr <- read_dta("LHRIOOct08replication.dta")
 lhr <- rename(lhr, "st" = "_st", "event" = "_d", "stop" = "_t", "start" = "_t0")
 lhr$io <- ifelse(lhr$index > 0, 1, 0)
 lhr$lnt <- log(lhr$stop)
-lhr$caplnt <- lhr$capchange * lhr$lnt
+lhr$capchangelnt <- lhr$capchange * lhr$lnt
 lhr$samereg <- ifelse(lhr$twodem5 == 0 & lhr$onedem5 == 0, 1, 0)
+lhr$battletidelnt <- lhr$battletide * lhr$lnt
+lhr$twoaut5 = ifelse(lhr$twodem5 == 0 & lhr$onedem5 == 0, 1, 0)
 ##### Models ---------------------------------------------------------------------------
+
+##### Coxph diagnostics
+#
+# coxfull <- coxph(Surv(start, stop, event) ~ archigosFIRC + capchange + battletide +
+#                thirdpartycfire + index + onedem5 + twodem5 + tie + lndeaths +
+#                cfhist + stakes + contiguity,
+#              data = lhr,
+#              x = T); summary(coxfull)
+# coxfullph <- coxph(Surv(start, stop, event) ~ archigosFIRC + archigosFIRClnt + battletide + capchange +
+#                      thirdpartycfire + index + onedem5 + twodem5 + twodem5lnt + tie + lndeaths +
+#                      cfhist + stakes + contiguity + contiguitylnt,
+#                    data = lhr,
+#                    x = T); summary(coxfullph)
+
+##### PH Diagnostics
+cox <- coxph(Surv(start, stop, event) ~ archigosFIRC + capchange + battletide +
+                   thirdpartycfire + index + twoaut5 + twodem5 + tie + lndeaths +
+                   cfhist + stakes + contiguity,
+                 data = lhr,
+                 x = T); summary(cox)
+cox.zph(cox)
+cox2 <- coxph(Surv(start, stop, event) ~ archigosFIRC + capchange + battletide +
+               thirdpartycfire + index + twoaut5 + twodem5 + twodem5lnt + tie + lndeaths +
+               cfhist + cfhistlnt + stakes + contiguity,
+             data = lhr,
+             x = T); summary(cox2)
+#### cf hist --- capchange -- archigosFIRC ----- tie(ish)
+
+
+e <- tvcure(Surv(start, stop, event) ~ capchange + contiguity +
+              stakes + cfhist + thirdpartycfire,
+            cureform = ~ tie + battletide + lndeaths + thirdpartycfire + stakes +
+              index + cfhist + twodem5 + twoaut5 + archigosFIRC,
+            data = lhr,
+            var = T, nboot = 30,
+            brglm = T); summary(e)
+
+a <- tvcure(Surv(start, stop, event) ~ capchange + capchangelnt + contiguity +
+              stakes + cfhist + cfhistlnt + thirdpartycfire,
+            cureform = ~ tie + battletide + lndeaths + thirdpartycfire + stakes +
+              index + cfhist + twodem5 + twoaut5 + archigosFIRC,
+            data = lhr,
+            var = T, nboot = 30,
+            brglm = T); summary(a)
+b <- prediction3(a, variable = "twodem5", values = c(0, 1), type = "uncureprob", CI = F)
+
 
 
 ##### set.seed
-
 # Cox model - full
-cox <- coxph(Surv(start, stop, event) ~ lndeaths + tie + battletide + thirdpartycfire +
-               stakes + onedem5 + twodem5 + index + cfhist + archigosFIRC +
-               contiguity + capchange, data = lhr, x = T); summary(cox)
-saveRDS(coxtab, file = "./res/coxtab.RDS")
-
-
-coxa <- coxph(Surv(start, stop, event) ~ lndeaths + tie + battletide + thirdpartycfire +
-               stakes + onedem5 + index +
-               contiguity, data = lhr, x = T); summary(cox); cox.zph(coxa)
-coxb <- coxph(Surv(start, stop, event) ~ lndeaths + tie + battletide + thirdpartycfire + archigosFIRC  +
-               stakes + samereg + index +
-               contiguity, data = lhr, x = T); summary(coxb); cox.zph(coxb)
-coxc <- coxph(Surv(start, stop, event) ~ lndeaths + tie + battletide + thirdpartycfire +
-               stakes + samereg + index +
-               contiguity, data = lhr, x = T); cox.zph(coxc)
-
-#- no ondem5, twodem5, cfhist, capchange
-cureph2 <- tvcure(Surv(start, stop, event) ~  lndeaths + tie + stakes + battletide + thirdpartycfire + index + contiguity,
-                 cureform = ~ lndeaths + battletide + thirdpartycfire +
-                   tie + stakes + archigosFIRC + samereg + index +
-                   contiguity,
-                 data = lhr, var = T, nboot = 10, brglm = T); summary(cureph2)
-
+# cox <- coxph(Surv(start, stop, event) ~ lndeaths + tie + battletide + thirdpartycfire +
+#                stakes + onedem5 + twodem5 + index + cfhist + archigosFIRC +
+#                contiguity + capchange, data = lhr, x = T); summary(cox)
+# saveRDS(coxtab, file = "./res/coxtab.RDS")
+#
+#
+# # coxa <- coxph(Surv(start, stop, event) ~ lndeaths + tie + battletide + thirdpartycfire +
+#                stakes + onedem5 + index +
+#                contiguity, data = lhr, x = T); summary(cox); cox.zph(coxa)
+# coxb <- coxph(Surv(start, stop, event) ~ lndeaths + tie + battletide + thirdpartycfire + archigosFIRC  +
+#                stakes + samereg + index +
+#                contiguity, data = lhr, x = T); summary(coxb); cox.zph(coxb)
+# coxc <- coxph(Surv(start, stop, event) ~ lndeaths + tie + battletide + thirdpartycfire +
+#                stakes + samereg + index +
+#                contiguity, data = lhr, x = T); cox.zph(coxc)
+#
+# #- no ondem5, twodem5, cfhist, capchange
+# cureph2 <- tvcure(Surv(start, stop, event) ~  lndeaths + tie + stakes + battletide + thirdpartycfire + index + contiguity,
+#                  cureform = ~ lndeaths + battletide + thirdpartycfire +
+#                    tie + stakes + archigosFIRC + samereg + index +
+#                    contiguity,
+#                  data = lhr, var = T, nboot = 10, brglm = T); summary(cureph2)
+#
 
 # Cure model - full
-curefull <- tvcure(Surv(start, stop, event) ~  capchange + lndeaths +
-                     battletide + tie + thirdpartycfire + stakes +
-                     twodem5 + onedem5 + index + cfhist + contiguity,
-             cureform = ~ archigosFIRC + capchange + lndeaths + battletide +
-               tie + thirdpartycfire + stakes + onedem5 + twodem5 + index +
-               cfhist + contiguity,
-             data = lhr, var = T, nboot = 1000, brglm = T); summary(curefull)
-saveRDS(curefull, file = "./res/curefull.RDS")
-curefull2 <- tvcure(Surv(start, stop, event) ~  capchange + lndeaths +
-                     battletide + tie + thirdpartycfire + stakes +
-                     twodem5 + onedem5 + index + cfhist + contiguity,
-                   cureform = ~ capchange + lndeaths + battletide +
-                     tie + thirdpartycfire + stakes + onedem5 + twodem5 + index +
-                     cfhist + contiguity,
-                   data = lhr, var = T, nboot = 100, brglm = T); summary(curefull2)
+# curefull <- tvcure(Surv(start, stop, event) ~  capchange + lndeaths +
+#                      battletide + tie + thirdpartycfire + stakes +
+#                      twodem5 + onedem5 + index + cfhist + contiguity,
+#              cureform = ~ archigosFIRC + capchange + lndeaths + battletide +
+#                tie + thirdpartycfire + stakes + onedem5 + twodem5 + index +
+#                cfhist + contiguity,
+#              data = lhr, var = T, nboot = 1000, brglm = T); summary(curefull)
+# saveRDS(curefull, file = "./res/curefull.RDS")
+# curefull2 <- tvcure(Surv(start, stop, event) ~  capchange + lndeaths +
+#                      battletide + tie + thirdpartycfire + stakes +
+#                      twodem5 + onedem5 + index + cfhist + contiguity,
+#                    cureform = ~ capchange + lndeaths + battletide +
+#                      tie + thirdpartycfire + stakes + onedem5 + twodem5 + index +
+#                      cfhist + contiguity,
+#                    data = lhr, var = T, nboot = 100, brglm = T); summary(curefull2)
+#
+# cureph <- tvcure(Surv(start, stop, event) ~  capchange + lndeaths +
+#                       battletide + tie + thirdpartycfire + stakes +
+#                       twodem5 + onedem5 + index + cfhist + contiguity,
+#                     cureform = ~ capchange + lndeaths + battletide +
+#                       tie + thirdpartycfire + stakes + onedem5 + twodem5 + index +
+#                       cfhist + contiguity,
+#                     data = lhr, var = T, nboot = 100, brglm = T); summary(curefull2)
 
-cureph <- tvcure(Surv(start, stop, event) ~  capchange + lndeaths +
-                      battletide + tie + thirdpartycfire + stakes +
-                      twodem5 + onedem5 + index + cfhist + contiguity,
-                    cureform = ~ capchange + lndeaths + battletide +
-                      tie + thirdpartycfire + stakes + onedem5 + twodem5 + index +
-                      cfhist + contiguity,
-                    data = lhr, var = T, nboot = 100, brglm = T); summary(curefull2)
-
-# Cure model - partial
-curepart <- tvcure(Surv(start, stop, event) ~  capchange + index +
-                     stakes + cfhist + contiguity,
-             cureform = ~ archigosFIRC + capchange + lndeaths + battletide +
-               tie + thirdpartycfire + stakes + onedem5 + twodem5 + index +
-               cfhist + contiguity,
-             data = lhr, var = T, nboot = 1000, brglm = T); summary(curepart)
-saveRDS(curepart, file = "./res/curepart.RDS")
-
-cl <- makeCluster(3, "SOCK"); registerDoSNOW(cl)
-curepart2 <- tvcure(Surv(start, stop, event) ~  capchange + index +
-                     stakes + cfhist + contiguity + thirdpartycfire,
-                   cureform = ~ archigosFIRC + lndeaths + battletide +
-                     tie + stakes + onedem5 + twodem5 + index +
-                     cfhist + contiguity,
-                   data = lhr, var = T, nboot = 100, brglm = T); summary(curepart2)
-curepart3 <- tvcure(Surv(start, stop, event) ~  capchange + index +
-                      stakes + cfhist + contiguity + thirdpartycfire,
-                    cureform = ~ archigosFIRC + lndeaths + battletide +
-                      tie + stakes + onedem5 + twodem5 + (index > 0) + index +
-                      cfhist + contiguity,
-                    data = lhr, var = T, nboot = 100, brglm = T); summary(curepart3)
-curepart4 <- tvcure(Surv(start, stop, event) ~  capchange + strata(tie) + index +
-                      stakes + cfhist + contiguity + thirdpartycfire,
-                    cureform = ~ archigosFIRC + lndeaths + battletide +
-                      tie + stakes + onedem5 + twodem5 + (index > 0) +
-                      cfhist + contiguity,
-                    data = lhr, var = T, nboot = 100, brglm = T); summary(curepart4)
-
-
-curepart5 <- tvcure(Surv(start, stop, event) ~  capchange + (index > 0) +
-                      stakes + cfhist + contiguity + thirdpartycfire,
-                    cureform = ~ archigosFIRC + lndeaths + battletide +
-                      tie + stakes + onedem5 + twodem5 + (index > 0) +
-                      cfhist + contiguity,
-                    data = lhr, var = T, nboot = 100, brglm = T); summary(curepart5)
-
-curepart6 <- tvcure(Surv(start, stop, event) ~  (index > 0) + twodem5,
-                    cureform = ~ archigosFIRC + lndeaths + battletide +
-                      tie + stakes + onedem5 + twodem5 +
-                      cfhist + contiguity,
-                    data = lhr, var = T, nboot = 100, brglm = T); summary(curepart6)
-curepart6 <- tvcure(Surv(start, stop, event) ~  index + twodem5 + lndeaths,
-                    cureform = ~ lndeaths + battletide +
-                      tie + stakes + onedem5 + twodem5 +
-                      cfhist + contiguity,
-                    data = lhr, var = T, nboot = 100, brglm = T); summary(curepart6)
+# # Cure model - partial
+# curepart <- tvcure(Surv(start, stop, event) ~  capchange + index +
+#                      stakes + cfhist + contiguity,
+#              cureform = ~ archigosFIRC + capchange + lndeaths + battletide +
+#                tie + thirdpartycfire + stakes + onedem5 + twodem5 + index +
+#                cfhist + contiguity,
+#              data = lhr, var = T, nboot = 1000, brglm = T); summary(curepart)
+# saveRDS(curepart, file = "./res/curepart.RDS")
+#
+# cl <- makeCluster(3, "SOCK"); registerDoSNOW(cl)
+# curepart2 <- tvcure(Surv(start, stop, event) ~  capchange + index +
+#                      stakes + cfhist + contiguity + thirdpartycfire,
+#                    cureform = ~ archigosFIRC + lndeaths + battletide +
+#                      tie + stakes + onedem5 + twodem5 + index +
+#                      cfhist + contiguity,
+#                    data = lhr, var = T, nboot = 100, brglm = T); summary(curepart2)
+# curepart3 <- tvcure(Surv(start, stop, event) ~  capchange + index +
+#                       stakes + cfhist + contiguity + thirdpartycfire,
+#                     cureform = ~ archigosFIRC + lndeaths + battletide +
+#                       tie + stakes + onedem5 + twodem5 + (index > 0) + index +
+#                       cfhist + contiguity,
+#                     data = lhr, var = T, nboot = 100, brglm = T); summary(curepart3)
+# curepart4 <- tvcure(Surv(start, stop, event) ~  capchange + strata(tie) + index +
+#                       stakes + cfhist + contiguity + thirdpartycfire,
+#                     cureform = ~ archigosFIRC + lndeaths + battletide +
+#                       tie + stakes + onedem5 + twodem5 + (index > 0) +
+#                       cfhist + contiguity,
+#                     data = lhr, var = T, nboot = 100, brglm = T); summary(curepart4)
+#
+#
+# curepart5 <- tvcure(Surv(start, stop, event) ~  capchange + (index > 0) +
+#                       stakes + cfhist + contiguity + thirdpartycfire,
+#                     cureform = ~ archigosFIRC + lndeaths + battletide +
+#                       tie + stakes + onedem5 + twodem5 + (index > 0) +
+#                       cfhist + contiguity,
+#                     data = lhr, var = T, nboot = 100, brglm = T); summary(curepart5)
+#
+# curepart6 <- tvcure(Surv(start, stop, event) ~  (index > 0) + twodem5,
+#                     cureform = ~ archigosFIRC + lndeaths + battletide +
+#                       tie + stakes + onedem5 + twodem5 +
+#                       cfhist + contiguity,
+#                     data = lhr, var = T, nboot = 100, brglm = T); summary(curepart6)
+# curepart6 <- tvcure(Surv(start, stop, event) ~  index + twodem5 + lndeaths,
+#                     cureform = ~ lndeaths + battletide +
+#                       tie + stakes + onedem5 + twodem5 +
+#                       cfhist + contiguity,
+#                     data = lhr, var = T, nboot = 100, brglm = T); summary(curepart6)
 
 ##### Tables --------------------------------------------------------------------
 vl <- list("Battle Deaths" = "lndeaths",
