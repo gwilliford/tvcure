@@ -73,50 +73,56 @@ c1 <- survfit(cox2)
 
 ##### PLOTS --------------------------------------------------------------------
 
+breaks <- seq(0, 150, 10) * 365
+labs <- seq(0, 150, 10)
+
 ### Tie variable
 # Cox pred
-newdata1 <- apply(cox2$x, 2, median, na.rm = T)
-newdata1 <- as.data.frame(rbind(newdata1, newdata1))
-newdata1[2, "tie"] <- 1
-pcox <- survfit(cox, newdata1, conf.int = 0.90)
-plot(pcox, T, col = c(1, 2))
+# newdata1 <- apply(cox2$x, 2, median, na.rm = T)
+# newdata1 <- as.data.frame(rbind(newdata1, newdata1))
+# newdata1[2, "tie"] <- 1
+# pcox <- ggsurvplot(
+#   a <- surv_fit(cox, data = newdata1, conf.int = 0.90)
+#   , data = newdata1)
+# plot(pcox, T, col = c(1, 2))
+# survpred.coxph(pcox)
 
 # Surv uncure
 tpred1 <- prediction4(cure2, "tie", c(0, 1), type = "uncureprob")
-plot(tpred1)
+tplot1 <- tpred1 + xlab("Tie")
 
 # Surv cure
 tpred2 <- prediction4(cure2, "tie", c(0, 1), type = "spop")
-plot(tpred2)
+tplot2 <- tpred2 + xlab("Tie")
 
 ### Deaths variable
 # Cox pred
 lnmin <- min(lhr$lndeaths, na.rm = T)
 lnmax <- max(lhr$lndeaths, na.rm = T)
-newdata2 <- apply(cox2$x, 2, median, na.rm = T)
-newdata2 <- as.data.frame(rbind(newdata2, newdata2))
-newdata2[2, "lndeaths"] <- lnmin
-newdata2[2, "lndeaths"] <- lnmax
-pcox <- survfit(cox2, newdata2, conf.int = 0.90)
-plot(pcox, T, col = c(1, 2))
+# newdata2 <- apply(cox2$x, 2, median, na.rm = T)
+# newdata2 <- as.data.frame(rbind(newdata2, newdata2))
+# newdata2[2, "lndeaths"] <- lnmin
+# newdata2[2, "lndeaths"] <- lnmax
+# pcox2 <- survfit(cox2, newdata2, conf.int = 0.90)
+# plot(pcox2, T, col = c(1, 2))
 
 dpred1 <- prediction4(cure2, "lndeaths", c(lnmin, lnmax), type = "uncureprob")
-plot(dpred1)
+dpred1 <- dpred1 + xlab("Log Battle Deaths")
 dpred2 <- prediction4(cure2, "lndeaths", c(lnmin, lnmax), type = "spop", legendtitle = "Log Battle Deaths")
-plot(dpred2)
+dpred2 <- dpred2 + xlab("Log Battle Deaths") + xlab("Time (in years)") + scale_x_continuous(breaks = breaks, labels = labs)
 
 ### Battle consistency variable
-newdata3 <- apply(cox2$x, 2, median, na.rm = T)
-newdata3 <- as.data.frame(rbind(newdata3, newdata3))
-newdata3[1, "battletide"] <- 0
-newdata3[2, "battletide"] <- 1
-pcox <- survfit(cox2, newdata3, conf.int = 0.90)
-plot(pcox, T, col = c(1, 2))
+# newdata3 <- apply(cox2$x, 2, median, na.rm = T)
+# newdata3 <- as.data.frame(rbind(newdata3, newdata3))
+# newdata3[1, "battletide"] <- 0
+# newdata3[2, "battletide"] <- 1
+# pcox3 <- survfit(cox2, newdata3, conf.int = 0.90)
+# plot(pcox3, T, col = c(1, 2))
 
 bpred1 <- prediction4(cure2, "battletide", c(0, 1), type = "uncureprob")
-plot(bpred1)
+bpred1 <- bpred1 + xlab("Battle Consistency")
 bpred2 <- prediction4(cure2, "battletide", c(0, 1), type = "spop", legendtitle = "Battle Consistency")
-plot(bpred2)
+bpred2 <- bpred2 + xlab("Time (in years)") + scale_x_continuous(breaks = breaks, labels = labs)
 
 ##### Tables --------------------------------------------------------------------
 vl <- list("Battle Deaths" = "lndeaths",
@@ -130,6 +136,7 @@ vl <- list("Battle Deaths" = "lndeaths",
      "Foreign-Imposed Regime Change" = "archigosFIRC",
      "Mixed Regime Type" = "onedem5",
      "Joint Democracy" = "twodem5",
+     "Joint Autocracy" = "twoaut5",
      "Conflict History" = "cfhist",
      "Conflict History $\\times \\ln(t)$" = "cfhistlnt",
      "Contiguity" = "contiguity")
@@ -137,8 +144,9 @@ vl <- list("Battle Deaths" = "lndeaths",
 # fulltab <- tvtable_tvcure(curefull, format = "long", varlist = vl)
 # coxtab <- tvtable_coxph(cox, format = "long", varlist = vl)
 
-tvtable(cox2, cure2)
-
+t1 <- tvtable(cox2, cure2, varlist = vl)
+x1 <- tvtable_xtable(t1)
+printer(x1)
 # tvtable_tvcure(curepart, format = "long", varlist = vl)
 
 # Combined Table
