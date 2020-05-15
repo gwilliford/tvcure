@@ -10,7 +10,7 @@
 #' @param ylab A label for the y-axis.
 #' @param internals A logical value indicating whether the predictions should be returned. If FALSE, only the graph will be returned.
 
-prediction3 <- function(model, variable, values,
+prediction4 <- function(model, variable = NULL, values = NULL, newX = NULL, newZ = NULL,
                         type = c("basesurv", "spop", "suncure", "uncureprob"),
                         CI = T, nsims = 1000, bw = F,
                         xlab = "Time", legendtitle = NULL,
@@ -45,22 +45,23 @@ prediction3 <- function(model, variable, values,
   # progress <- function(n) setTxtProgressBar(pb, n)
   # opts <- list(progress = progress)
 
-  # Create dataset for predictions -----------------------------------------------------------
 
-  newX <- apply(X, 2, median)
-  newX <- matrix(rep(newX, length(values)), ncol = length(newX), byrow = T)
-  colnames(newX) <- bnames
-
-  if (variable %in% bnames) newX[, variable] <- values
   # Create dataset for predictions -----------------------------------------------------------
+  if (is.null(newX)) {
     newX <- apply(X, 2, median)
+    newX <- matrix(rep(newX, length(values)), ncol = length(newX), byrow = T)
+    colnames(newX) <- bnames
+    if (variable %in% bnames) newX[, variable] <- values
+  }
   newX <- as.matrix(newX)
   nx <- nrow(newX)
 
-  newZ <- apply(Z, 2, median)
-  newZ <- matrix(rep(newZ, length(values)), ncol = length(newZ), byrow = T)
-  colnames(newZ) <- gnames
-  if (variable %in% gnames) newZ[, variable] <- values
+  if (is.null(newZ)) {
+    newZ <- apply(Z, 2, median)
+    newZ <- matrix(rep(newZ, length(values)), ncol = length(newZ), byrow = T)
+    colnames(newZ) <- gnames
+    if (variable %in% gnames) newZ[, variable] <- values
+  }
   newZ <- as.matrix(newZ)
   nz <- nrow(newZ)
 
@@ -148,7 +149,6 @@ prediction3 <- function(model, variable, values,
     spoplo      <- matrix(nrow = nobs, ncol = dim(newZ))
     spophi      <- matrix(nrow = nobs, ncol = dim(newZ))
 
-    browser()
     # foreach(i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %dopar% {
     #   #for (k in 1:nrow(newX)) {
     #   if (type == "suncure") {
@@ -177,7 +177,7 @@ prediction3 <- function(model, variable, values,
     }
 
   } # close CI = T else loop
-
+browser()
   # Plot Setup --------------------------------------------------------------
   if (bw == T) {
     splot <- ggplot() + theme_bw()
@@ -257,10 +257,8 @@ prediction3 <- function(model, variable, values,
   }
 
   # Spop Plot ---------------------------------------------------------------
-
-  # Structure data
   if (type == "spop") {
-
+    vals <- round(values, 1)
     # Structure data
     if (CI == F) {
       spm  <- split(spop, rep(1:ncol(spop), each = nrow(spop)))
@@ -270,7 +268,7 @@ prediction3 <- function(model, variable, values,
       spf <- as.data.frame(do.call(rbind, spm))
       colnames(spf) <- c("spm", "Time", "num")
     } else {
-      spm  <- split(spopmean, rep(1:ncol(spopmean), each = nrow(spopmean)))
+      spm  <- split(spopmean, rep(1:ncol(spopmean), each = nrow(spopmean))) # two matrices of simulated spops
       splo <- split(spoplo, rep(1:ncol(spoplo), each = nrow(spoplo)))
       sphi <- split(spophi, rep(1:ncol(spophi), each = nrow(spophi)))
       for (i in 1:length(spm)) {
@@ -282,17 +280,24 @@ prediction3 <- function(model, variable, values,
 
     # Plot line
     if (bw == F) {
-      splot = splot + geom_line(spf, mapping = aes(Time, spm, col = as.factor(num),                                              linetype = as.factor(num))) + labs(linetype = legendtitle, col = legendtitle)
+      splot = splot +
+        geom_line(spf, mapping = aes(Time, spm, col = as.factor(num), linetype = as.factor(num))) +
+        labs(linetype = legendtitle, col = legendtitle, fill = legendtitle)
     } else {
-      splot = splot + geom_line(spf, mapping = aes(Time, spm, linetype = as.factor(num))) +
+      splot = splot +
+        geom_line(spf, mapping = aes(Time, spm, linetype = as.factor(num))) +
         labs(linetype = legendtitle)
     }
+
+    splot + scale_fill_discrete(labels = vals)
 
     # Add CIs
     if (CI == T) {
       if (bw == F) {
-        splot = splot + geom_ribbon(spf, mapping = aes(x = Time, ymin = splo, ymax = sphi, col = as.factor(num),
-                                                       fill = as.factor(num), linetype = as.factor(num)), alpha = 0.2) +
+        splot = splot + geom_ribbon(spf, mapping = aes(x = Time, ymin = splo, ymax = sphi,
+                                                       col = as.factor(num),
+                                                       fill = as.factor(num),
+                                                       linetype = as.factor(num)), alpha = 0.2)# +
           labs(fill = legendtitle, linetype = legendtitle, col = legendtitle)
       } else {
         splot = splot + geom_ribbon(spf, mapping = aes(x = Time, ymin = splo, ymax = sphi,
@@ -300,7 +305,11 @@ prediction3 <- function(model, variable, values,
           labs(linetype = legendtitle)
       }
     }
-    splot = splot + ylab(ylab) + xlab(xlab)
+    splot = splot + ylab(ylab) + xlab(xlab) +
+      scale_linetype_discrete(labels = vals)  +
+      scale_color_discrete(labels = vals) +
+      scale_fill_discrete(labels = vals)
+
   }
 
   # Output ------------------------------------------------------------------
