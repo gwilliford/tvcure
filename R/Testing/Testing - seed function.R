@@ -11,6 +11,12 @@ set.seed(5)
 cp <- tvcure(Surv(start, stop, event) ~ lndeaths + tie,
              cureform = ~ battletide + thirdpartycfire + tie,
              data = lhr, nboot = 10)
+a <- prediction3(cp, "tie", c(0, 1), "uncureprob")
+a <- prediction3(cp, "tie", c(0, 1), "spop")
+a <- prediction3(cp, "tie", c(0, 1), "spop")
+
+
+
 cp2 <- tvcure(Surv(start, stop, event) ~ lndeaths + tie,
               cureform = ~ battletide + thirdpartycfire + tie,
               data = lhr, nboot = 10)

@@ -49,7 +49,6 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
     if (qi == "pvalue") qivec <- bpval
 
     # Stars
-    browser()
     if (stars) {
       bstar <- gtools::stars.pval(bpval)
       if (nc == 2) gstar <- gtools::stars.pval(gpval)
@@ -89,9 +88,9 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
     # Create model names
     if (is.null(modnames)) {
       if (nc == 1) {
-        mn[[i]] <- paste0("Model " , i,)
+        mn[[i]] <- paste("Model " , i, sep = "")
       } else {
-        mn[[i]] <- paste0("\\", "multicolumn{2}{c}{", "Model ", i, "}")
+        mn[[i]] <- paste0("\\multicolumn{2}{c}{", "Model ", i, "}")
       }
     } else {
       if (nc == 1) {

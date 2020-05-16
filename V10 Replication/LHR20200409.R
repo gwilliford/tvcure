@@ -19,20 +19,7 @@ lhr$twoaut5 = ifelse(lhr$twodem5 == 0 & lhr$onedem5 == 0, 1, 0)
 lhr$twodem5t = lhr$twodem5 * lhr$stop
 ##### Models ---------------------------------------------------------------------------
 
-##### Coxph diagnostics
-#
-# coxfull <- coxph(Surv(start, stop, event) ~ archigosFIRC + capchange + battletide +
-#                thirdpartycfire + index + onedem5 + twodem5 + tie + lndeaths +
-#                cfhist + stakes + contiguity,
-#              data = lhr,
-#              x = T); summary(coxfull)
-# coxfullph <- coxph(Surv(start, stop, event) ~ archigosFIRC + archigosFIRClnt + battletide + capchange +
-#                      thirdpartycfire + index + onedem5 + twodem5 + twodem5lnt + tie + lndeaths +
-#                      cfhist + stakes + contiguity + contiguitylnt,
-#                    data = lhr,
-#                    x = T); summary(coxfullph)
-
-##### PH Diagnostics
+### Standard cox models
 cox <- coxph(Surv(start, stop, event) ~ archigosFIRC + capchange + battletide +
                    thirdpartycfire + index + twoaut5 + twodem5 + tie + lndeaths +
                    cfhist + stakes + contiguity,
@@ -44,7 +31,6 @@ cox2 <- coxph(Surv(start, stop, event) ~ capchange + capchangelnt + battletide +
                cfhist + cfhistlnt + stakes + contiguity,
              data = lhr,
              x = T); summary(cox2)
-#### cf hist --- capchange -- archigosFIRC ----- tie(ish)
 cox.zph(cox2, function(x) {log(x)})
 
 
@@ -55,7 +41,6 @@ cure1 <- tvcure(Surv(start, stop, event) ~ capchange + contiguity +
             data = lhr,
             var = T, nboot = 30,
             brglm = T); summary(cure1)
-
 cure2 <- tvcure(Surv(start, stop, event) ~ capchange + capchangelnt + contiguity +
               stakes + cfhist + cfhistlnt + thirdpartycfire,
             cureform = ~ tie + battletide + lndeaths + thirdpartycfire + stakes +
@@ -63,13 +48,6 @@ cure2 <- tvcure(Surv(start, stop, event) ~ capchange + capchangelnt + contiguity
             data = lhr,
             var = T, nboot = 30,
             brglm = T); summary(cure2)
-b <- prediction3(a, variable = "twodem5", values = c(0, 1), type = "uncureprob", CI = F)
-
-
-
-####
-
-c1 <- survfit(cox2)
 
 ##### PLOTS --------------------------------------------------------------------
 
@@ -140,99 +118,8 @@ vl <- list("Battle Deaths" = "lndeaths",
      "Conflict History" = "cfhist",
      "Conflict History $\\times \\ln(t)$" = "cfhistlnt",
      "Contiguity" = "contiguity")
-# parttab <- tvtable_tvcure(curepart, format = "long", varlist = vl)
-# fulltab <- tvtable_tvcure(curefull, format = "long", varlist = vl)
-# coxtab <- tvtable_coxph(cox, format = "long", varlist = vl)
 
 t1 <- tvtable(cox2, cure2, varlist = vl)
 x1 <- tvtable_xtable(t1)
 printer(x1)
-# tvtable_tvcure(curepart, format = "long", varlist = vl)
 
-# Combined Table
-combtab <- tvtable_combine(c("coxtab", "parttab"))
-print(xtable(combtab, align = "llXXX"),
-      booktabs = T,
-      tabular.environment = "tabularx",
-      width="\\textwidth",
-      include.rownames = F,
-      sanitize.text.function=identity,
-      hline.after = getOption("xtable.hline.after", c(-1,0,nrow(x))),
-) #file = "./tab/combtab.tex")
-combtab2 <- tvtable_combine(c("fulltab", "parttab"), modnum = T)
-print(xtable(combtab2, align = "llXXXX"),
-      booktabs = T,
-      tabular.environment = "tabularx",
-      width="\\textwidth",
-      include.rownames = F,
-      sanitize.text.function=identity,
-      hline.after = getOption("xtable.hline.after", c(-1,0,nrow(x))),
-) #file = "./tab/combtab.tex")
-combtab3 <- tvtable_combine(c("coxtab", "fulltab", "parttab"), modnum = T)
-print(xtable(combtab3, align = "llXXXXX"),
-      booktabs = T,
-      tabular.environment = "tabularx",
-      width="\\textwidth",
-      include.rownames = F,
-      sanitize.text.function=identity,
-      hline.after = getOption("xtable.hline.after", c(-1,0,nrow(x))),
-) #file = "./tab/combtab.tex")
-
-
-newdata <- apply(cox$x, 2, median, na.rm = T)
-newdata <- as.data.frame(rbind(newdata, newdata))
-newdata[2, "tie"] <- 1
-pcox <- survfit(cox, newdata, conf.int = 0.90)
-plot(pcox, T, col = c(1, 2))
-# pcox <- predict(cox, type = "expected", data = lhr)
-# scox <- exp(-pcox)
-# lattice(x = lhr$stop, x = )
-# library(survminer)
-ggsurvplot(cox, newdata)
-newdata2 <- as.data.frame(rbind(newdata, newdata))
-newdata2[2, "twodem5"] <- 1
-pcox <- survfit(cox, newdata2, conf.int = 0.90)
-plot(pcox, T, col = c(1, 2))
-
-ppart <- prediction3(curefull, "twodem5", c(0, 1), "uncureprob")
-plot(ppart)
-ppart <- prediction3(curepart, "twodem5", c(0, 1), "spop")
-plot(ppart)
-ppart <- prediction3(curepart, "twodem5", c(0, 1), "suncure")
-plot(ppart)
-
-ppart <- prediction3(curepart, "contiguity", c(0, 1), "uncureprob")
-plot(ppart)
-ppart <- prediction3(curepart, "contiguity", c(0, 1), "spop")
-plot(ppart)
-
-ppart <- prediction3(curepart, "tie", c(0, 1), "uncureprob")
-plot(ppart)
-ppart <- prediction3(curepart, "tie", c(0, 1), "spop")
-plot(ppart)
-ppart <- prediction3(curepart, "tie", c(0, 1), "suncure")
-plot(ppart)
-
-
-ppart <- prediction3(curepart, "lndeaths", seq(5, 16, 1), "uncureprob"); plot(ppart)
-ppart <- prediction3(curepart, "lndeaths", c(5, 10, 15), "spop")
-a <- plot(ppart)
-a <- a + geom_vline(aes(xintercept = 8789))
-newdata <- apply(cox$x, 2, median, na.rm = T)
-newdata4 <- as.data.frame(rbind(newdata, newdata))
-newdata4[2, "lndeaths"] <- 16
-newdata4[2, "lndeaths"] <- 5
-alpha <- predict(cox, newdata4, "risk", se.fit = T)
-
-
-
-plot(survfit(cox, newdata4), conf.int = T, col = c(1:2))
-ppart <- prediction3(curepart, "lndeaths", c(5, 10, 15), "suncure")
-
-
-
-a <- survminer::ggcoxzph(cox.zph(cox))
-
-
-
-ggcoxdiagnostics(cox, type = "deviance", linear.predictions = F)

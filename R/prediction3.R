@@ -135,6 +135,7 @@ prediction3 <- function(model, variable, values,
     spoplo      <- matrix(nrow = nobs, ncol = dim(newZ))
     spophi      <- matrix(nrow = nobs, ncol = dim(newZ))
 
+    browser()
     for(i in 1:nsims) {
       #for (k in 1:nrow(newX)) {
       if (type == "suncure") {
@@ -150,13 +151,14 @@ prediction3 <- function(model, variable, values,
     }
   } # close CI = T else loop
 
+  browser()
   # Plot Setup --------------------------------------------------------------
   if (bw == T) {
     splot <- ggplot() + theme_bw()
   } else {
     splot <- ggplot() + theme(panel.border = element_rect(colour = "black", fill = NA))
   }
-  browser()
+
   # Uncureprob Plot ---------------------------------------------------------
   if (type == "uncureprob") {
     if (CI == F) {
@@ -178,7 +180,7 @@ prediction3 <- function(model, variable, values,
       splot <- splot + geom_line(mapping = aes(Time, s0mean)) +
         geom_ribbon(aes(x = Time, ymin = s0lo, ymax = s0hi), alpha=0.2)
     }
-    splot = splot + ylab(ylab) + xlab(variable)# +
+    splot = splot + ylab(ylab) + xlab(variable)
   }
 
   # Suncure Plot ------------------------------------------------------------
