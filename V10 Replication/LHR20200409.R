@@ -13,28 +13,37 @@ cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
 lhr <- read_dta("LHRIOOct08replication.dta")
 lhr <- rename(lhr, "st" = "_st", "event" = "_d", "stop" = "_t", "start" = "_t0")
 lhr$io <- ifelse(lhr$index > 0, 1, 0)
+lhr$lnt <- lhr$stop^2 / 1000
 lhr$lnt <- log(lhr$stop)
 lhr$capchangelnt <- lhr$capchange * lhr$lnt
+lhr$lncapchangelnt <- log(lhr$capchange) * lhr$lnt
+lhr$lncapchange <- log(lhr$capchange)
 lhr$samereg <- ifelse(lhr$twodem5 == 0 & lhr$onedem5 == 0, 1, 0)
 lhr$battletidelnt <- lhr$battletide * lhr$lnt
 lhr$twoaut5 = ifelse(lhr$twodem5 == 0 & lhr$onedem5 == 0, 1, 0)
 lhr$twodem5t = lhr$twodem5 * lhr$stop
+
+##### Notes
+# Cure equation - positive coefficients increase probability of failure, negative coefficients decrease probability of failure
+
 ##### Models ---------------------------------------------------------------------------
 
 ### Standard cox models
-cox <- coxph(Surv(start, stop, event) ~ archigosFIRC + capchange + battletide +
+cox <- coxph(Surv(start, stop, event) ~ archigosFIRC + lncapchange + battletide +
                    thirdpartycfire + index + twoaut5 + twodem5 + tie + lndeaths +
                    cfhist + stakes + contiguity,
                  data = lhr,
                  x = T); summary(cox)
 cox.zph(cox)
-cox2 <- coxph(Surv(start, stop, event) ~ capchange + capchangelnt + battletide +
+cox2 <- coxph(Surv(start, stop, event) ~ lncapchange + lncapchangelnt + battletide +
                thirdpartycfire + index + twoaut5 + twodem5 + tie + lndeaths +
                cfhist + cfhistlnt + stakes + contiguity,
              data = lhr,
              x = T); summary(cox2)
-cox.zph(cox2, function(x) {log(x)})
-
+# cox.zph(cox2, function(x) {log(x)})
+# cox.zph(cox2)
+# cox.zph(cox2, "identity")
+# plot(cox.zph(cox2))[1]
 
 cure1 <- tvcure(Surv(start, stop, event) ~ capchange + contiguity +
               stakes + cfhist + thirdpartycfire,
@@ -43,13 +52,27 @@ cure1 <- tvcure(Surv(start, stop, event) ~ capchange + contiguity +
             data = lhr,
             var = T, nboot = 30,
             brglm = T); summary(cure1)
-cure2 <- tvcure(Surv(start, stop, event) ~ capchange + capchangelnt + contiguity +
+cure2 <- tvcure(Surv(start, stop, event) ~ lncapchange + lncapchange:lnt + contiguity + #t^2
               stakes + cfhist + cfhistlnt + thirdpartycfire,
             cureform = ~ tie + battletide + lndeaths + thirdpartycfire + stakes +
               index + cfhist + twodem5 + twoaut5,
             data = lhr,
-            var = T, nboot = 30,
+            var = T, nboot = 1000,
             brglm = T); summary(cure2)
+# cure3 <- tvcure(Surv(start, stop, event) ~ lncapchange + lncapchange:lnt + contiguity + #lnt
+#                         stakes + cfhist + cfhistlnt + thirdpartycfire,
+#                 cureform = ~ tie + battletide + lndeaths + thirdpartycfire + stakes +
+#                         index + cfhist + twodem5 + twoaut5,
+#                 data = lhr,
+#                 var = T, nboot = 100,
+#                 brglm = T); summary(cure3)
+# cure4 <- tvcure(Surv(start, stop, event) ~ capchange + capchange:lnt + contiguity + #lnt
+#                         stakes + cfhist + cfhistlnt + thirdpartycfire,
+#                 cureform = ~ tie + battletide + lndeaths + thirdpartycfire + stakes +
+#                         index + cfhist + twodem5 + twoaut5,
+#                 data = lhr,
+#                 var = T, nboot = 1000,
+#                 brglm = T); summary(cure4)
 
 ##### PLOTS --------------------------------------------------------------------
 cn <- c("time", "surv", "lower", "upper", "num")
@@ -67,6 +90,7 @@ coxbase <- ggplot(mapping = aes(x = time, y = surv), data = coxbasepdat) +
         scale_x_continuous(breaks = breaks, labels = labs) +
         theme(panel.border = element_rect(colour = "black", fill = NA)) + ylim(0, 1)
 
+
 #cure basesurv
 curebase <- prediction4(cure2, "tie", c(0, 1), type = "basesurv")
 curebase <- curebase + scale_x_continuous(breaks = breaks, labels = labs) +
@@ -75,13 +99,15 @@ curebase <- curebase + scale_x_continuous(breaks = breaks, labels = labs) +
 
 # combine
 base <- grid.arrange(coxbase, curebase + theme(axis.title.y=element_blank()), ncol = 2); base
+ggsave("C:/Users/gwill/Dropbox/Research/Dissertation/Manuscript/chapter2/img/base.png", plot = base, width = 5.5, height = 3, units = "in")
+
 
 ### Tie comparison ---------------------------------------------------------------
 legendtitle <- "Tie"
 vals <- c(0, 1)
 
 # Cox plot
-newdata1 <- apply(cox2$x, 2, median, na.rm = T)
+newdata1 <- apply(cox2$x, 2, mean, na.rm = T)
 newdata1 <- as.data.frame(rbind(newdata1, newdata1))
 newdata1[2, "tie"] <- 1
 pcoxtie1 <- survfit(cox2, newdata = newdata1[1, ], se.fit = T)
@@ -92,6 +118,10 @@ pcoxtie2pdat <- cbind(as.data.frame(cbind(pcoxtie2$time, pcoxtie2$surv, pcoxtie2
 colnames(pcoxtie1pdat) <- cn
 colnames(pcoxtie2pdat) <- cn
 pcoxtiepdat <- rbind(pcoxtie1pdat, pcoxtie2pdat)
+
+# predict(cox2, newdata = newdata1, se.fit = T, type = "lp")
+# library(simPH)
+# a <- coxsimLinear(cox2, "tie", Xj = c(0, 1), Xl = c(0, 1), qi = "Hazard Rate"); simGG(a)
 
 pcoxtieplot <- ggplot(mapping = aes(x = time, y = surv, col = as.factor(num), linetype = as.factor(num)), data = pcoxtiepdat) +
         geom_line() + geom_ribbon(aes(ymin = lower, ymax = upper,
@@ -126,7 +156,7 @@ ggsave("C:/Users/gwill/Dropbox/Research/Dissertation/Manuscript/chapter2/img/tie
 
 
 ### Deaths comparison
-legendtitle <- "Log(Battle Deaths)"
+legendtitle <- "ln(Battle Deaths)"
 deathmin <- round(min(lhr$lndeaths, na.rm = T), 1)
 deathmax <- round(max(lhr$lndeaths, na.rm = T), 1)
 vals <- c(deathmin, deathmax)
@@ -156,10 +186,10 @@ pcoxdeathsplot <- ggplot(mapping = aes(x = time, y = surv, col = as.factor(num),
         scale_x_continuous(breaks = breaks, labels = labs) +
         theme(panel.border = element_rect(colour = "black", fill = NA))
 
-# Cureplot
+# Cureplots
 tpred1 <- prediction4(cure2, "lndeaths", c(deathmin, deathmax), type = "uncureprob")
-tplot1 <- tpred1 + xlab("Log(Battle Deaths)")
-tpred2 <- prediction4(cure2, "lndeaths", c(deathmin, deathmax), type = "spop", legendtitle = "Log(Battle Deaths)")
+tplot1 <- tpred1 + xlab("ln(Battle Deaths)")
+tpred2 <- prediction4(cure2, "lndeaths", c(deathmin, deathmax), type = "spop", legendtitle = "ln(Battle Deaths)")
 tplot2 <- tpred2 + xlab("Time in years") + theme(legend.position = "none") +  ylab("Probability of Survival") + xlab("Time in years") + scale_x_continuous(breaks = breaks, labels = labs)
 
 # combine
@@ -176,76 +206,31 @@ ggsave("C:/Users/gwill/Dropbox/Research/Dissertation/Manuscript/chapter2/img/dea
 
 
 
-
-# ggarrange(a, tplot1, tplot2, ncol = 2, nrow = 2)
-# b <- grid.arrange(
-#         grobs = list(a, tplot1, tplot2),
-#         ncol = 2, nrow = 2,
-#         # widths = c(0.1, 1, 1),
-#         layout_matrix = rbind(c(1, 2),
-#                               c(1, 3))
-# )
-
-
-# ) + plot.background()
-# grid.rect(width = .98, height = .98, gp = gpar(lwd = 2, col = "blue", fill = NA))
-
-ggsave("C:/Users/gwill/Dropbox/Research/Dissertation/Manuscript/chapter2/img/tie.png", plot = b, width = 5.5, height = 4, units = "in")
-
-# pcox1b <- surv_fit(cox2, data = newdata1[2, ], se.fit = T)
-
-# pcox1b <- survfit(cox2, newdata = newdata2, se.fit = T)
-plot(pcox1a)
-plot(pcox1b)
-
-autoplot(pcox1a)
-
-# Surv uncure
-tplot1 <- tpred1 + xlab("Tie")
-
-# Surv cure
-+ ylim(0.5, 1)
-
-# Combine and save
-ggarrange(tpred1, tpred2, ncol = 2,)
-ggsave("./figures/attempts.png", width = 3, height = 3, units = "in")
-
-
-### Deaths variable
-# Cox pred
-# lnmin <- min(lhr$lndeaths, na.rm = T)
-# lnmax <- max(lhr$lndeaths, na.rm = T)
-# newdata2 <- apply(cox2$x, 2, median, na.rm = T)
-# newdata2 <- as.data.frame(rbind(newdata2, newdata2))
-# newdata2[2, "lndeaths"] <- lnmin
-# newdata2[2, "lndeaths"] <- lnmax
-# pcox2 <- survfit(cox2, newdata2, conf.int = 0.90)
-# plot(pcox2, T, col = c(1, 2))
-
-dpred1 <- prediction4(cure2, "lndeaths", c(lnmin, lnmax), type = "uncureprob")
-dpred1 <- dpred1 + xlab("Log Battle Deaths")
-dpred2 <- prediction4(cure2, "lndeaths", c(lnmin, lnmax), type = "spop", legendtitle = "Log Battle Deaths")
-dpred2 <- dpred2 + xlab("Log Battle Deaths") + xlab("Time (in years)") + scale_x_continuous(breaks = breaks, labels = labs)
-
-### Battle consistency variable
-# newdata3 <- apply(cox2$x, 2, median, na.rm = T)
-# newdata3 <- as.data.frame(rbind(newdata3, newdata3))
-# newdata3[1, "battletide"] <- 0
-# newdata3[2, "battletide"] <- 1
-# pcox3 <- survfit(cox2, newdata3, conf.int = 0.90)
-# plot(pcox3, T, col = c(1, 2))
-
+### Battletide
 bpred1 <- prediction4(cure2, "battletide", c(0, 1), type = "uncureprob")
-bpred1 <- bpred1 + xlab("Battle Consistency")
+bplot1 <- bpred1 + xlab("Battle Consistency")
 bpred2 <- prediction4(cure2, "battletide", c(0, 1), type = "spop", legendtitle = "Battle Consistency")
-bpred2 <- bpred2 + xlab("Time (in years)") + scale_x_continuous(breaks = breaks, labels = labs)
+bplot2 <- bpred2 + xlab("Time in years") + theme(legend.position = "none") +
+        ylab("Probability of Survival") + xlab("Time in years") +
+        scale_x_continuous(breaks = breaks, labels = labs)
 
-d <- prediction4(cure2, "battletide", c(0, 1), type = "suncure")
 
+### Capchange Plot
+legendtitle <- "Capability Change"
+capmin <- round(min(lhr$lncapchange, na.rm = T), 1)
+capmax <- round(max(lhr$lncapchange, na.rm = T), 1)
+vals <- c(capmin, capmax)
+
+# Cureplot
+cpred1 <- prediction4(cure2, "lncapchange", c(capmin, capmax), type = "spop", legendtitle = "ln(Capability Change)")
+cplot1 <- cpred1 + xlab("Time in years") + theme(legend.position = "none") +  ylab("Probability of Survival") + xlab("Time in years") + scale_x_continuous(breaks = breaks, labels = labs)
+
+
+#### Low risk - high risk cases
 g <- apply(cox2$x, 2, median, na.rm = T)
 g <- rbind(g,g)
-g[,"capchange"] <- c(0, 4.5)
-g[,"capchangelnt"] <- c(0, 4.5 * log(21))
+g[,"lncapchange"] <- c(-11.7, 1.5)
+g[,"lncapchange:lnt"] <- c(-11.7 * log(21), 1.5 * log(21))
 g[,"battletide"] <- c(1, 0)
 g[,"thirdpartycfire"] <- c(1, 0)
 g[,"index"] <- c(12, 0)
@@ -262,22 +247,67 @@ colnames(g)[ncol(g)] <- "Intercept"
 
 g1 <- g[, cure2$bnames]
 g2 <- g[, cure2$gnames]
+prediction4(cure2, newX = g1, newZ = g2, type = "suncure")
 
+### With values
+prediction4(cure2, variable = "lncapchange", values = c(capmin, capmax), type = "suncure")
 
-f <- g[1,]
-f <- rbind(f, f)
-f[2, "tie"] <- 1
-f1 <- f[, cure2$bnames]
-f2 <- f[, cure2$gnames]
+### High risk cases (second row of g)
+h <- g[1, ]
+h <- as.data.frame(rbind(h, h, h, h))
+capmin <-  min(lhr$capchange, na.rm = T)
+capmax <- max(lhr$capchange, na.rm = T)
+caplo <- mean(lhr$capchange, na.rm = T) - 2 * sd(lhr$capchange, na.rm = T)
+caphi <- mean(lhr$capchange, na.rm = T) + 2 * sd(lhr$capchange, na.rm = T)
+h$capchange <- c(capmin, capmax, caphi, caplo)
+h <- as.data.frame(rbind(h, h))
 
-h <- g[2,]
-h <- rbind(h, h)
-h[2, "tie"] <- 1
+h$capchange <- c(caphi, caplo)
+h[,"capchange:lnt"] <- c(caphi * log(21), caplo * log(21))
+
+h[,"capchange:lnt"] <- c(capmin * log(21), capmax * log(21), caphi * log(21), caplo * log(21))
 h1 <- h[, cure2$bnames]
 h2 <- h[, cure2$gnames]
 
+prediction4(cure2, newX = h1, newZ = h2, type = "suncure")
+# in browser
+newX[, "lncapchange:lnt"] <- c(capmin * 9.081256, capmax * 9.081256)
 
-prediction4(cure2, newX = f1, newZ = f2, type = "spop")
+
+
+### High risk cases (second row of g)
+h <- g[2, ]
+h <- as.data.frame(rbind(h, h))
+# caplo <- mean(lhr$capchange, na.rm = T) - 2 * sd(lhr$capchange, na.rm = T)
+# caphi <- mean(lhr$capchange, na.rm = T) + 2 * sd(lhr$capchange, na.rm = T)
+caplo <- quantile(lhr$lncapchange, 0.05, na.rm = T)
+caphi <- quantile(lhr$lncapchange, 0.95, na.rm = T)
+h$capchange <- c(caplo, caphi)
+h[,"capchange:lnt"] <- c(caplo * log(31), caphi * log(31))
+h1 <- h[, cure2$bnames]
+h2 <- h[, cure2$gnames]
+prediction4(cure2, newX = h1, newZ = h2, type = "suncure")
+prediction4(cure2, newX = h1, newZ = h2, type = "spop")
+
+### High risk cases (second row of g)
+h <- g[2, ]
+h <- as.data.frame(rbind(h, h))
+caplo <-  min(lhr$lncapchange, na.rm = T)
+caphi <- max(lhr$lncapchange, na.rm = T)
+h$capchange <- c(caplo, caphi)
+h[,"capchange:lnt"] <- c(caplo * log(21), caphi * log(21))
+h1 <- h[, cure4$bnames]
+h2 <- h[, cure4$gnames]
+
+
+prediction4(cure4, newX = h1, newZ = h2, type = "suncure")
+prediction4(cure4, newX = h1, newZ = h2, type = "spop")
+
+lhr$one <- 1
+a <- lhr %>%
+        group_by(id) %>%
+        summarize(sum1 = sum(one))
+
 # g1hi <- g1[2, cure2$bnames]
 # g2lo <- g2[1, c(cure2$gnames[-1])]
 # g2hi <- g2[2, c(cure2$gnames[-1])]
@@ -290,6 +320,8 @@ vl <- list("Battle Deaths" = "lndeaths",
      "Third Party Intervention" = "thirdpartycfire",
      "Capability Change" = "capchange",
      "Capability Change $\\times \\ln(t)$" = "capchangelnt",
+     "$\\ln(\\text{Capability Change})$" = "lncapchange",
+     "$\\ln(\\text(Capability Change)) \\times \\ln(\\text(T))$" = "lncapchangelnt",
      "Existential Stakes" = "stakes",
      "Agreement Strength" = "index",
      "Foreign-Imposed Regime Change" = "archigosFIRC",
@@ -300,7 +332,31 @@ vl <- list("Battle Deaths" = "lndeaths",
      "Conflict History $\\times \\ln(t)$" = "cfhistlnt",
      "Contiguity" = "contiguity")
 
-t1 <- tvtable(cox2, cure2, varlist = vl)
+t1 <- tvtable(cox2, cure2, varlist = vl, label = "tab:res",
+              caption = "Cox proportional hazards and cure model estimates of ceasefire duration"
+              modnum = F)
 x1 <- tvtable_xtable(t1)
-printer(x1)
+# printer(x1)
+addtorow <- list()
+addtorow$pos <- as.list(c(0, nrow(t1)))
+addtorow$command <- as.list(c("\& \\multicolumn{1}{c}{Model 1} & \\multicolumn{2}{c}{Model 2} \\\\ \\cmidrule(lr){2-2}\\cmidrule(lr){3-4}",
+                              "\\bottomrule"
+                              "\\bottomrule \\n \\footnote{\\footnotesize Note: $'***' p leq 0.001, '**' p \leq 0.01, '*' p \\leq 0.5, + \\leq 0.1$}\n"
+                              ))
+
+print(t1,
+     booktabs = T,
+     sanitize.text.function = identity,
+     include.rownames = F,
+     include.colnames = F,
+     add.to.row = addtorwo
+     hline.after = c(-1, 2, nrow(x) - 2), ...)
+
+
+
+#assign a position argument to addtorow
+#rws are the row indexes for the row to be colored,
+#0 is the row index for longtable argument
+
+#assign corresponding commands to addtorow
 
