@@ -9,7 +9,7 @@ library(ggpubr)
 options(scipen = 999)
 cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
 
-# Load data
+##### Load data
 lhr <- read_dta("LHRIOOct08replication.dta")
 lhr <- rename(lhr, "st" = "_st", "event" = "_d", "stop" = "_t", "start" = "_t0")
 lhr$io <- ifelse(lhr$index > 0, 1, 0)
@@ -25,6 +25,13 @@ lhr$twodem5t = lhr$twodem5 * lhr$stop
 
 ##### Notes
 # Cure equation - positive coefficients increase probability of failure, negative coefficients decrease probability of failure
+
+##### Descriptive Statistics
+lhr$one <- 1
+a <- lhr %>%
+        group_by(id) %>%
+        summarize(sum1 = sum(one))
+
 
 ##### Models ---------------------------------------------------------------------------
 
@@ -119,9 +126,6 @@ colnames(pcoxtie1pdat) <- cn
 colnames(pcoxtie2pdat) <- cn
 pcoxtiepdat <- rbind(pcoxtie1pdat, pcoxtie2pdat)
 
-# predict(cox2, newdata = newdata1, se.fit = T, type = "lp")
-# library(simPH)
-# a <- coxsimLinear(cox2, "tie", Xj = c(0, 1), Xl = c(0, 1), qi = "Hazard Rate"); simGG(a)
 
 pcoxtieplot <- ggplot(mapping = aes(x = time, y = surv, col = as.factor(num), linetype = as.factor(num)), data = pcoxtiepdat) +
         geom_line() + geom_ribbon(aes(ymin = lower, ymax = upper,
@@ -138,7 +142,9 @@ pcoxtieplot <- ggplot(mapping = aes(x = time, y = surv, col = as.factor(num), li
 tpred1 <- prediction4(cure2, "tie", c(0, 1), type = "uncureprob")
 tplot1 <- tpred1 + xlab("Tie")
 tpred2 <- prediction4(cure2, "tie", c(0, 1), type = "spop", legendtitle = "Tie")
-tplot2 <- tpred2 + xlab("Time in years") + theme(legend.position = "none") +  ylab("Probability of Survival") + xlab("Time in years") + scale_x_continuous(breaks = breaks, labels = labs)
+tplot2 <- tpred2 + xlab("Time in years") + theme(legend.position = "none") +
+        ylab("Probability of Survival") + xlab("Time in years") +
+        scale_x_continuous(breaks = breaks, labels = labs)
 
 # combine
 legend <- get_legend(pcoxtieplot)
@@ -150,9 +156,8 @@ b <- grid.arrange(
         layout_matrix = rbind(c(1, 2),
                               c(3, 4))
 )
-
-#save
-ggsave("C:/Users/gwill/Dropbox/Research/Dissertation/Manuscript/chapter2/img/tie.png", plot = b, width = 5.5, height = 4, units = "in")
+ggsave("C:/Users/gwill/Dropbox/Research/Dissertation/Manuscript/chapter2/img/tie.png",
+       plot = b, width = 5.5, height = 4, units = "in")
 
 
 ### Deaths comparison
@@ -215,103 +220,32 @@ bplot2 <- bpred2 + xlab("Time in years") + theme(legend.position = "none") +
         scale_x_continuous(breaks = breaks, labels = labs)
 
 
-### Capchange Plot
-legendtitle <- "Capability Change"
-capmin <- round(min(lhr$lncapchange, na.rm = T), 1)
-capmax <- round(max(lhr$lncapchange, na.rm = T), 1)
-vals <- c(capmin, capmax)
+#### Low risk cases 1st row - high risk cases second column
+sim <- apply(cox2$x, 2, median, na.rm = T)
+sim <- rbind(sim,sim)
+sim[,"lncapchange"] <- c(-11.7, 1.5)
+sim[,"lncapchange:lnt"] <- c(-11.7 * log(21), 1.5 * log(21))
+sim[,"battletide"] <- c(1, 0)
+sim[,"thirdpartycfire"] <- c(1, 0)
+sim[,"index"] <- c(12, 0)
+sim[,"lndeaths"] <- c(15.6, 5.3)
+sim[,"cfhist"] <- c(0, 1.6)
+sim[,"cfhistlnt"] <- c(0, 1.6 * log(21))
+sim[, "stakes"] <- c(0, 1)
+sim[,"contiguity"] <- c(0, 1)
+sim[, "twodem5"] <- c(1, 0)
+sim[,"twoaut5"] <- c(0, 1)
+sim[,"tie"] <- c(0, 1)
+sim <- cbind(sim, c(0, 1))
+colnames(sim)[ncol(sim)] <- "Intercept"
 
-# Cureplot
-cpred1 <- prediction4(cure2, "lncapchange", c(capmin, capmax), type = "spop", legendtitle = "ln(Capability Change)")
-cplot1 <- cpred1 + xlab("Time in years") + theme(legend.position = "none") +  ylab("Probability of Survival") + xlab("Time in years") + scale_x_continuous(breaks = breaks, labels = labs)
-
-
-#### Low risk - high risk cases
-g <- apply(cox2$x, 2, median, na.rm = T)
-g <- rbind(g,g)
-g[,"lncapchange"] <- c(-11.7, 1.5)
-g[,"lncapchange:lnt"] <- c(-11.7 * log(21), 1.5 * log(21))
-g[,"battletide"] <- c(1, 0)
-g[,"thirdpartycfire"] <- c(1, 0)
-g[,"index"] <- c(12, 0)
-g[,"lndeaths"] <- c(15.6, 5.3)
-g[,"cfhist"] <- c(0, 1.6)
-g[,"cfhistlnt"] <- c(0, 1.6 * log(21))
-g[, "stakes"] <- c(0, 1)
-g[,"contiguity"] <- c(0, 1)
-g[, "twodem5"] <- c(1, 0)
-g[,"twoaut5"] <- c(0, 1)
-g[,"tie"] <- c(0, 1)
-g <- cbind(g, c(0, 1))
-colnames(g)[ncol(g)] <- "Intercept"
-
-g1 <- g[, cure2$bnames]
-g2 <- g[, cure2$gnames]
+simlo <- sim[, cure2$bnames]
+simhi <- sim[, cure2$gnames]
 prediction4(cure2, newX = g1, newZ = g2, type = "suncure")
 
-### With values
-prediction4(cure2, variable = "lncapchange", values = c(capmin, capmax), type = "suncure")
 
 ### High risk cases (second row of g)
-h <- g[1, ]
-h <- as.data.frame(rbind(h, h, h, h))
-capmin <-  min(lhr$capchange, na.rm = T)
-capmax <- max(lhr$capchange, na.rm = T)
-caplo <- mean(lhr$capchange, na.rm = T) - 2 * sd(lhr$capchange, na.rm = T)
-caphi <- mean(lhr$capchange, na.rm = T) + 2 * sd(lhr$capchange, na.rm = T)
-h$capchange <- c(capmin, capmax, caphi, caplo)
-h <- as.data.frame(rbind(h, h))
 
-h$capchange <- c(caphi, caplo)
-h[,"capchange:lnt"] <- c(caphi * log(21), caplo * log(21))
-
-h[,"capchange:lnt"] <- c(capmin * log(21), capmax * log(21), caphi * log(21), caplo * log(21))
-h1 <- h[, cure2$bnames]
-h2 <- h[, cure2$gnames]
-
-prediction4(cure2, newX = h1, newZ = h2, type = "suncure")
-# in browser
-newX[, "lncapchange:lnt"] <- c(capmin * 9.081256, capmax * 9.081256)
-
-
-
-### High risk cases (second row of g)
-h <- g[2, ]
-h <- as.data.frame(rbind(h, h))
-# caplo <- mean(lhr$capchange, na.rm = T) - 2 * sd(lhr$capchange, na.rm = T)
-# caphi <- mean(lhr$capchange, na.rm = T) + 2 * sd(lhr$capchange, na.rm = T)
-caplo <- quantile(lhr$lncapchange, 0.05, na.rm = T)
-caphi <- quantile(lhr$lncapchange, 0.95, na.rm = T)
-h$capchange <- c(caplo, caphi)
-h[,"capchange:lnt"] <- c(caplo * log(31), caphi * log(31))
-h1 <- h[, cure2$bnames]
-h2 <- h[, cure2$gnames]
-prediction4(cure2, newX = h1, newZ = h2, type = "suncure")
-prediction4(cure2, newX = h1, newZ = h2, type = "spop")
-
-### High risk cases (second row of g)
-h <- g[2, ]
-h <- as.data.frame(rbind(h, h))
-caplo <-  min(lhr$lncapchange, na.rm = T)
-caphi <- max(lhr$lncapchange, na.rm = T)
-h$capchange <- c(caplo, caphi)
-h[,"capchange:lnt"] <- c(caplo * log(21), caphi * log(21))
-h1 <- h[, cure4$bnames]
-h2 <- h[, cure4$gnames]
-
-
-prediction4(cure4, newX = h1, newZ = h2, type = "suncure")
-prediction4(cure4, newX = h1, newZ = h2, type = "spop")
-
-lhr$one <- 1
-a <- lhr %>%
-        group_by(id) %>%
-        summarize(sum1 = sum(one))
-
-# g1hi <- g1[2, cure2$bnames]
-# g2lo <- g2[1, c(cure2$gnames[-1])]
-# g2hi <- g2[2, c(cure2$gnames[-1])]
-# g <- prediction4(cure2, "battletide", c(0, 1), type = "spop")
 
 ##### Tables --------------------------------------------------------------------
 vl <- list("Battle Deaths" = "lndeaths",
