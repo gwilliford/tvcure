@@ -12,7 +12,6 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
   qi <- match.arg(qi)
 
   tabnames <- list()
-  mn <- list()
   # Extract cell entries and variable names
   for (i in 1:length(models)) {
 
@@ -27,34 +26,41 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
       # assign(paste0("tabnames", i), bnames)
       nc = 1
     } else {
-      beta  <- round(model$beta, digits)
-      bse   <- round(model$b_sd, digits)
-      bz    <- round(model$b_zvalue, digits)
-      bpval <- round(model$b_pvalue, digits)
+      beta   <- round(model$beta, digits)
+      bse    <- round(model$b_sd, digits)
+      bz     <- round(model$b_zvalue, digits)
+      bpval  <- round(model$b_pvalue, digits)
       bnames <- model$bnames
 
-      gamma <- round(model$gamma, digits)
-      gse   <- round(model$g_sd, digits)
-      gz    <- round(model$g_zvalue, digits)
-      gpval <- round(model$g_pvalue, digits)
+      gamma  <- round(model$gamma, digits)
+      gse    <- round(model$g_sd, digits)
+      gz     <- round(model$g_zvalue, digits)
+      gpval  <- round(model$g_pvalue, digits)
       gnames <- model$gnames
 
-      if (qi == "se") qivec2 <- round(model$g_sd, digits)
-      if (qi == "zscore") qivec2 <- round(model$g_pvalue, digits)
-      if (qi == "pvalue") qivec2 <- round(model$g_zvalue, digits)
       nc = 2
     }
-    if (qi == "se")     qivec <- bse
-    if (qi == "zscore") qivec <- bz
-    if (qi == "pvalue") qivec <- bpval
+
+    if (qi == "se")     qivec <- round(bse,   digits)
+    if (qi == "zscore") qivec <- round(bz,    digits)
+    if (qi == "pvalue") qivec <- round(bpval, digits)
+    if (nc == 2) {
+      if (qi == "se")     qivec2 <- round(model$g_sd,     digits)
+      if (qi == "zscore") qivec2 <- round(model$g_pvalue, digits)
+      if (qi == "pvalue") qivec2 <- round(model$g_zvalue, digits)
+    }
 
     # Stars
     if (stars) {
       bstar <- gtools::stars.pval(bpval)
-      if (nc == 2) gstar <- gtools::stars.pval(gpval)
       for (j in 1:length(qivec)) {
-        qivec[j] <- capture.output(cat("(", qivec[j], ")", bstar[j], sep = ""))
-        if (nc == 2) qivec2[j] <- capture.output(cat("(", qivec2[j], ")", gstar[j], sep = ""))
+        qivec[j] <- capture.output(cat("(", qivec[j],  ")", bstar[j], sep = ""))
+      }
+      if (nc == 2) {
+        gstar <- gtools::stars.pval(gpval)
+        for (j in 1:length(qivec2)) {
+          qivec2[j] <- capture.output(cat("(", qivec2[j], ")", gstar[j], sep = ""))
+        }
       }
     }
 
@@ -85,34 +91,7 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
     colnames(tab)[1] <- "vn"
     assign(paste0("tab", i), tab)
 
-    # Create model names
-    if (is.null(modnames)) {
-      if (nc == 1) {
-        mn[[i]] <- paste("Model " , i, sep = "")
-      } else {
-        mn[[i]] <- paste0("\\multicolumn{2}{c}{", "Model ", i, "}")
-      }
-    } else {
-      if (nc == 1) {
-        mn[[i]] <- modnames[i]
-      } else {
-        mn[[i]] <- c(modnames[i], "blank")
-      }
-    }
-
-    # Create summary stats
-    if (nc == 1) {
-      svec = vector(length = 2)
-      svec[1] <- nrow(model$y)
-      svec[2] <- model$nevent
-    } else {
-      svec = vector(length = 4)
-      svec[1] <- model$nobs
-      svec[2] <- model$nfail
-    }
-    assign(paste0("svec", i), svec)
-  }
-
+  browser()
   # Order by varlist
   allnames <- unique(unlist(tabnames))
   if (is.null(varlist)) {
@@ -135,6 +114,19 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
     varlabs <- varnames
     dex <- as.vector(rbind(index3, ""))
     varlabs[1:length(dex)] <- dex
+  }
+
+  # Create summary stats
+  if (nc == 1) {
+    svec = vector(length = 2)
+    svec[1] <- nrow(model$y)
+    svec[2] <- model$nevent
+  } else {
+    svec = vector(length = 4)
+    svec[1] <- c(model$nobs, NA)
+    svec[2] <- c(model$nfail, NA)
+  }
+  assign(paste0("svec", i), svec)
   }
 
   # Combine tables
@@ -161,18 +153,37 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
   }
   tdf <- as.matrix(tdf)
 
-  mn2 <- c("", unlist(mn))
-  mn2 <- replace(mn2, mn2 == "blank", "")
 
+  # # Create model names
+  # mn <- list()
+  # if (is.null(modnames)) {
+  #   if (nc == 1) {
+  #     mn[[i]] <- paste0("\\multicolumn{1}{c}{", "Model " , i, "}", sep = "")
+  #   } else {
+  #     mn[[i]] <- paste0("\\multicolumn{2}{c}{", "Mode l", i, "}", sep = "")
+  #   }
+  # } else {
+  #   if (nc == 1) {
+  #     mn[[i]] <- modnames[i]
+  #   } else {
+  #     mn[[i]] <- c(modnames[i], "blank")
+  #   }
+  # }
+  # mn <- c("", unlist(mn))
+  # mn <- replace(mn, mn == "blank", "")
   # test <- c(1, 2, 3, 4)
+
+
   svec <- vector()
   for (i in 1:len) {
     svec <- c(svec, eval(parse(text = paste0("svec", i))))
   }
   sumtab <- matrix(svec, nrow = 2)
   sumtab <- cbind(c("Number of Observations", "Number of Failures"), sumtab)
+  # sumtab[1, 3] = NA
+  # sumtab[2, 3] = NA
 
-  ftab <- rbind(mn2, cn, tdf, sumtab)
+  ftab <- rbind(cn, tdf, sumtab) #Mn first if used
   rownames(ftab) <- NULL
   ftab
 }
