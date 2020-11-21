@@ -18,33 +18,35 @@ prediction3 <- function(model, variable, values,
 
   # Setup -------------------------------------------------------------------
 
-  require(ggplot2)
-  call <- match.call()
   if (!inherits(model, "tvcure")) stop("Model must be a tvcure object")
+
+  type = match.arg(type)
+
+  beta  <- model$parameters$beta
+  gamma <- model$parameters$gamma
+  vcovb <- model$parameters$vcovb
+  vcovg <- model$paramaters$vcovg
+
+  bnames <- model$varnames$bnames
+  gnames <- model$varnames$gnames
+
   s0 = as.matrix(model$Survival, ncol = 1)
   H0 = as.matrix(model$BaseHaz, ncol = 1)
-  nobs = nrow(s0)
-  beta <- model$beta
-  gamma <- model$gamma
-  bnames <- model$bnames
-  gnames <- model$gnames
-  link <- model$link
-  Status <- model$Status
-  Time <- model$Time[order(model$Time)]
-  X <- model$X
-  Z <- model$Z
-  if (is.null(legendtitle)) {
-    legendtitle <- variable
-  }
-  type = match.arg(type)
-  # clstatus <- foreach::getDoParRegistered()
-  # if (foreach::getDoParRegistered() == T) cl <- foreach::getDoSeqName()
-  # if (foreach::getDoParRegistered() == F)
-  cl <- foreach::registerDoSEQ()
-  # pb <- txtProgressBar(max = nsims, style = 3)
-  # progress <- function(n) setTxtProgressBar(pb, n)
-  # opts <- list(progress = progress)
 
+  X <- model$data$X
+  Z <- model$data$Z
+
+  nx <- nrow(X)
+  nz <- nrow(Z)
+
+  Status <- model$data$Status
+  Time   <- model$data$Time[order(model$data$Time)]
+
+  nobs = nrow(s0)
+  link <- model$options$link
+
+
+browser()
   # Create dataset for predictions -----------------------------------------------------------
   newX <- apply(X, 2, median)
   newX <- matrix(rep(newX, length(values)), ncol = length(newX), byrow = T)
@@ -60,8 +62,6 @@ prediction3 <- function(model, variable, values,
   newZ <- as.matrix(newZ)
   nz <- nrow(newZ)
 
-  vcovb <- model$vcovb
-  vcovg <- model$vcovg
 
   # Create predictions ------------------------------------------------------------------
   # Without CIs
@@ -73,11 +73,15 @@ prediction3 <- function(model, variable, values,
       uncureprob <- pnorm(gamma %*% t(newZ))
     }
 
+    s0      <- s0[order(s0, decreasing = T)]
+
     suncure = array(0, dim = c(nobs, nx))
-    ebetaX = exp(model$beta %*% t(newX))
+    ebetaX = exp(beta %*% t(newX))
     for (i in 1:nx) {
       suncure[, i] = s0^ebetaX[i]
     }
+    suncure <- suncure[order(suncure[, 1], decreasing = T), ]
+
 
     spop = array(0, dim = c(nobs, nrow(newX)))
     for (i in 1:nobs) {
@@ -85,9 +89,10 @@ prediction3 <- function(model, variable, values,
         spop[i, j] = uncureprob[j] * suncure[i, j] + (1 - uncureprob[j])
       }
     }
-    s0      <- s0[order(s0, decreasing = T)]
-    suncure <- suncure[order(suncure[, 1], decreasing = T), ]
     spop    <- spop[order(spop[, 1], decreasing = T), ]
+
+
+
   } else { ## With CIs =========================================================================
 
     Coef_smplb <- MASS::mvrnorm(n = nsims, mu = beta, Sigma = vcovb)
@@ -107,7 +112,7 @@ prediction3 <- function(model, variable, values,
     # Simulate baseline hazard
     s0sim <- matrix(nrow = nsims, ncol = nobs)
     for (j in 1:nsims) {
-      s0sim[j, ] <- as.vector(s0)^exp(Coef_smplb[j, ] %*% t(model$X))
+      s0sim[j, ] <- as.vector(s0)^exp(Coef_smplb[j, ] %*% t(X))
     }
     s0mean <- sort(apply(s0sim, 2, mean), decreasing = T)
     s0lo   <- sort(apply(s0sim, 2, quantile, 0.05), decreasing = T)
