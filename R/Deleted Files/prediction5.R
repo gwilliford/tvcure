@@ -44,7 +44,6 @@ prediction5 <- function(model, type = c("basesurv", "spop", "suncure", "uncurepr
   nobs = nrow(s0)
   link <- model$options$link
 
-  browser()
   # Create dataset for predictions -----------------------------------------------------------
   # if (is.null(X)) {
   #   X <- apply(X, 2, median)
@@ -62,9 +61,8 @@ prediction5 <- function(model, type = c("basesurv", "spop", "suncure", "uncurepr
   # }
   # Z <- as.matrix(Z)
 
-  # browser()
-  # Create predictions ------------------------------------------------------------------
-  # Without CIs
+  browser()
+  # Predictions without CIS ----------------------------------------------------
   if (CI == F) {
     if (link == "logit") {
       uncureprob <- exp(gamma %*% t(Z)) / (1 + exp(gamma %*% t(Z)))
@@ -89,7 +87,9 @@ prediction5 <- function(model, type = c("basesurv", "spop", "suncure", "uncurepr
     s0      <- s0[order(s0, decreasing = T)]
     suncure <- suncure[order(suncure[, 1], decreasing = T), ]
     spop    <- spop[order(spop[, 1], decreasing = T), ]
-  } else { # With CIs ----------------------------------------------------------
+
+  # Predictions with CIs -------------------------------------------------------
+  } else {
 
 
     Coef_smplb <- MASS::mvrnorm(n = nsims, mu = beta, Sigma = vcovb)
