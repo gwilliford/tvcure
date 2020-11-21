@@ -1,23 +1,23 @@
 #' Estimate cure models.
 #'
-#' @param formula
-#' @param cureform
-#' @param offset
-#' @param data
-#' @param na.action
-#' @param link
-#' @param var If
-#' @param brglm
-#' @param firthcox
-#' @param emmax Specifies the maximum number of iterations for the EM algorithm.
-#' @param eps
-#' @param nboot Specifies the number of bootstrap samples to draw.
-#' @param parallel If true, bootstraps will be run in parallel. A progress bar displaying the number of completed boostraps will be displayed. This option requires the user to set up a \link{snow} object and register it using the \link{doSNOW} package (see example below).
+#' @param formula Formula specifying variables used to model the hazard rate. The response variable must be a \link{survival} object.
+#' @param cureform Formula specifying variables used to model the cure rate. Must start with a tilde followed by  independent variables.
+#' @param link Link function to use for generalized linear model. Only "logit" and "probit" are supported.
+#' @param data A data.frame containing the variables in the model.
+#' @param na.action Indicates how missing values are handled.
+#' @param offset An optional numeric vector that specifies an offset term.
+#' @param subset An optional vector identifying which observations should be used.
+#' @param var If True, estimates variance using bootstrap resampling.
+#' @param nboot Specifies the number of bootstrap samples for variance estimation.
+#' @param parallel If True, variance estimation will be run using parallel processing. Requires the user to set up a \link{snow} object and register it using the \link{doSNOW} package.
+#' @param brglm Estimate bias-reduced
+#' @param emmax Specifies the maximum number of iterations to run.
+#' @param eps A positive number. Model converges when the change in the log-likelihood between iterations is less than this value.
+
 tvcure = function(formula, cureform, link = "logit",
                    data, na.action = na.omit, offset = NULL, subset = NULL,
-                   var = T, nboot = 100,
-                   parallel = T,
-                   brglm = F, firthcox = F,
+                   var = T, nboot = 100, parallel = T,
+                   brglm = F,
                    emmax = 1000, eps = 1e-07)
 {
   # Preliminaries and error checking--------------------------------------------
@@ -149,22 +149,22 @@ if (var) {
   fit$data$Status = Status
 
   # Coefficients
-  fit$parametersgamma = gamma
-  fit$parametersbeta = beta
+  fit$parameters$gamma = gamma
+  fit$parameters$beta = beta
 
-  # Variance parameters
+  # Variance parameters$
   if (var) {
-    fit$parametersvcovg    = varout$vcovg
-    fit$parametersvcovb    = varout$vcovb
-    fit$parametersg_var    = varout$g_var
-    fit$parametersg_sd     = varout$g_sd
-    fit$parametersg_zvalue = fit$parametersgamma/fit$parametersg_sd
-    fit$parametersg_pvalue = (1 - pnorm(abs(fit$parametersg_zvalue))) * 2
-    fit$parametersb_var    = varout$b_var
-    fit$parametersb_sd     = varout$b_sd
-    fit$parametersb_zvalue = fit$parametersbeta/fit$parametersb_sd
-    fit$parametersb_pvalue = (1 - pnorm(abs(fit$parametersb_zvalue))) * 2
-    fit$bootcomp           = varout$bootcomp
+    fit$parameters$vcovg    = varout$vcovg
+    fit$parameters$vcovb    = varout$vcovb
+    fit$parameters$g_var    = varout$g_var
+    fit$parameters$g_sd     = varout$g_sd
+    fit$parameters$g_zvalue = fit$parameters$gamma/fit$parameters$g_sd
+    fit$parameters$g_pvalue = (1 - pnorm(abs(fit$parameters$g_zvalue))) * 2
+    fit$parameters$b_var    = varout$b_var
+    fit$parameters$b_sd     = varout$b_sd
+    fit$parameters$b_zvalue = fit$parameters$beta/fit$parameters$b_sd
+    fit$parameters$b_pvalue = (1 - pnorm(abs(fit$parameters$b_zvalue))) * 2
+    fit$bootcomp            = varout$bootcomp
   }
 
   # call
