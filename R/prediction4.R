@@ -10,8 +10,8 @@
 #' @param ylab A label for the y-axis.
 #' @param internals A logical value indicating whether the predictions should be returned. If FALSE, only the graph will be returned.
 
-prediction4 <- function(model, variable = NULL, values = NULL, newX = NULL, newZ = NULL,
-                        type = c("basesurv", "spop", "suncure", "uncureprob"),
+prediction4 <- function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
+                        variable = NULL, values = NULL, newX = NULL, newZ = NULL,
                         CI = T, nsims = 1000, bw = F,
                         xlab = "Time", legendtitle = NULL,
                         ylab = "Predicted Survival Probability", internals = F) {
@@ -24,13 +24,13 @@ prediction4 <- function(model, variable = NULL, values = NULL, newX = NULL, newZ
   s0 = as.matrix(model$Survival, ncol = 1)
   H0 = as.matrix(model$BaseHaz, ncol = 1)
   nobs = nrow(s0)
-  beta <- model$beta
-  gamma <- model$gamma
-  bnames <- model$bnames
-  gnames <- model$gnames
-  link <- model$link
-  Status <- model$Status
-  Time <- model$Time[order(model$Time)]
+  beta <- model$parameters$beta
+  gamma <- model$parameters$gamma
+  bnames <- model$varnames$bnames
+  gnames <- model$varnames$gnames
+  link <- model$options$link
+  Status <- model$data$Status
+  Time <- model$data$Time[order(model$data$Time)]
   X <- model$X
   Z <- model$Z
   if (is.null(legendtitle)) {
@@ -39,15 +39,6 @@ prediction4 <- function(model, variable = NULL, values = NULL, newX = NULL, newZ
   type = match.arg(type)
 
   if (!is.null(values)) {vals <- round(values, 1)}
-
-  # clstatus <- foreach::getDoParRegistered()
-  # if (foreach::getDoParRegistered() == T) cl <- foreach::getDoSeqName()
-  # # if (foreach::getDoParRegistered() == F)
-  # cl <- foreach::registerDoSEQ()
-  # pb <- txtProgressBar(max = nsims, style = 3)
-  # progress <- function(n) setTxtProgressBar(pb, n)
-  # opts <- list(progress = progress)
-
 
   # Create dataset for predictions -----------------------------------------------------------
   if (is.null(newX)) {
@@ -126,14 +117,6 @@ prediction4 <- function(model, variable = NULL, values = NULL, newX = NULL, newZ
     suncuresims <- array(NA, dim = c(nsims, nobs, nrow(newX)))
     spopsims    <- array(NA, dim = c(nsims, nobs, nrow(newX)))
 
-    # if (type == "suncure" | type == "spop") {
-    #   foreach (i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %:%
-    #     foreach (k = 1:nrow(newX)) %dopar% {
-    #       suncuresims[i, , k] <- s0sim[i, ]^ebetaXsim[i, k]
-    #       spopsims[i, , k] <- uncureprobsims[i, k] *
-    #         suncuresims[i, , k] + (1 - uncureprobsims[i, k])
-    #     }
-    # }
     if (type == "suncure" | type == "spop") {
       for (i in 1:nsims) {
         for (k in 1:nrow(newX)) {
@@ -151,20 +134,6 @@ prediction4 <- function(model, variable = NULL, values = NULL, newX = NULL, newZ
     spoplo      <- matrix(nrow = nobs, ncol = dim(newZ))
     spophi      <- matrix(nrow = nobs, ncol = dim(newZ))
 
-    # foreach(i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %dopar% {
-    #   #for (k in 1:nrow(newX)) {
-    #   if (type == "suncure") {
-    #     suncuremean[, i] <- sort(apply(suncuresims[, , i], 2, mean), decreasing = T)
-    #     suncurelo[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.05), decreasing = T)
-    #     suncurehi[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.95), decreasing = T)
-    #   }
-    #   if (type == "spop") {
-    #     spopmean[, i]    <- sort(apply(spopsims[, , i], 2, mean), decreasing = T)
-    #     spoplo[, i]      <- sort(apply(spopsims[, , i], 2, quantile, 0.05), decreasing = T)
-    #     spophi[, i]      <- sort(apply(spopsims[, , i], 2, quantile, 0.95), decreasing = T)
-    #   }
-    # }
-    # for(i in 1:nsims) {
       for (k in 1:nrow(newX)) {
         if (type == "suncure") {
           suncuremean[, k] <- sort(apply(suncuresims[, , k], 2, mean), decreasing = T)
