@@ -44,12 +44,6 @@ prediction5 <- function(model, type = c("basesurv", "spop", "suncure", "uncurepr
   nobs = nrow(s0)
   link <- model$options$link
 
-  # if (is.null(legendtitle)) {
-  #   legendtitle <- variable
-  # }
-
-  # if (!is.null(values)) vals <- round(values, 1)
-
   browser()
   # Create dataset for predictions -----------------------------------------------------------
   # if (is.null(X)) {
