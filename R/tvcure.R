@@ -10,7 +10,7 @@
 #' @param var If True, estimates variance using bootstrap resampling.
 #' @param nboot Specifies the number of bootstrap samples for variance estimation.
 #' @param parallel If True, variance estimation will be run using parallel processing. Requires the user to set up a \link{snow} object and register it using the \link{doSNOW} package.
-#' @param brglm Estimate bias-reduced
+#' @param brglm Use a bias-reduced generalized linear model for the cure component. Uses the \link{brglm2} package.
 #' @param emmax Specifies the maximum number of iterations to run.
 #' @param eps A positive number. Model converges when the change in the log-likelihood between iterations is less than this value.
 
