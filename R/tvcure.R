@@ -124,6 +124,7 @@ if (var) {
                    eps, brglm, survobj, nobs, parallel, method)
 }
 
+  browser()
 # Final fit details
   fit = list()
   class(fit) = "tvcure"
@@ -162,11 +163,6 @@ if (var) {
     fit$bootcomp            = varout$bootcomp
   }
 
-  # call
-  fit$call = call
-  fit$formula = formula
-  fit$terms = terms(formula)
-
   # varnames
   fit$varnames$gnames = gnames
   fit$varnames$gnames[1] = "Intercept"
@@ -188,6 +184,10 @@ if (var) {
   fit$nobs  = nobs
   fit$nboot = nboot
 
+  # call
+  fit$call = call
+  fit$formula = formula
+  fit$terms = terms(formula)
+
   fit
-  # print_tvcure(fit, var)
 }
