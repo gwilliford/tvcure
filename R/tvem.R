@@ -1,5 +1,5 @@
   tvem <- function(Time, Status, X, Z, offset, gamma, beta,
-                   link, emmax, eps, brglm, firthcox, survobj, survtype, method){
+                   link, emmax, eps, brglm, survobj, survtype, method){
 
     w <- Status
     n <- length(Status)
@@ -34,24 +34,14 @@
       update_cureg <- incidence_fit$coef
 
       # Update latency coefficients
-      # if (firthcox) {
-      #   if (!is.null(offset)) {
-      #     coxit <- coxphf::coxphf(survobj ~ X + offset(offset + log(w)),
-      #                    subset = w != 0, method = "breslow")$coef
-      #   } else {
-      #     coxit <- coxphf::coxphf(survobj ~ X + offset(log(w)), subset = w != 0,
-      #                    method = "breslow")
-      #   }
-      # } else {
-        if (!is.null(offset)) {
-          coxit <- coxph(survobj ~ X + offset(offset + log(w)),
-                               subset = w != 0, method = "breslow", x = T)
-        } else {
-          coxit <- coxph(survobj ~ X + offset(log(w)), subset = w != 0,
-                         method = "breslow", x = T)
-         # browser()
-        }
-      # }
+      if (!is.null(offset)) {
+        coxit <- coxph(survobj ~ X + offset(offset + log(w)),
+                             subset = w != 0, method = "breslow", x = T)
+      } else {
+        coxit <- coxph(survobj ~ X + offset(log(w)), subset = w != 0,
+                       method = "breslow", x = T)
+      }
+
       update_a <- tvsurv(Time, Status, X, beta, w)
       update_s <- update_a$survival
 

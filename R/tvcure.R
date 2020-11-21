@@ -97,19 +97,14 @@ tvcure = function(formula, cureform, link = "logit",
                                    "family = binomial(link = '", link, "'", "), ",
                                    "method = '", method, "'",
                                    ")", sep = "")))$coef
-  # if (firthcox) {
-  #   firthdat = subset(X, w != 0)
-  #   firthobj = subset(survobj, w != 0)
-  #   beta = coxphf::coxphf(firthobj ~ X + offset(log(w)))$coef
-  # } else {
-    uncuremod = coxph(survobj ~ X + offset(log(w)), subset = w != 0, method = "breslow")
-    beta = uncuremod$coef
-  # }
+  uncuremod = coxph(survobj ~ X + offset(log(w)), subset = w != 0, method = "breslow")
+  beta = uncuremod$coef
+
   cat("Initial estimates obtained, beginning em algorithm...\n")
 
 # Call to EM function -------------------------------------------------------
   emfit = tvem(Time, Status, X, Z, offset, gamma, beta,
-                link, emmax, eps, brglm, firthcox, survobj, survtype, method)
+                link, emmax, eps, brglm, survobj, survtype, method)
   if (emfit$emrun == emmax) {
     warning("Maximum number of EM iterations reached. Estimates have not have converged.")
   }
@@ -126,7 +121,7 @@ tvcure = function(formula, cureform, link = "logit",
 if (var) {
   varout = tvboot(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status,
                    X, Z, gnames, bnames, offset, gamma, beta, link, emmax,
-                   eps, brglm, firthcox, survobj, nobs, parallel, method)
+                   eps, brglm, survobj, nobs, parallel, method)
 }
 
 # Final fit details
