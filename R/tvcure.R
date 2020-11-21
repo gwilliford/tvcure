@@ -1,7 +1,7 @@
 #' Estimate cure models.
 #'
-#' @param formula Formula specifying variables used to model the hazard rate. The response variable must be a \link{survival} object.
-#' @param cureform Formula specifying variables used to model the cure rate. Must start with a tilde followed by  independent variables.
+#' @param formula Formula specifying variables used to model the hazard rate. The left-hand side of the formula must be a \link{survival} object.
+#' @param cureform Formula specifying variables used to model the risk of ever experiencing an event. Must start with a tilde followed by independent variables.
 #' @param link Link function to use for generalized linear model. Only "logit" and "probit" are supported.
 #' @param data A data.frame containing the variables in the model.
 #' @param na.action Indicates how missing values are handled.
@@ -25,7 +25,7 @@ tvcure = function(formula, cureform, link = "logit",
     if (parallel == T) {
       clstatus = foreach::getDoParRegistered()
       if (clstatus == T) {
-        if (getDoParName() == "doSEQ") stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
+        if (getDoParName() == "doSEQ") stop("Please register a snow cluster to use parallel functionality or set parallel = F.")
       } else stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
     }
 
@@ -108,8 +108,8 @@ tvcure = function(formula, cureform, link = "logit",
   if (emfit$emrun == emmax) {
     warning("Maximum number of EM iterations reached. Estimates have not have converged.")
   }
-  gamma = emfit$gamma
-  beta = emfit$beta
+  gamma    = emfit$gamma
+  beta     = emfit$beta
   Survival = emfit$Survival
   Basehaz  = emfit$Basehaz
   cat("Coefficient estimation complete, estimating variance...\n")
