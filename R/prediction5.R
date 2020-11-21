@@ -12,12 +12,9 @@
 
 prediction5 <- function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
                         variable = NULL, values = NULL,
-                        CI = T, nsims = 1000)
-                       # bw = F, xlab = "Time", legendtitle = NULL,
-                        #ylab = "Predicted Survival Probability", internals = F) {
+                        CI = T, nsims = 1000) {
 
   # Setup -------------------------------------------------------------------
-  # require(ggplot2)
 
   if (!inherits(model, "tvcure")) stop("Model must be a tvcure object")
 
@@ -27,7 +24,7 @@ prediction5 <- function(model, type = c("basesurv", "spop", "suncure", "uncurepr
   beta  <- model$parameters$beta
   gamma <- model$parameters$gamma
   vcovb <- model$parameters$vcovb
-  vcovg <- model$parmaters$vcovg
+  vcovg <- model$paramaters$vcovg
 
   bnames <- model$varnames$bnames
   gnames <- model$varnames$gnames
@@ -166,7 +163,7 @@ prediction5 <- function(model, type = c("basesurv", "spop", "suncure", "uncurepr
     structure(list(uncureprob = uncureprob,
                    s0 = s0, suncure = suncure, spop = spop,
                    link = link, Time = Time, CI = CI,
-                   X = X, Z = Z, variable = variable)
+                   X = X, Z = Z, variable = variable),
               class = "predicttvcure")
   } else {
     structure(list(uncuremean = uncuremean, uncurelo = uncurelo, uncurehi = uncurehi,
@@ -174,7 +171,7 @@ prediction5 <- function(model, type = c("basesurv", "spop", "suncure", "uncurepr
                    suncuremean, suncurelo, suncurehi,
                    spopmean = spopmean, spoplo = spoplo, spophi = spophi,
                    link = link, Time = Time, CI = CI,
-                   X = X, Z = Z, variable = variable)
+                   X = X, Z = Z, variable = variable),
               class = "predicttvcure")
   }
 }
