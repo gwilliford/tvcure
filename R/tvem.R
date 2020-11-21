@@ -49,7 +49,7 @@
         } else {
           coxit <- coxph(survobj ~ X + offset(log(w)), subset = w != 0,
                          method = "breslow", x = T)
-          browser()
+         # browser()
         }
       # }
       update_a <- tvsurv(Time, Status, X, beta, w)
