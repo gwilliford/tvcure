@@ -36,10 +36,14 @@ tvpred <- function(model, newX = NULL, newZ = NULL,
 
 
   # Error messages -------------------------------------------------------------
-  if (!inherits(model, "tvcure")) stop("Model must be a tvcure object")
+  if (!inherits(model, "tvcure"))
+    stop("Model must be a tvcure object")
+  if (type != "basesurv" & (is.null(newX) | is.null(newZ)))
+    stop("newX and newZ must be specified unless type = \"basesurv\"")
 
 
-browser()
+
+
   # Format data ----------------------------------------------------------------
 
   if (is.null(newX)) {
@@ -91,7 +95,8 @@ browser()
   }
 
 
-  # Output ------------------------------------------------------------------
+
+  # Output ---------------------------------------------------------------------
   if (CI == F) {
     if (type == "basesurv")   return(structure(list(basesurv = s0, type = type), class = "tvpred"))
     if (type == "suncure")    return(structure(list(suncure = suncure, type = type), class = "tvpred"))
