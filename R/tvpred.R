@@ -48,21 +48,20 @@ tvpred <- function(model, newX = NULL, newZ = NULL,
 
   if (is.null(newX)) {
     newX <- apply(X, 2, median)
-    newX = t(as.matrix(newX))
-  } else {
-    newX <- as.matrix(newX)
+    newX <- matrix(rep(newX, 1), ncol = length(newX), byrow = T)
+    colnames(newX) <- bnames
   }
+  newX <- as.matrix(newX)
   nx <- nrow(newX)
 
   if (is.null(newZ)) {
     newZ <- apply(Z, 2, median)
-    newZ <- t(as.matrix(newZ))
-  } else {
-    newZ = as.matrix(newZ)
+    newZ <- matrix(rep(newZ, 1), ncol = length(newZ), byrow = T)
+    colnames(newZ) <- gnames
+    newZ <- as.matrix(newZ)
   }
+  newZ = as.matrix(newZ)
   nz <- nrow(newZ)
-
-
 
   # Create predictions without CIs ---------------------------------------------
   if (CI == F) {
