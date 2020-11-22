@@ -35,21 +35,20 @@
 
       # Update latency coefficients
       if (!is.null(offset)) {
-        coxit <- coxph(survobj ~ X + offset(offset + log(w)),
-                             subset = w != 0, method = "breslow", x = T)
+        coxit <- coxph(survobj ~ X + offset(offset + log(w)), subset = w != 0,
+                       method = "breslow", x = T)
       } else {
         coxit <- coxph(survobj ~ X + offset(log(w)), subset = w != 0,
                        method = "breslow", x = T)
-        browser()
       }
       update_a <- tvsurv(Time, Status, X, beta, w)
       update_s <- update_a$survival
 
       if (!inherits(coxit,"error")){
         update_beta <- coxit$coefficients
-        convergence <- sum(c(update_cureg - gamma, update_beta - beta)^2)
-                       + sum((s - update_s)^2)
-        if (is.infinite(convergence) | is.na(convergence)) stop("EM algorithm failed to converge.")
+        convergence <- sum(c(update_cureg - gamma, update_beta - beta)^2) + sum((s - update_s)^2)
+        if (is.infinite(convergence) | is.na(convergence)
+            ) stop("EM algorithm failed to converge.")
         gamma <- update_cureg
         beta<- update_beta
         s <- update_s
