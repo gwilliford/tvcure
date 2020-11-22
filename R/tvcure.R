@@ -119,8 +119,6 @@ tvcure <- function(formula, cureform, link = "logit",
   Basehaz  <- emfit$Basehaz
   cat("Coefficient estimation complete, estimating variance...\n")
 
-# Fang et al. standard errors
-#varfit <- tvvar(X = X, Z = Z, beta = beta, gamma = gamma, nbeta = nbeta, ngamma = ngamma, Time = Time, Status = Status, Basehaz = Basehaz, nobs = nobs)
 
 # Bootstrap standard errors --------------------------------------------------
 if (var) {
