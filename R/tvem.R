@@ -61,28 +61,6 @@
         i <- i + 1
       }
     }
-    #browser()
-    # idx = w == 0
-    # rn0 = as.numeric(names(Status[idx == T]))
-    # rn1 = names(Status[idx == F])
-    # df = data.frame(X) %>% left_join()
-    #
-    # Xsub = as.data.frame(X) %>% dplyr::filter(idx == T)
-    # Xsub = X[rownames(X) == rn0, ]
-    # rownames(coxit$x)
-    #
-    # v = vector(length = nrow(X))
-    # new = cbind(rn0, 0)
-    # new2 = cbind(rn1, 0)
-    # df = data.frame(n = 1:nrow(X))
-    # df0 = data.frame(n = rn0, Status = 0)
-    # df1 = data.frame(n = rn1, Status = )
-    #
-    # df = merge(df, new)
-    #
-
-    # rn0 = dplyr::row_number(idx[idx == F])
-    # rn1 = dplyr::row_number(idx[idx == T])
 
     em <- list(incidence_fit = incidence_fit, gamma = gamma, beta = beta, latency_fit = coxit,
                Survival = s, Basehaz = basehaz, uncureprob = uncureprob, w = w,
