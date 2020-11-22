@@ -16,84 +16,12 @@ prediction4 <- function(model, variable = NULL, values = NULL, newX = NULL, newZ
                         xlab = "Time", legendtitle = NULL,
                         ylab = "Predicted Survival Probability", internals = F) {
 
-  # Setup -------------------------------------------------------------------
-
-  require(ggplot2)
-  call <- match.call()
-  if (!inherits(model, "tvcure")) stop("Model must be a tvcure object")
-  s0 = as.matrix(model$Survival, ncol = 1)
-  H0 = as.matrix(model$BaseHaz, ncol = 1)
-  nobs = nrow(s0)
-  beta <- model$beta
-  gamma <- model$gamma
-  bnames <- model$bnames
-  gnames <- model$gnames
-  link <- model$link
-  Status <- model$Status
-  Time <- model$Time[order(model$Time)]
-  X <- model$X
-  Z <- model$Z
-  if (is.null(legendtitle)) {
-    legendtitle <- variable
-  }
-  type = match.arg(type)
-  # clstatus <- foreach::getDoParRegistered()
-  # if (foreach::getDoParRegistered() == T) cl <- foreach::getDoSeqName()
-  # # if (foreach::getDoParRegistered() == F)
-  # cl <- foreach::registerDoSEQ()
-  # pb <- txtProgressBar(max = nsims, style = 3)
-  # progress <- function(n) setTxtProgressBar(pb, n)
-  # opts <- list(progress = progress)
 
 
   # Create dataset for predictions -----------------------------------------------------------
-  if (is.null(newX)) {
-    newX <- apply(X, 2, median)
-    newX <- matrix(rep(newX, length(values)), ncol = length(newX), byrow = T)
-    colnames(newX) <- bnames
-    if (variable %in% bnames) newX[, variable] <- values
-  }
-  newX <- as.matrix(newX)
-  nx <- nrow(newX)
 
-  if (is.null(newZ)) {
-    newZ <- apply(Z, 2, median)
-    newZ <- matrix(rep(newZ, length(values)), ncol = length(newZ), byrow = T)
-    colnames(newZ) <- gnames
-    if (variable %in% gnames) newZ[, variable] <- values
-  }
-  newZ <- as.matrix(newZ)
-  nz <- nrow(newZ)
 
-  vcovb <- model$vcovb
-  vcovg <- model$vcovg
-
-  # Create predictions ------------------------------------------------------------------
-  # Without CIs
-  if (CI == F) {
-    if (link == "logit") {
-      uncureprob <- exp(gamma %*% t(newZ)) / (1 + exp(gamma %*% t(newZ)))
-    }
-    if (link == "probit") {
-      uncureprob <- pnorm(gamma %*% t(newZ))
-    }
-
-    suncure = array(0, dim = c(nobs, nx))
-    ebetaX = exp(model$beta %*% t(newX))
-    for (i in 1:nx) {
-      suncure[, i] = s0^ebetaX[i]
-    }
-
-    spop = array(0, dim = c(nobs, nrow(newX)))
-    for (i in 1:nobs) {
-      for (j in 1:nrow(newX)) {
-        spop[i, j] = uncureprob[j] * suncure[i, j] + (1 - uncureprob[j])
-      }
-    }
-    s0      <- s0[order(s0, decreasing = T)]
-    suncure <- suncure[order(suncure[, 1], decreasing = T), ]
-    spop    <- spop[order(spop[, 1], decreasing = T), ]
-  } else { ## With CIs =========================================================================
+ else { ## With CIs =========================================================================
 
     Coef_smplb <- MASS::mvrnorm(n = nsims, mu = beta, Sigma = vcovb)
     Coef_smplg <- MASS::mvrnorm(n = nsims, mu = gamma, Sigma =  vcovg)
@@ -123,14 +51,6 @@ prediction4 <- function(model, variable = NULL, values = NULL, newX = NULL, newZ
     suncuresims <- array(NA, dim = c(nsims, nobs, nrow(newX)))
     spopsims    <- array(NA, dim = c(nsims, nobs, nrow(newX)))
 
-    # if (type == "suncure" | type == "spop") {
-    #   foreach (i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %:%
-    #     foreach (k = 1:nrow(newX)) %dopar% {
-    #       suncuresims[i, , k] <- s0sim[i, ]^ebetaXsim[i, k]
-    #       spopsims[i, , k] <- uncureprobsims[i, k] *
-    #         suncuresims[i, , k] + (1 - uncureprobsims[i, k])
-    #     }
-    # }
     if (type == "suncure" | type == "spop") {
       for (i in 1:nsims) {
         for (k in 1:nrow(newX)) {
@@ -149,182 +69,21 @@ prediction4 <- function(model, variable = NULL, values = NULL, newX = NULL, newZ
     spoplo      <- matrix(nrow = nobs, ncol = dim(newZ))
     spophi      <- matrix(nrow = nobs, ncol = dim(newZ))
 
-    # foreach(i = 1:nsims, .options.snow = opts, .errorhandling = 'remove') %dopar% {
-    #   #for (k in 1:nrow(newX)) {
-    #   if (type == "suncure") {
-    #     suncuremean[, i] <- sort(apply(suncuresims[, , i], 2, mean), decreasing = T)
-    #     suncurelo[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.05), decreasing = T)
-    #     suncurehi[, i]   <- sort(apply(suncuresims[, , i], 2, quantile, 0.95), decreasing = T)
-    #   }
-    #   if (type == "spop") {
-    #     spopmean[, i]    <- sort(apply(spopsims[, , i], 2, mean), decreasing = T)
-    #     spoplo[, i]      <- sort(apply(spopsims[, , i], 2, quantile, 0.05), decreasing = T)
-    #     spophi[, i]      <- sort(apply(spopsims[, , i], 2, quantile, 0.95), decreasing = T)
-    #   }
-    # }
-    # for(i in 1:nsims) {
-      for (k in 1:nrow(newX)) {
-        if (type == "suncure") {
-          suncuremean[, k] <- sort(apply(suncuresims[, , k], 2, mean), decreasing = T)
-          suncurelo[, k]   <- sort(apply(suncuresims[, , k], 2, quantile, 0.05), decreasing = T)
-          suncurehi[, k]   <- sort(apply(suncuresims[, , k], 2, quantile, 0.95), decreasing = T)
-        }
-        if (type == "spop") {
-          spopmean[, k]    <- sort(apply(spopsims[, , k], 2, mean), decreasing = T)
-          spoplo[, k]      <- sort(apply(spopsims[, , k], 2, quantile, 0.05), decreasing = T)
-          spophi[, k]      <- sort(apply(spopsims[, , k], 2, quantile, 0.95), decreasing = T)
-        }
+    for (k in 1:nrow(newX)) {
+      if (type == "suncure") {
+        suncuremean[, k] <- sort(apply(suncuresims[, , k], 2, mean), decreasing = T)
+        suncurelo[, k]   <- sort(apply(suncuresims[, , k], 2, quantile, 0.05), decreasing = T)
+        suncurehi[, k]   <- sort(apply(suncuresims[, , k], 2, quantile, 0.95), decreasing = T)
+      }
+      if (type == "spop") {
+        spopmean[, k]    <- sort(apply(spopsims[, , k], 2, mean), decreasing = T)
+        spoplo[, k]      <- sort(apply(spopsims[, , k], 2, quantile, 0.05), decreasing = T)
+        spophi[, k]      <- sort(apply(spopsims[, , k], 2, quantile, 0.95), decreasing = T)
+      }
     }
-
   } # close CI = T else loop
-browser()
-  # Plot Setup --------------------------------------------------------------
-  if (bw == T) {
-    splot <- ggplot() + theme_bw()
-  } else {
-    splot <- ggplot() + theme(panel.border = element_rect(colour = "black", fill = NA))
-  }
-
-  # Uncureprob Plot ---------------------------------------------------------
-  if (type == "uncureprob") {
-    if (CI == F) {
-      splot <- ggplot(mapping = aes(x = values, y = as.vector(uncureprob))) + geom_point()
-    } else {
-      splot <- ggplot(mapping = aes(x = values, y = as.vector(uncuremean))) + geom_point() +
-        geom_errorbar(width = (length(values)/10), mapping = aes(x = values, ymin = uncurelo, ymax = uncurehi), colour = "black")
-    }
-    splot <- splot + scale_x_continuous(breaks = values) + ylab("Probability of Failure") +
-      xlab(variable) + theme(legend.position = "none") + theme_bw()
-  }
-
-  # Basesurv Plot -----------------------------------------------------------
-
-  if (type == "basesurv") {
-    if (CI == F) {
-      splot <- splot + geom_line(mapping = aes(Time, s0))
-    } else {
-      splot <- splot + geom_line(mapping = aes(Time, s0mean)) +
-        geom_ribbon(aes(x = Time, ymin = s0lo, ymax = s0hi), alpha=0.2)
-    }
-    splot = splot + ylab(ylab) + xlab(variable)# +
-  }
-
-  # Suncure Plot ------------------------------------------------------------
-  if (type == "suncure") {
-
-    # Structure data
-    if (CI == F) {
-      scm  <- split(suncure, rep(1:ncol(suncure), each = nrow(suncure)))
-      for (i in 1:length(scm)) {
-        scm[[i]] <- cbind(scm[[i]], Time, num = i)
-      }
-      scf <- as.data.frame(do.call(rbind, scm))
-      colnames(scf) <- c("scm", "Time", "num")
-    } else {
-      scm  <- split(suncuremean, rep(1:ncol(suncuremean), each = nrow(suncuremean)))
-      sclo <- split(suncurelo, rep(1:ncol(suncurelo), each = nrow(suncurelo)))
-      schi <- split(suncurehi, rep(1:ncol(suncurehi), each = nrow(suncurehi)))
-      for (i in 1:length(scm)) {
-        scm[[i]] <- cbind(scm[[i]], Time, num = i, sclo[[i]], schi[[i]])
-      }
-      scf <- as.data.frame(do.call(rbind, scm))
-      colnames(scf) <- c("scm", "Time", "num", "sclo", "schi")
-    }
-
-    # Plot line
-    if (bw == F) {
-      splot = splot + geom_line(scf, mapping = aes(Time, scm, col = as.factor(num),
-                                                   linetype = as.factor(num))) +
-        labs(linetype = legendtitle, col = legendtitle)
-    } else {
-      splot = splot + geom_line(scf, mapping = aes(Time, scm, linetype = as.factor(num))) +
-        labs(linetype = legendtitle)
-    }
-
-    # Add CIs
-    if (CI == T) {
-      if (bw == F) {
-        splot = splot + geom_ribbon(scf, mapping = aes(x = Time, ymin = sclo, ymax = schi, col = as.factor(num),
-                                                       fill = as.factor(num), linetype = as.factor(num)), alpha=0.2) +
-          labs(fill = legendtitle, linetype = legendtitle, col = legendtitle)
-      } else {
-        splot = splot + geom_ribbon(scf, mapping = aes(x = Time, ymin = sclo, ymax = schi,
-                                                       linetype = as.factor(num)), alpha=0.2) +
-          labs(linetype = legendtitle)
-      }
-    }
-    splot = splot + ylab(ylab) + xlab(xlab)
-  }
-
-  # Spop Plot ---------------------------------------------------------------
-  if (type == "spop") {
-    vals <- round(values, 1)
-    # Structure data
-    if (CI == F) {
-      spm  <- split(spop, rep(1:ncol(spop), each = nrow(spop)))
-      for (i in 1:length(spm)) {
-        spm[[i]] <- cbind(spm[[i]], Time, num = i)
-      }
-      spf <- as.data.frame(do.call(rbind, spm))
-      colnames(spf) <- c("spm", "Time", "num")
-    } else {
-      spm  <- split(spopmean, rep(1:ncol(spopmean), each = nrow(spopmean))) # two matrices of simulated spops
-      splo <- split(spoplo, rep(1:ncol(spoplo), each = nrow(spoplo)))
-      sphi <- split(spophi, rep(1:ncol(spophi), each = nrow(spophi)))
-      for (i in 1:length(spm)) {
-        spm[[i]] <- cbind(spm[[i]], Time, num = i, splo[[i]], sphi[[i]])
-      }
-      spf <- as.data.frame(do.call(rbind, spm))
-      colnames(spf) <- c("spm", "Time", "num", "splo", "sphi")
-    }
-
-    # Plot line
-    if (bw == F) {
-      splot = splot +
-        geom_line(spf, mapping = aes(Time, spm, col = as.factor(num), linetype = as.factor(num))) +
-        labs(linetype = legendtitle, col = legendtitle, fill = legendtitle)
-    } else {
-      splot = splot +
-        geom_line(spf, mapping = aes(Time, spm, linetype = as.factor(num))) +
-        labs(linetype = legendtitle)
-    }
-
-    splot + scale_fill_discrete(labels = vals)
-
-    # Add CIs
-    if (CI == T) {
-      if (bw == F) {
-        splot = splot + geom_ribbon(spf, mapping = aes(x = Time, ymin = splo, ymax = sphi,
-                                                       col = as.factor(num),
-                                                       fill = as.factor(num),
-                                                       linetype = as.factor(num)), alpha = 0.2)# +
-          labs(fill = legendtitle, linetype = legendtitle, col = legendtitle)
-      } else {
-        splot = splot + geom_ribbon(spf, mapping = aes(x = Time, ymin = splo, ymax = sphi,
-                                                       linetype = as.factor(num)), alpha = 0.2) +
-          labs(linetype = legendtitle)
-      }
-    }
-    splot = splot + ylab(ylab) + xlab(xlab) +
-      scale_linetype_discrete(labels = vals)  +
-      scale_color_discrete(labels = vals) +
-      scale_fill_discrete(labels = vals)
-
-  }
 
   # Output ------------------------------------------------------------------
-  if (internals == F) {
-    return(splot)
-  } else {
-    if (CI == F) {
-      structure(list(uncureprob = uncureprob,
-                     s0 = s0, suncure = suncure, spop = spop,
-                     Survival = model$Survival,
-                     link = link, Time = Time, CI = CI,
-                     newX = newX, newZ = newZ, variable = variable, splot = splot),
-                class = "predicttvcure")
-
-    } else {
       structure(list(uncuremean = uncuremean, uncurelo = uncurelo, uncurehi = uncurehi,
                      s0mean = s0mean, s0lo = s0lo, s0hi = s0hi,
                      suncuremean, suncurelo, suncurehi,
