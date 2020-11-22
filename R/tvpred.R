@@ -1,27 +1,27 @@
-tvpred <- function(model, newX = NULL, newZ = NULL,
+tvpred = function(model, newX = NULL, newZ = NULL,
                         type = c("basesurv", "spop", "suncure", "uncureprob"),
                         CI = T, nsims = 1000) {
 
   # Setup -------------------------------------------------------------------
 
-  call <- match.call()
+  call = match.call()
   type = match.arg(type)
 
   # Parameters
-  beta <- model$beta
-  gamma <- model$gamma
-  vcovb <- model$vcovb
-  vcovg <- model$vcovg
+  beta = model$beta
+  gamma = model$gamma
+  vcovb = model$vcovb
+  vcovg = model$vcovg
 
   # Varnames
-  bnames <- model$bnames
-  gnames <- model$gnames
+  bnames = model$bnames
+  gnames = model$gnames
 
   # Data
-  Status <- model$Status
-  Time   <- model$Time[order(model$Time)]
-  X <- model$X
-  Z <- model$Z
+  Status = model$Status
+  Time   = model$Time[order(model$Time)]
+  X = model$X
+  Z = model$Z
 
   # survival and hazard estimates
   s0 = as.matrix(model$Survival, ncol = 1)
@@ -31,7 +31,7 @@ tvpred <- function(model, newX = NULL, newZ = NULL,
   nobs = nrow(s0)
 
   # Options
-  link <- model$link
+  link = model$link
 
 
 
@@ -47,23 +47,21 @@ tvpred <- function(model, newX = NULL, newZ = NULL,
   # Format data ----------------------------------------------------------------
 
   if (is.null(newX)) {
-    newX <- apply(X, 2, median)
-    newX <- matrix(rep(newX, 1), ncol = length(newX), byrow = T)
-    colnames(newX) <- bnames
+    newX = apply(X, 2, median)
+    newX = matrix(rep(newX, 1), ncol = length(newX), byrow = T)
+    colnames(newX) = bnames
   }
-  newX <- as.matrix(newX)
-  nx <- nrow(newX)
+  newX = as.matrix(newX)
+  nx = nrow(newX)
 
   if (is.null(newZ)) {
-    newZ <- apply(Z, 2, median)
-    newZ <- matrix(rep(newZ, 1), ncol = length(newZ), byrow = T)
-    colnames(newZ) <- gnames
-    newZ <- as.matrix(newZ)
+    newZ = apply(Z, 2, median)
+    newZ = matrix(rep(newZ, 1), ncol = length(newZ), byrow = T)
+    colnames(newZ) = gnames
+    newZ = as.matrix(newZ)
   }
   newZ = as.matrix(newZ)
-  nz <- nrow(newZ)
-
-
+  nz = nrow(newZ)
 
   # Create predictions without CIs ---------------------------------------------
   if (CI == F) {
@@ -73,8 +71,8 @@ tvpred <- function(model, newX = NULL, newZ = NULL,
 
     if (type != "basesurv") {
       # Uncureprob
-      if (link == "logit")  uncureprob <- exp(gamma %*% t(newZ)) / (1 + exp(gamma %*% t(newZ)))
-      if (link == "probit") uncureprob <- pnorm(gamma %*% t(newZ))
+      if (link == "logit")  uncureprob = exp(gamma %*% t(newZ)) / (1 + exp(gamma %*% t(newZ)))
+      if (link == "probit") uncureprob = pnorm(gamma %*% t(newZ))
 
       # Suncure
       suncure = array(0, dim = c(nobs, nx))
@@ -82,7 +80,7 @@ tvpred <- function(model, newX = NULL, newZ = NULL,
       for (i in 1:nx) {
         suncure[, i] = s0^ebetaX[i]
       }
-      suncure <- suncure[order(suncure[, 1], decreasing = T), ]
+      suncure = suncure[order(suncure[, 1], decreasing = T), ]
 
       # Spop
       spop = array(0, dim = c(nobs, nrow(newX)))
@@ -91,7 +89,7 @@ tvpred <- function(model, newX = NULL, newZ = NULL,
           spop[i, j] = uncureprob[j] * suncure[i, j] + (1 - uncureprob[j])
         }
       }
-      spop    <- spop[order(spop[, 1], decreasing = T), ]
+      spop    = spop[order(spop[, 1], decreasing = T), ]
     }
   }
 
@@ -101,25 +99,30 @@ tvpred <- function(model, newX = NULL, newZ = NULL,
   if (CI == T) {
 
     # Simulate coefficients
-    Coef_smplb <- MASS::mvrnorm(n = nsims, mu = beta, Sigma = vcovb)
-    Coef_smplg <- MASS::mvrnorm(n = nsims, mu = gamma, Sigma =  vcovg)
+    Coef_smplb = MASS::mvrnorm(n = nsims, mu = beta, Sigma = vcovb)
+    Coef_smplg = MASS::mvrnorm(n = nsims, mu = gamma, Sigma =  vcovg)
 
     # obtain simulated values of baseline hazard
-    s0sim <- matrix(nrow = nsims, ncol = nobs)
+    s0sim = matrix(nrow = nsims, ncol = nobs)
     for (j in 1:nsims) {
-      s0sim[j, ] <- as.vector(s0)^exp(Coef_smplb[j, ] %*% t(model$X))
+      s0sim[j, ] = as.vector(s0)^exp(Coef_smplb[j, ] %*% t(model$X))
     }
-    s0mean <- sort(apply(s0sim, 2, mean), decreasing = T)
-    s0lo   <- sort(apply(s0sim, 2, quantile, 0.05), decreasing = T)
-    s0hi   <- sort(apply(s0sim, 2, quantile, 0.95), decreasing = T)
+    s0mean = sort(apply(s0sim, 2, mean), decreasing = T)
+    s0lo   = sort(apply(s0sim, 2, quantile, 0.05), decreasing = T)
+    s0hi   = sort(apply(s0sim, 2, quantile, 0.95), decreasing = T)
 
+    browser()
     if (type != "basesurv") {
+
+      # # turn newX and Z into row vector if only one observation
+      # if (ncol(newX) == 1) newX = t(newX)
+      # if (ncol(newZ) == 1) newZ = t(newZ)
 
       # obtain simulated values of uncureprob
 
       if (link == "logit")
-        uncureprobsims <- exp(Coef_smplg %*% newZ) / (1 + exp(Coef_smplg %*% newZ))
-      if (link == "probit") uncureprobsims <- pnorm(Coef_smplg %*% t(newZ))
+        uncureprobsims = exp(Coef_smplg %*% t(newZ)) / (1 + exp(Coef_smplg %*% t(newZ)))
+      if (link == "probit") uncureprobsims = pnorm(Coef_smplg %*% t(newZ))
 
       uncuremean = apply(uncureprobsims, 2, mean)
       uncurelo   = apply(uncureprobsims, 2, quantile, 0.05)
@@ -128,33 +131,31 @@ tvpred <- function(model, newX = NULL, newZ = NULL,
       # Obtain simulated values of suncure and spop
 
       if (type == "suncure" | type == "spop") {
-        ebetaXsim <- exp(Coef_smplb %*% t(newX))
-        suncuresims <- array(NA, dim = c(nsims, nobs, nrow(newX)))
-        spopsims    <- array(NA, dim = c(nsims, nobs, nrow(newX)))
+        ebetaXsim   = exp(Coef_smplb %*% t(newX))
+        suncuresims = array(NA, dim = c(nsims, nobs, nrow(newX)))
+        spopsims    = array(NA, dim = c(nsims, nobs, nrow(newX)))
 
-        if (type == "suncure" | type == "spop") {
-          for (i in 1:nsims) {
-            for (k in 1:nrow(newX)) {
-              suncuresims[i, , k] <- s0sim[i, ]^ebetaXsim[i, k]
-              spopsims[i, , k] <- uncureprobsims[i, k] * suncuresims[i, , k] + (1 - uncureprobsims[i, k])
-            }
+        for (i in 1:nsims) {
+          for (k in 1:nrow(newX)) {
+            suncuresims[i, , k] = s0sim[i, ]^ebetaXsim[i, k]
+            spopsims[i, , k] = uncureprobsims[i, k] * suncuresims[i, , k] + (1 - uncureprobsims[i, k])
           }
         }
 
-        suncuremean <- matrix(nrow = nobs, ncol = dim(newZ))
-        suncurelo   <- matrix(nrow = nobs, ncol = dim(newZ))
-        suncurehi   <- matrix(nrow = nobs, ncol = dim(newZ))
-        spopmean    <- matrix(nrow = nobs, ncol = dim(newZ))
-        spoplo      <- matrix(nrow = nobs, ncol = dim(newZ))
-        spophi      <- matrix(nrow = nobs, ncol = dim(newZ))
+        suncuremean = matrix(nrow = nobs, ncol = dim(newZ))
+        suncurelo   = matrix(nrow = nobs, ncol = dim(newZ))
+        suncurehi   = matrix(nrow = nobs, ncol = dim(newZ))
+        spopmean    = matrix(nrow = nobs, ncol = dim(newZ))
+        spoplo      = matrix(nrow = nobs, ncol = dim(newZ))
+        spophi      = matrix(nrow = nobs, ncol = dim(newZ))
 
         for (k in 1:nrow(newX)) {
-            suncuremean[, k] <- sort(apply(suncuresims[, , k], 2, mean), decreasing = T)
-            suncurelo[, k]   <- sort(apply(suncuresims[, , k], 2, quantile, 0.05), decreasing = T)
-            suncurehi[, k]   <- sort(apply(suncuresims[, , k], 2, quantile, 0.95), decreasing = T)
-            spopmean[, k]    <- sort(apply(spopsims[, , k], 2, mean), decreasing = T)
-            spoplo[, k]      <- sort(apply(spopsims[, , k], 2, quantile, 0.05), decreasing = T)
-            spophi[, k]      <- sort(apply(spopsims[, , k], 2, quantile, 0.95), decreasing = T)
+            suncuremean[, k] = sort(apply(suncuresims[, , k], 2, mean), decreasing = T)
+            suncurelo[, k]   = sort(apply(suncuresims[, , k], 2, quantile, 0.05), decreasing = T)
+            suncurehi[, k]   = sort(apply(suncuresims[, , k], 2, quantile, 0.95), decreasing = T)
+            spopmean[, k]    = sort(apply(spopsims[, , k], 2, mean), decreasing = T)
+            spoplo[, k]      = sort(apply(spopsims[, , k], 2, quantile, 0.05), decreasing = T)
+            spophi[, k]      = sort(apply(spopsims[, , k], 2, quantile, 0.95), decreasing = T)
         }
       }
     }
@@ -164,22 +165,29 @@ tvpred <- function(model, newX = NULL, newZ = NULL,
 
   # Output ---------------------------------------------------------------------
   if (CI == F) {
-    if (type == "basesurv")   return(structure(list(basesurv = s0, type = type), class = "tvpred"))
-    if (type == "suncure")    return(structure(list(suncure = suncure, type = type), class = "tvpred"))
-    if (type == "spop")       return(structure(list(spop = spop, type = type), class = "tvpred"))
-    if (type == "uncureprob") return(structure(list(uncureprob = uncureprob, type = type), class = "tvpred"))
+    if (type == "basesurv")   return(structure(list(s0 = s0, CI = CI, type = type),
+                                               class = "tvpred"))
+    if (type == "suncure")    return(structure(list(suncure = suncure, Time = Time, CI = CI, type = type),
+                                               class = "tvpred"))
+    if (type == "spop")       return(structure(list(spop = spop, Time = Time, CI = CI, type = type),
+                                               class = "tvpred"))
+    if (type == "uncureprob") return(structure(list(uncureprob = uncureprob, Time = Time, CI = CI, type = type),
+                                               class = "tvpred"))
   } else {
-    if (type == "basesurv")   return(structure(list(s0mean = s0mean, s0lo = s0lo, s0hi = s0hi,
-                                                  Time = Time, CI = CI, type = type),
-                                             class = "tvcure"))
-    if (type == "suncure")    return(structure(list(suncuremean = suncuremean,
-                                                    suncurelo = suncurelo, suncurehi = suncurehi,
-                                                    Time = Time, CI = CI, type = type),
-                                             class = "tvcure"))
-    if (type == "spop")       return(structure(list(spopmean = spopmean,
-                                                    spoplo = spoplo, spophi = spophi,
-                                                    Time = Time, CI = CI, type = type),
-                                             class = "tvcure"))
+    if (type == "basesurv")   return(structure(list(
+      s0mean = s0mean, s0lo = s0lo, s0hi = s0hi,
+      CI = CI, type = type),
+      class = "tvcure"))
+    if (type == "suncure")    return(structure(list(
+      suncuremean = suncuremean,
+      suncurelo = suncurelo, suncurehi = suncurehi,
+      Time = Time, CI = CI, type = type),
+      class = "tvcure"))
+    if (type == "spop")       return(structure(list(
+      spopmean = spopmean,
+      spoplo = spoplo, spophi = spophi,
+      Time = Time, CI = CI, type = type),
+      class = "tvcure"))
     if (type == "uncureprob") return(structure(list(
       uncuremean = uncuremean, uncurelo = uncurelo, uncurehi = uncurehi,
       Time = Time, CI = CI, type = type),
