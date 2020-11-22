@@ -7,8 +7,6 @@ tvpred <- function(model, newX = NULL, newZ = NULL,
   call <- match.call()
   type = match.arg(type)
 
-  if (!inherits(model, "tvcure")) stop("Model must be a tvcure object")
-
   # Parameters
   beta <- model$beta
   gamma <- model$gamma
@@ -24,14 +22,44 @@ tvpred <- function(model, newX = NULL, newZ = NULL,
   Time   <- model$Time[order(model$Time)]
   X <- model$X
   Z <- model$Z
-  nobs = nrow(s0)
 
+  browser()
   # survival and hazard estimates
   s0 = as.matrix(model$Survival, ncol = 1)
   H0 = as.matrix(model$BaseHaz, ncol = 1)
 
+  # Summary
+  nobs = nrow(s0)
+
   # Options
   link <- model$link
+
+
+
+  # Error messages -------------------------------------------------------------
+  if (!inherits(model, "tvcure")) stop("Model must be a tvcure object")
+
+
+
+  # Format data ----------------------------------------------------------------
+  if (is.null(newX)) {
+    newX <- apply(X, 2, median)
+    newX <- matrix(rep(newX, length(values)), ncol = length(newX), byrow = T)
+    colnames(newX) <- bnames
+    if (variable %in% bnames) newX[, variable] <- values
+  }
+  newX <- as.matrix(newX)
+  nx <- nrow(newX)
+
+  if (is.null(newZ)) {
+    newZ <- apply(Z, 2, median)
+    newZ <- matrix(rep(newZ, length(values)), ncol = length(newZ), byrow = T)
+    colnames(newZ) <- gnames
+    if (variable %in% gnames) newZ[, variable] <- values
+  }
+  newZ <- as.matrix(newZ)
+  nz <- nrow(newZ)
+
 
 
   # Create predictions without CIs ---------------------------------------------
@@ -65,9 +93,9 @@ tvpred <- function(model, newX = NULL, newZ = NULL,
 
   # Output ------------------------------------------------------------------
   if (CI == F) {
-    if (type = "basesurv")   structure(list(basesurv = s0), class = "tvpred")
-    if (type = "suncure")    structure(list(suncure = s0), class = "tvpred")
-    if (type = "spop")       structure(list(spop = s0), class = "tvpred")
-    if (type = "uncureprob") structure(list(uncureprob = s0), class = "tvpred")
+    if (type == "basesurv")   structure(list(basesurv = s0), class = "tvpred")
+    if (type == "suncure")    structure(list(suncure = suncure), class = "tvpred")
+    if (type == "spop")       structure(list(spop = spop), class = "tvpred")
+    if (type == "uncureprob") structure(list(uncureprob = uncureprob), class = "tvpred")
   }
 }
