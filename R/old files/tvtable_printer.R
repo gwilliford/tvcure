@@ -5,7 +5,7 @@ footnote <- function(x) {
   return(fn)
 }
 
-tvtable_xtable <- function(tab, ...) {
+tvtable_xtable <- function(tab, colnames, ...) {
   require(xtable)
   t <- as.data.frame(tab)
   # if (!is.null(footnote)) {
@@ -13,15 +13,15 @@ tvtable_xtable <- function(tab, ...) {
   #   fn$pos[[1]] <- c(nrow(t))
   #   fn$command = paste("\\hline \\footnotesize{", tab$footnote, "}\n", sep = " ")
   # }
-  tvxtab <- xtable(t, ...)
+
+  # Colnames
   # tvxtab <- list(tvxtab = tvxtab, fn = fn)
 }
 printer <- function(x, ...) {
-  xtable::print.xtable(x,
+  xtable::print.xtable(x, include.colnames = F,
                        booktabs = T,
                        sanitize.text.function = identity,
                        include.rownames = F,
-                       include.colnames = F,
-                       # add.to.row = x$fn,
+                       add.to.row = x$fn,
                        hline.after = c(-1, 2, nrow(x) - 2), ...)
 }

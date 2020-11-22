@@ -37,6 +37,9 @@ prediction4 <- function(model, variable = NULL, values = NULL, newX = NULL, newZ
     legendtitle <- variable
   }
   type = match.arg(type)
+
+  if (!is.null(values)) {vals <- round(values, 1)}
+
   # clstatus <- foreach::getDoParRegistered()
   # if (foreach::getDoParRegistered() == T) cl <- foreach::getDoSeqName()
   # # if (foreach::getDoParRegistered() == F)
@@ -119,7 +122,7 @@ prediction4 <- function(model, variable = NULL, values = NULL, newX = NULL, newZ
     s0hi   <- sort(apply(s0sim, 2, quantile, 0.95), decreasing = T)
 
     # Obtain simulated values of suncure and spop
-    ebetaXsim <- exp(Coef_smplb %*% t(newX))
+    ebetaXsim <- exp(Coef_smplb %*% t(newX)) #mark
     suncuresims <- array(NA, dim = c(nsims, nobs, nrow(newX)))
     spopsims    <- array(NA, dim = c(nsims, nobs, nrow(newX)))
 
@@ -140,7 +143,6 @@ prediction4 <- function(model, variable = NULL, values = NULL, newX = NULL, newZ
         }
       }
     }
-
 
     suncuremean <- matrix(nrow = nobs, ncol = dim(newZ))
     suncurelo   <- matrix(nrow = nobs, ncol = dim(newZ))
@@ -174,18 +176,18 @@ prediction4 <- function(model, variable = NULL, values = NULL, newX = NULL, newZ
           spoplo[, k]      <- sort(apply(spopsims[, , k], 2, quantile, 0.05), decreasing = T)
           spophi[, k]      <- sort(apply(spopsims[, , k], 2, quantile, 0.95), decreasing = T)
         }
-    }
+      }
 
   } # close CI = T else loop
-browser()
-  # Plot Setup --------------------------------------------------------------
+
+# Plot Setup --------------------------------------------------------------
   if (bw == T) {
     splot <- ggplot() + theme_bw()
   } else {
     splot <- ggplot() + theme(panel.border = element_rect(colour = "black", fill = NA))
   }
 
-  # Uncureprob Plot ---------------------------------------------------------
+# Uncureprob Plot ---------------------------------------------------------
   if (type == "uncureprob") {
     if (CI == F) {
       splot <- ggplot(mapping = aes(x = values, y = as.vector(uncureprob))) + geom_point()
@@ -197,7 +199,7 @@ browser()
       xlab(variable) + theme(legend.position = "none") + theme_bw()
   }
 
-  # Basesurv Plot -----------------------------------------------------------
+# Basesurv Plot -----------------------------------------------------------
 
   if (type == "basesurv") {
     if (CI == F) {
@@ -206,10 +208,10 @@ browser()
       splot <- splot + geom_line(mapping = aes(Time, s0mean)) +
         geom_ribbon(aes(x = Time, ymin = s0lo, ymax = s0hi), alpha=0.2)
     }
-    splot = splot + ylab(ylab) + xlab(variable)# +
+    splot = splot + ylab("Probability of Survival") + xlab("Time in years")# +
   }
 
-  # Suncure Plot ------------------------------------------------------------
+# Suncure Plot ------------------------------------------------------------
   if (type == "suncure") {
 
     # Structure data
@@ -256,9 +258,9 @@ browser()
     splot = splot + ylab(ylab) + xlab(xlab)
   }
 
-  # Spop Plot ---------------------------------------------------------------
+# Spop Plot ---------------------------------------------------------------
   if (type == "spop") {
-    vals <- round(values, 1)
+
     # Structure data
     if (CI == F) {
       spm  <- split(spop, rep(1:ncol(spop), each = nrow(spop)))
@@ -278,39 +280,39 @@ browser()
       colnames(spf) <- c("spm", "Time", "num", "splo", "sphi")
     }
 
-    # Plot line
-    if (bw == F) {
-      splot = splot +
-        geom_line(spf, mapping = aes(Time, spm, col = as.factor(num), linetype = as.factor(num))) +
-        labs(linetype = legendtitle, col = legendtitle, fill = legendtitle)
-    } else {
-      splot = splot +
-        geom_line(spf, mapping = aes(Time, spm, linetype = as.factor(num))) +
-        labs(linetype = legendtitle)
-    }
-
-    splot + scale_fill_discrete(labels = vals)
-
-    # Add CIs
-    if (CI == T) {
+      # Plot line
       if (bw == F) {
-        splot = splot + geom_ribbon(spf, mapping = aes(x = Time, ymin = splo, ymax = sphi,
-                                                       col = as.factor(num),
-                                                       fill = as.factor(num),
-                                                       linetype = as.factor(num)), alpha = 0.2)# +
-          labs(fill = legendtitle, linetype = legendtitle, col = legendtitle)
+        splot = splot +
+          geom_line(spf, mapping = aes(Time, spm, col = as.factor(num), linetype = as.factor(num))) +
+          labs(linetype = legendtitle, col = legendtitle, fill = legendtitle)
       } else {
-        splot = splot + geom_ribbon(spf, mapping = aes(x = Time, ymin = splo, ymax = sphi,
-                                                       linetype = as.factor(num)), alpha = 0.2) +
+        splot = splot +
+          geom_line(spf, mapping = aes(Time, spm, linetype = as.factor(num))) +
           labs(linetype = legendtitle)
       }
-    }
-    splot = splot + ylab(ylab) + xlab(xlab) +
-      scale_linetype_discrete(labels = vals)  +
-      scale_color_discrete(labels = vals) +
-      scale_fill_discrete(labels = vals)
 
-  }
+      splot + scale_fill_discrete(labels = vals)
+
+      # Add CIs
+      if (CI == T) {
+        if (bw == F) {
+          splot = splot + geom_ribbon(spf, mapping = aes(x = Time, ymin = splo, ymax = sphi,
+                                                         col = as.factor(num),
+                                                         fill = as.factor(num),
+                                                         linetype = as.factor(num)), alpha = 0.2)# +
+            labs(fill = legendtitle, linetype = legendtitle, col = legendtitle)
+        } else {
+          splot = splot + geom_ribbon(spf, mapping = aes(x = Time, ymin = splo, ymax = sphi,
+                                                         linetype = as.factor(num)), alpha = 0.2) +
+            labs(linetype = legendtitle)
+        }
+      }
+      splot = splot + ylab(ylab) + xlab(xlab) +
+        scale_linetype_discrete(labels = vals)  +
+        scale_color_discrete(labels = vals) +
+        scale_fill_discrete(labels = vals)
+
+    }
 
   # Output ------------------------------------------------------------------
   if (internals == F) {
