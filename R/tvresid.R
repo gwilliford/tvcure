@@ -21,34 +21,7 @@ residuals.tvcure = function (model, type = c("WLCH", "Cox-Snell", "M-Cox-Snell",
   Z = model$Z[, -1]
   gamma = model$gamma[-1]
 
-  if (type == "WLCH") {
-    if (class(model$uncufit) != "surv.survreg")
-      stop("WLCH residuals is only defined for parametric models")
-    fit = model$uncufit$fit
-    n = nrow(data)
-    hazard = outer(ttime, 1:n, FUN = function(x, y) {
-      dval = dsurvreg(x, mean = unculp[y], scale = fit$scale,
-                      dist = fit$dist, parms = fit$parms)
-      sval = 1 - psurvreg(x, mean = unculp[y], scale = fit$scale,
-                          dist = fit$dist, parms = fit$parms)
-      uncureprob[y] * dval/(uncureprob[y] * sval + 1 -
-                              uncureprob[y])
-    })
-    etime = NULL
-    val = NULL
-    XZ = cbind(X[, -1, drop = F], Z)
-    for (i in 1:n) {
-      if (cens[i] == 1) {
-        tt = ttime[i]
-        etime = c(etime, tt)
-        rset = ttime >= tt
-        hrset = hazard[i, rset]
-        val = rbind(val, XZ[i, , drop = F] - colSums(sweep(XZ[rset,
-                                                              , drop = F], 1, hrset, FUN = "*"))/sum(hrset))
-      }
-    }
-    list(eventtime = etime, residuals = val)
-  }
+
   else if (type == "Cox-Snell") {
     residuals = -log(uncureprob * model$survprob + 1 - uncureprob)
     resid.uncure = -log(model$survprob)
