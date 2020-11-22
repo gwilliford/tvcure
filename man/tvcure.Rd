@@ -4,10 +4,30 @@
 \alias{tvcure}
 \title{Estimate cure models.}
 \usage{
-tvcure(formula, cureform, offset = NULL, model = c("ph", "aft"), data,
-  na.action = na.omit, link = "logit", var = T, firthlogit = F,
-  firthcox = FALSE, emmax = 50, eps = 1e-07, nboot = 100,
-  parallel = T)
+tvcure(
+  formula,
+  cureform,
+  link = "logit",
+  data,
+  na.action = na.omit,
+  offset = NULL,
+  subset = NULL,
+  var = T,
+  nboot = 100,
+  parallel = T,
+  brglm = F,
+  emmax = 1000,
+  eps = 1e-07
+)
+}
+\arguments{
+\item{var}{If}
+
+\item{nboot}{Specifies the number of bootstrap samples to draw.}
+
+\item{parallel}{If true, bootstraps will be run in parallel. A progress bar displaying the number of completed boostraps will be displayed. This option requires the user to set up a \link{snow} object and register it using the \link{doSNOW} package (see example below).}
+
+\item{emmax}{Specifies the maximum number of iterations for the EM algorithm.}
 }
 \description{
 Estimate cure models.
