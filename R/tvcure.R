@@ -12,7 +12,7 @@
 #' @param eps
 #' @param nboot Specifies the number of bootstrap samples to draw.
 #' @param parallel If true, bootstraps will be run in parallel. A progress bar displaying the number of completed boostraps will be displayed. This option requires the user to set up a \link{snow} object and register it using the \link{doSNOW} package (see example below).
-tvcure <- function(formula, cureform, link = "logit",
+tvcure <- function(survform, cureform, link = "logit",
                    data, na.action = na.omit, offset = NULL, subset = NULL,
                    var = T, nboot = 100,
                    parallel = T,
@@ -38,7 +38,7 @@ tvcure <- function(formula, cureform, link = "logit",
     if (brglm) require(brglm2)
 
     # Pull variables from data
-    xvars <- all.vars(formula)
+    xvars <- all.vars(survform)
     zvars <- all.vars(cureform)
 
     # Create data frame and apply missing data function
@@ -47,7 +47,7 @@ tvcure <- function(formula, cureform, link = "logit",
     nobs  <- nrow(data)
 
     # Create IV matrices
-    mf <- model.frame(formula, data)
+    mf <- model.frame(survform, data)
     X <- model.matrix(attr(mf, "terms"), mf)
     if (ncol(X) == 2) {
       X1 <- X[, -1]
@@ -161,8 +161,6 @@ if (var) {
   fit$emmax <- emmax
   fit$emrun <- emfit$emrun
   fit$var <- var
-  fit$formula <- formula
-  fit$terms <- terms(formula)
   fit
   #print_tvcure(fit, var)
 }

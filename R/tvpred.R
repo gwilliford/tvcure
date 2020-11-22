@@ -47,12 +47,13 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
 
 
 
-
   # Error messages -------------------------------------------------------------
   if (!inherits(model, "tvcure"))
     stop("Model must be a tvcure object")
   if (type != "basesurv" & (is.null(newX) | is.null(newZ)))
     stop("newX and newZ must be specified unless type = \"basesurv\"")
+  if (CI == T & model$options$var == F)
+    stop("Confidence intervals require estimates of coefficient variance. Set var = T in tvcure function.")
 
 
 
