@@ -1,33 +1,30 @@
-residuals.tvcure = function (object, data, type = c("WLCH", "Cox-Snell", "M-Cox-Snell", "Martingale", "M-Martingale")) {
+residuals.tvcure = function (model, type = c("WLCH", "Cox-Snell", "M-Cox-Snell", "Martingale", "M-Martingale")) {
 
   type = match.arg(type)
 
-  if (class(object) != "mixcure")
-    stop("mixcure object is missing")
-  if (is.null(data))
-    stop("data is missing")
+  if (class(model) != "tvcure") stop("Model must be a tvcure object")
 
-  mfx = model.frame(formula = object$survformula, data = data, na.action = na.pass)
+  # Response variable
+  mfx = model.frame(formula = model$call$survform, data = data, na.action = na.pass)
   survtime = model.response(mfx)
-  ttime = survtime[, 1]
-  cens = survtime[, 2]
+  ttime = model$Time
+  cens = model$Status
 
-  uncureprob = object$curefit$uncureprob
-  bt = coef(object$uncufit$fit)
-  X = model.matrix(terms(mf), data = data)
-  if (length(bt) == ncol(X))
-    unculp = as.vector(X %*% bt)
-  else unculp = as.vector(X[, -1, drop = F] %*% bt)
+  uncureprob = model$uncureprob
+  beta_uncure = coef(model$uncufit$fit)
+  X = model$X
+  unculp = as.vector(X %*% beta_uncure)
+  else unculp = as.vector(X[, -1, drop = F] %*% beta_uncure)
 
-  mfz = model.frame(formula = object$cureformula, data = data,
-                   na.action = na.pass)
-  Z = model.matrix(terms(mfz), data = data)[, -1, drop = F]
-  gm = coef(object$curefit$fit)[-1]
+  # glm parameters
+  mfz = model.frame(formula = model$call$cureform, data = data, na.action = na.pass)
+  Z = model$Z[, -1]
+  gamma = model$gamma[-1]
 
   if (type == "WLCH") {
-    if (class(object$uncufit) != "surv.survreg")
+    if (class(model$uncufit) != "surv.survreg")
       stop("WLCH residuals is only defined for parametric models")
-    fit = object$uncufit$fit
+    fit = model$uncufit$fit
     n = nrow(data)
     hazard = outer(ttime, 1:n, FUN = function(x, y) {
       dval = dsurvreg(x, mean = unculp[y], scale = fit$scale,
@@ -53,14 +50,14 @@ residuals.tvcure = function (object, data, type = c("WLCH", "Cox-Snell", "M-Cox-
     list(eventtime = etime, residuals = val)
   }
   else if (type == "Cox-Snell") {
-    residuals = -log(uncureprob * object$survprob + 1 - uncureprob)
-    resid.uncure = -log(object$survprob)
-    list(type = type, cens = cens, time = ttime, weight = object$postuncure,
+    residuals = -log(uncureprob * model$survprob + 1 - uncureprob)
+    resid.uncure = -log(model$survprob)
+    list(type = type, cens = cens, time = ttime, weight = model$postuncure,
          residuals = residuals, resid.uncure = resid.uncure)
   }
   else if (type == "M-Cox-Snell") {
-    residuals = -log(object$survprob)
-    weight = object$postuncure
+    residuals = -log(model$survprob)
+    weight = model$postuncure
     resid.dist = (function(resids, cens, weight) {
       design = svydesign(id = ~1, weights = weight[weight >
                                                      0])
@@ -71,10 +68,10 @@ residuals.tvcure = function (object, data, type = c("WLCH", "Cox-Snell", "M-Cox-
          residuals = residuals, resid.dist = resid.dist)
   }
   else if (type == "M-Martingale") {
-    keep = object$postuncure != 0
-    val = cens + object$postuncure * log(object$survprob)
-    if (object$survmodel$fun == "coxph")
-      val2 = residuals(object$uncufit$fit, weighted = T)
+    keep = model$postuncure != 0
+    val = cens + model$postuncure * log(model$survprob)
+    if (model$survmodel$fun == "coxph")
+      val2 = residuals(model$uncufit$fit, weighted = T)
     else val2 = NULL
     deviance = sign(val) * sqrt(-2 * (val + cens * log(cens -
                                                          val)))
@@ -83,7 +80,7 @@ residuals.tvcure = function (object, data, type = c("WLCH", "Cox-Snell", "M-Cox-
          residuals2 = val2)
   }
   else if (type == "Martingale") {
-    val = cens + log(uncureprob * (object$survprob - 1) +
+    val = cens + log(uncureprob * (model$survprob - 1) +
                        1)
     list(type = type, xm = X, unculp = unculp, residuals = val,
          deviance = sign(val) * sqrt(-2 * (val + cens * log(cens -
