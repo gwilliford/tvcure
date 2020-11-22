@@ -1,4 +1,4 @@
-tvresid = function (model, type = c("Cox-Snell", "M-Cox-Snell", "Martingale", "M-Martingale")) {
+tvresid = function(model, type = c("Cox-Snell", "M-Cox-Snell", "Martingale", "M-Martingale")) {
 
   type = match.arg(type)
 
@@ -9,8 +9,6 @@ tvresid = function (model, type = c("Cox-Snell", "M-Cox-Snell", "Martingale", "M
   cens = model$Status
   X = model$X
   Z = model$Z[, -1]
-
-  browser()
 
   uncureprob = model$uncureprob
   survprob = model$Survival
@@ -30,8 +28,8 @@ tvresid = function (model, type = c("Cox-Snell", "M-Cox-Snell", "Martingale", "M
   else if (type == "M-Cox-Snell") {
     residuals = -log(survprob)
     resid.dist = (function(resids, cens, weight) {
-      design = svydesign(id = ~1, weights = weight[weight > 0])
-      svykm(Surv(resids[weight > 0], cens[weight > 0]) ~ 1, design = design)
+      design = survey::svydesign(id = ~1, weights = weight[weight > 0])
+      survey::svykm(Surv(resids[weight > 0], cens[weight > 0]) ~ 1, design = design)
     })(residuals, cens, weight)
     out = list(type = type, cens = cens, time = ttime, weight = weight,
          residuals = residuals, resid.dist = resid.dist)
@@ -39,8 +37,7 @@ tvresid = function (model, type = c("Cox-Snell", "M-Cox-Snell", "Martingale", "M
   else if (type == "M-Martingale") {
     keep = weight != 0
     val = cens + weight * log(survprob)
-    if (model$survmodel$fun == "coxph") val2 = residuals(model$uncuremod$fit, weighted = T)
-    else val2 = NULL
+    val2 = residuals(model$uncuremod, weighted = T)
     deviance = sign(val) * sqrt(-2 * (val + cens * log(cens - val)))
     out = list(type = type, xm = X[keep, ], keep = keep, unculp = unculp[keep],
          residuals = val[keep], deviance = deviance[keep],
