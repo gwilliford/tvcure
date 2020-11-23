@@ -11,26 +11,30 @@
     i <- 1
     while (convergence > eps & i < emmax) {
       if (link == "logit") {
-        uncureprob <- matrix(exp((gamma) %*% t(Z))/(1 + exp((gamma) %*% t(Z))), ncol = 1)
+        uncureprob <- matrix(exp((gamma) %*% t(Z))/
+                               (1 + exp((gamma) %*% t(Z))), ncol = 1)
       }
       if (link == "probit") {
         uncureprob <- matrix(pnorm(gamma %*% t(Z)), ncol = 1)
       }
 
       survival <- drop(s^(exp((beta) %*% t(X))))
-      w <- Status + (1 - Status) * (uncureprob * survival)/((1 - uncureprob) + uncureprob * survival)
+      w = Status + (1 - Status) * uncureprob * survival/
+        (1 - uncureprob + uncureprob * survival)
 
       # Update incidence coefficients
       if (is.null(offset)) {
-        incidence_fit <- eval(parse(text = paste("glm", "(", "as.integer(w) ~ Z[, -1],",
-                                                 "family = binomial(link = '", link, "'", "), ",
-                                                 "method = '", method, "'",
-                                                 ")", sep = "")))
+        incidence_fit <- eval(parse(
+          text = paste("glm", "(", "as.integer(w) ~ Z[, -1],",
+                       "family = binomial(link = '", link, "'", "), ",
+                       "method = '", method, "'",
+                       ")", sep = "")))
       } else {
-        incidence_fit <- eval(parse(text = paste("glm", "(", "as.integer(w) ~ Z[, -1],",
-                                                 "family = binomial(link = '", link, "'", "), ",
-                                                 "method = '", method, "'",
-                                                 ")", sep = "")))
+        incidence_fit <- eval(parse(
+          text = paste("glm", "(", "as.integer(w) ~ Z[, -1],",
+                       "family = binomial(link = '", link, "'", "), ",
+                       "method = '", method, "'",
+                       ")", sep = "")))
       }
       update_cureg <- incidence_fit$coef
 

@@ -90,9 +90,9 @@ tvcure <- function(survform, cureform, link = "logit",
 
   # Obtain initial estimates------------------------------------------------------
   browser()
-  w = rep(1, length(Time))
-  w[Status == 0] = seq(1, 0, along = w[Status == 0])
-  # w <- Status
+  # w = rep(1, length(Time))
+  # w[Status == 0] = seq(1, 0, along = w[Status == 0])
+  w <- Status
   gamma <- eval(parse(text = paste("glm", "(", "as.integer(w) ~ Z[, -1],",
                                    "family = binomial(link = '", link, "'", "), ",
                                    "method = '", method, "'",
@@ -162,7 +162,6 @@ if (var) {
   fit$emmax <- emmax
   fit$emrun <- emfit$emrun
   fit$var <- var
-  summary.tvcure(fit)
-  fit
+  return(fit)
   summary.tvcure(fit)
 }
