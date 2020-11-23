@@ -3,7 +3,7 @@
 # TO undersand KS Test
  #https://rdrr.io/cran/goftte/man/goftte-package.html
 
-prop.coxph <- function(model, variable = NULL, type.test = c("Lin", "Liu"),
+prop.coxph <- function(model, varnames = NULL, type.test = c("Lin", "Liu"),
                          R = 1000, plots = min(R,50), seed = NULL,
                          ...) {
 
@@ -21,45 +21,38 @@ prop.coxph <- function(model, variable = NULL, type.test = c("Lin", "Liu"),
 
   ot = order(Time)
   Time = Time[ot]
-  Status = Status[ot]
-  X = X[ot, , drop = F]
   n = length(Time)
+
+  Status = Status[ot]
   nd = sum(Status)
   nc = sum(Status == 0)
-  p = ncol(X)
   index.dtimes = (1:n)[Status == 1]
   dtimes = Time[index.dtimes]
-
   index.censtimes = (1:n)[Status == 0]
-  censtimes= Time[index.censtimes]
+  censtimes = Time[index.censtimes]
+
+  X = X[ot, , drop = F]
+  p = ncol(X)
 
   idxtime = which(Time == Time)
-  otime = cbind(Time,idxtime)
-  otime = otime[!duplicated(otime[,1]),]
+  otime = cbind(Time, idxtime)
+  otime = otime[!duplicated(otime[, 1]) ,]
   index.otime = otime[,2]
-  otime = otime[,1];
+  otime = otime[, 1];
   m = length(index.otime)
 
   #Ties
+  # if ( n > m & model$method != "breslow")
+  #   warning("In case of ties, use breslow method in coxph")
 
-  if ((n>m)&(model$method!="breslow"))
-    warning("In case of ties, use breslow method in coxph")
-
-  beta = coef(model)
-  if(any(is.na(beta))) stop("Over-parametrized model")
-
-  if (is.null(variable)==FALSE){
-    if (length(variable)!=p) stop("Variables names must have same length than number of variables in model")}
-
-  if (is.null(variable)==TRUE){
-    variable = na.omit(colnames(X))}
-
-
-  variable = unique(variable)
-  UsedData = X[,na.omit(match(variable, colnames(X))),drop = FALSE]
-
-  myvars = variable
-  myvars.idx = 1:p
+  beta = model$beta
+  if (!is.null(varnames) & length(varnames) != p)
+    stop("Varnames must have same length than number of variables in model")}
+  if (is.null(varnames)) varnames = na.omit(colnames(X))
+  variable = unique(varnames)
+  UsedData = X[, na.omit(match(varnames, colnames(X))),drop = FALSE]
+  #myvars = varnames
+  varnames.idx = 1:p
 
   output = .C("coxscoreW",
                R = as.integer(R),
@@ -101,7 +94,7 @@ prop.coxph <- function(model, variable = NULL, type.test = c("Lin", "Liu"),
   res = list(W = W, What = What,
               obs = x,
               KS = KS, CvM = CvM, AD = AS,
-              cvalues = allcvalues, variable = myvars,
+              cvalues = allcvalues, varnames = varnames,
               R = R, sd = Wsd, type = mytype, model="coxph", type.test = type.test,assumption="proportional hazards assumption")
   class(res) = "scproc"
   res
