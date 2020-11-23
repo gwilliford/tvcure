@@ -21,7 +21,7 @@ tvcure <- function(survform, cureform, link = "logit",
 {
   # Preliminaries and error checking--------------------------------------------
     # If parallel is true, ensure that snow cluster is registered
-    if (parallel == T) {
+    if (parallel == T & var == T) {
       clstatus <- foreach::getDoParRegistered()
       if (clstatus == T) {
         if (getDoParName() == "doSEQ") stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
@@ -37,11 +37,9 @@ tvcure <- function(survform, cureform, link = "logit",
     method <- ifelse(brglm, "brglmFit", "glm.fit")
     if (brglm) require(brglm2)
 
-    # Pull variables from data
+    # Create data frame and apply missing data function
     xvars <- all.vars(survform)
     zvars <- all.vars(cureform)
-
-    # Create data frame and apply missing data function
     avars <- unique(c(xvars, zvars))
     data  <- na.action(data[, c(avars)])
     nobs  <- nrow(data)
@@ -91,7 +89,10 @@ tvcure <- function(survform, cureform, link = "logit",
     cat("tvcure started at "); print(Sys.time()); ("Estimating coefficients...\n")
 
   # Obtain initial estimates------------------------------------------------------
-  w <- Status
+  browser()
+  w = rep(1, length(Time))
+  w[Status == 0] = seq(1, 0, along = w[Status == 0])
+  # w <- Status
   gamma <- eval(parse(text = paste("glm", "(", "as.integer(w) ~ Z[, -1],",
                                    "family = binomial(link = '", link, "'", "), ",
                                    "method = '", method, "'",
