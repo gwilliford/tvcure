@@ -17,7 +17,7 @@ summary.tvcure <- function(model) {
     colnames(bmat) <- "Hazard Coefficients"
   }
 
-  cat("Call:\n")
+  cat("\nCall:\n")
   print(model$call); cat("", sep="\n\n")
   print(gmat)  ; cat("", sep="\n\n")
   print(bmat)  ; cat("", sep="\n\n")
