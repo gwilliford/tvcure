@@ -1,4 +1,4 @@
-print_tvcure <- function (x, var, ...) {
+print.tvcure <- function (x, var, ...) {
   if (!is.null(cl <- x$call)) {
     cat("Call:\\n")
     dput(cl)
