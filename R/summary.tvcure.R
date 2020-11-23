@@ -1,6 +1,6 @@
 summary.tvcure <- function(model) {
   o <- model
-  if (model$var == T) {
+  if (model$options$var == T) {
     gmat <- cbind(model$gamma, model$g_sd, model$g_zvalue, model$g_pvalue)
     bmat <- cbind(model$beta, model$b_sd, model$b_zvalue, model$b_pvalue)
     rownames(gmat) <- model$gnames
@@ -23,5 +23,5 @@ summary.tvcure <- function(model) {
   print(bmat)  ; cat("", sep="\n\n")
   cat("n =", model$nobs, "with", model$nfail, "failures\n", sep = " ")
   cat("Model converged in", model$emrun, "iterations\n", sep = " ")
-  if (model$var == T) cat("Variance estimates based on", model$bootcomp, "successful boostrap replications\n", sep = " ")
+  if (model$options$var == T) cat("Variance estimates based on", model$bootcomp, "successful boostrap replications\n", sep = " ")
 }
