@@ -1,7 +1,7 @@
 phtest_plot = function(model, newX, newZ) {
-  su_pred = tvpred(model, "suncure", newX, newZ, CI = F)
+  su_pred = tvpred(model, "spop", newX, newZ, CI = F)
   Time = su_pred$Time
-  surv = su_pred$suncure
+  surv = su_pred$spop
   nx = ncol(surv)
 
   p_pred = tvpred(model, "uncureprob", newX, newZ, CI = F)
