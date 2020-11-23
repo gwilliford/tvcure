@@ -1,8 +1,8 @@
 #' Prediction function for tvcure models
 #'
-#' Computes various quantities, including the baseline survivor function, conditional survivor function, population survivor function, and probability of being at risk. Output is typically passed to \link{plot.tvpred}.
+#' Computes various quantities, including the baseline survivor function, conditional survivor function, unconditional survivor function, and probability of being at risk. Output is typically passed to \link{plot.tvpred}.
 #' @param model A \link{tvcure} object.
-#' @param type A character vector indicating values to predict. Choices include the baseline survivor function (\"basesurv\"), the conditional survivor function for uncured individuals (\"suncure\"), the population survivor function (\"spop\"), or the probability that an observation is at risk (\"uncureprob\").
+#' @param type A character vector indicating values to predict. Choices include the baseline survivor function (\"basesurv\"), the conditional survivor function for uncured individuals (\"suncure\"), the unconditional or population survivor function (\"spop\"), or the probability that an observation is at risk (\"uncureprob\").
 #' @param newX An n x k matrix containing values of X to use, where n is the number of observations and k is the number of variables in the hazard equation. Must contain values for all variables in the hazard equation. Must be included unless type = \"basesurv\." Must be passed as a matrix even if it only contains 1 row.
 #' @param newZ An n x k matrix containing values of Z to use. Must contain values for all variables in the cure equation equation. Must be included unless type = \"basesurv\." Must be passed as a matrix even if it only contains 1 row.
 #' @param CI Logical value indicating whether confidence intervals should be estimated by simulation.
