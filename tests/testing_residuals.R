@@ -1,5 +1,5 @@
-library(tvcure)
 library(mixcure)
+library(tvcure)
 library(smcure)
 library(fmtr)
 
@@ -45,6 +45,9 @@ tv_mm = tvresid(tv, type = "M-Martingale")
 summary(mc_mm$residuals)
 summary(tv_mm$residuals)
 
+#
+prop.coxph(tv)
+
 ################################################################################
 # Plot residuals
 ################################################################################
@@ -71,3 +74,5 @@ summary(tv_mm$residuals)
 # mc$cureformula
 # mf = model.frame(formula = mc$survformula, data = goldman.data, na.action = na.pass)
 # X = model.matrix(terms(mf), data = goldman.data)
+
+
