@@ -18,8 +18,7 @@
       }
 
       survival <- drop(s^(exp((beta) %*% t(X))))
-      w <- Status + (1 - Status) * (uncureprob * survival)/((1 -
-          uncureprob) + uncureprob * survival)
+      w <- Status + (1 - Status) * (uncureprob * survival)/((1 - uncureprob) + uncureprob * survival)
 
       # Update incidence coefficients
       if (is.null(offset)) {

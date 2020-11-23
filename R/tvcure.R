@@ -162,7 +162,7 @@ if (var) {
   fit$emmax <- emmax
   fit$emrun <- emfit$emrun
   fit$var <- var
+  summary.tvcure(fit)
   fit
-  #print_tvcure(fit, var)
   summary.tvcure(fit)
 }
