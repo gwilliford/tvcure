@@ -5,7 +5,7 @@
 \title{Estimate cure models.}
 \usage{
 tvcure(
-  formula,
+  survform,
   cureform,
   link = "logit",
   data,

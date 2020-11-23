@@ -26,6 +26,9 @@ tvpred(
 
 \item{nsims}{Number of simulations for estimating confidence intervals.}
 }
+\value{
+Returns a list of quantities necessary to generate plots using \link{plot.tvpred}.
+}
 \description{
-Computes various quantities, including the baseline survivor function, conditional survivor function, population survivor function, and probability of being at risk.
+Computes various quantities, including the baseline survivor function, conditional survivor function, population survivor function, and probability of being at risk. Output is typically passed to \link{plot.tvpred}.
 }
