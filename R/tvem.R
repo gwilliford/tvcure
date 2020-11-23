@@ -1,7 +1,9 @@
-  tvem <- function(Time, Status, X, Z, offset, gamma, beta,
+  tvem <- function(Time, Status, X, Z, w, offset, gamma, beta,
                    link, emmax, eps, brglm, survobj, survtype, method){
 
-    w <- Status
+    # w = rep(1, length(ttime))
+    # w[cens == 0] = seq(1, 0, along = w[cens == 0])
+    # w <- Status
     n <- length(Status)
     s <- tvsurv(Time, Status, X, beta, w)$survival
     convergence <- 1000

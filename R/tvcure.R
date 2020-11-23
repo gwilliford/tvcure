@@ -102,7 +102,7 @@ tvcure <- function(survform, cureform, link = "logit",
   cat("Initial estimates obtained, beginning em algorithm...\n")
 
 # Call to EM function -------------------------------------------------------
-  emfit <- tvem(Time, Status, X, Z, offset, gamma, beta,
+  emfit <- tvem(Time, Status, X, Z, w, offset, gamma, beta,
                 link, emmax, eps, brglm, survobj, survtype, method)
   if (emfit$emrun == emmax) {
     warning("Maximum number of EM iterations reached. Estimates have not have converged.")
@@ -117,7 +117,7 @@ tvcure <- function(survform, cureform, link = "logit",
 # Bootstrap standard errors --------------------------------------------------
 if (var) {
   varout <- tvboot(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status,
-                   X, Z, gnames, bnames, offset, gamma, beta, link, emmax,
+                   X, Z, w, gnames, bnames, offset, gamma, beta, link, emmax,
                    eps, brglm, survobj, nobs, parallel, method)
 }
 
@@ -164,4 +164,5 @@ if (var) {
   fit$var <- var
   fit
   #print_tvcure(fit, var)
+  summary.tvcure(fit)
 }

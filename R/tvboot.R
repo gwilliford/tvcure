@@ -1,5 +1,5 @@
 tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
-                   Z, gnames, bnames, offset, gamma, beta, link, emmax,
+                   Z, w, gnames, bnames, offset, gamma, beta, link, emmax,
                    eps, brglm, survobj, n, parallel, method) {
 
   # Progress Bar
@@ -47,7 +47,7 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
       }
 
       bootfit <- tvem(Time = boottime, Status = bootstatus,
-                      X = bootX, Z = bootZ, offset,
+                      X = bootX, Z = bootZ, w, offset,
                       gamma, beta, link, emmax,
                       eps, brglm,
                       survobj = bootsurv, survtype, method)#, error = function(e) NULL)
