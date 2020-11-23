@@ -2,22 +2,26 @@
 # library(goftte) - code from goftte 1.0.5
 # TO undersand KS Test
  #https://rdrr.io/cran/goftte/man/goftte-package.html
+##' @export
+`prop` <-
+  function(model,...) UseMethod("prop")
 
-prop.coxph <- function(model, varnames = NULL, type.test = c("Lin", "Liu"),
+`prop.coxph` <- function(model, varnames = NULL, type.test = c("Lin"),
                          R = 1000, plots = min(R,50), seed = NULL,
                          ...) {
 
-  if(type.test == "Lin") type.test.num = 1
-  if(type.test == "Liu") type.test.num = 2
+  type.test.num = 0
+  if (type.test == "Lin"){type.test.num = 1}
+  if (type.test == "Liu"){type.test.num = 2}
   if (!is.null(seed)) set.seed(seed)
 
-  mt = model.frame(model)
-  Y = model.extract(mt, "response")
-  if (attr(Y, "type") == "right") {
-    Time = Y[, "Time"];
-    Status = Y[, "Status"]
-  } else stop("Expected right-censored data.");
-  X = X
+  # mt = model.frame(model)
+  #Y = model.extract(mt, "response")
+  # if (attr(Y, "type") == "right") {
+  Time = model$Time
+  Status = model$Status
+  # } else stop("Expected right-censored data.");
+  X = model$X
 
   ot = order(Time)
   Time = Time[ot]
@@ -47,7 +51,7 @@ prop.coxph <- function(model, varnames = NULL, type.test = c("Lin", "Liu"),
 
   beta = model$beta
   if (!is.null(varnames) & length(varnames) != p)
-    stop("Varnames must have same length than number of variables in model")}
+    stop("Varnames must have same length than number of variables in model")
   if (is.null(varnames)) varnames = na.omit(colnames(X))
   variable = unique(varnames)
   UsedData = X[, na.omit(match(varnames, colnames(X))),drop = FALSE]
@@ -77,7 +81,7 @@ prop.coxph <- function(model, varnames = NULL, type.test = c("Lin", "Liu"),
                cvalues = as.double(numeric(p*R)),
                Ws = as.double(numeric(p*m*plots)),
                W = as.double(numeric(p*m)),
-               pkg="goftte"
+               pkg="tvcure"
   )
 
   UsedVars = W = Wsd = What = KS = CvM = AS = allcvalues = x = mytype = c()
@@ -95,7 +99,7 @@ prop.coxph <- function(model, varnames = NULL, type.test = c("Lin", "Liu"),
               obs = x,
               KS = KS, CvM = CvM, AD = AS,
               cvalues = allcvalues, varnames = varnames,
-              R = R, sd = Wsd, type = mytype, model="coxph", type.test = type.test,assumption="proportional hazards assumption")
+              R = R, sd = Wsd, type = mytype, type.test = type.test,assumption="proportional hazards assumption") # model="coxph",
   class(res) = "scproc"
   res
 }

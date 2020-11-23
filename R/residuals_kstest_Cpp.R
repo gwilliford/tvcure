@@ -1,19 +1,19 @@
-##' @export
+#' @export
 `prop` <-
   function(model,...) UseMethod("prop")
 
 `prop.crr` <- function(model,
-                       fstatus,
-                       ftime,
-                       cov1,
-                       cencode=0,
-                       failcode=1,
-                       variable=NULL,
-                       type.test=c("Liu"),
-                       R=1000,
-                       plots=min(R,50),
-                       seed=NULL,
-                       ...){
+                                 fstatus,
+                                 ftime,
+                                 cov1,
+                                 cencode=0,
+                                 failcode=1,
+                                 varnames=NULL,
+                                 type.test=c("Liu"),
+                                 R=1000,
+                                 plots=min(R,50),
+                                 seed=NULL,
+                                 ...){
 
   if(length(type.test)>1)
     stop("Enter a test both")
@@ -141,7 +141,7 @@
   nc <- sum(status==cencode)
 
   if (m.X!=length(model$coef))
-    stop("Number of variables must be the same as in model")
+    stop("Number of varnamess must be the same as in model")
   p <- m.X
 
   index.censtimes <- (1:n)[status==cencode]
@@ -175,12 +175,12 @@
 
   if(any(is.na(beta))) stop("Over-parametrized model")
 
-  if(is.null(variable)==TRUE){
-    variable=c(names)}
+  if(is.null(varnames)==TRUE){
+    varnames=c(names)}
 
-  if(length(variable)!=p) stop("Variables names must have same length than number of variables in model")
+  if(length(varnames)!=p) stop("varnamess names must have same length than number of varnamess in model")
 
-  myvars <- variable
+  myvars <- varnames
   myvars.idx <- 1:length(names)
 
   output <- .C("crrscoreW",
@@ -209,7 +209,7 @@
                cvalues=as.double(numeric(p*R)),
                Ws=as.double(numeric(p*m*plots)),
                W=as.double(numeric(p*m)),
-               pkg="goftte"
+               pkg="tvcure"
   )
 
   UsedVars <- W <- Wsd <- What <- KS <- CvM <- AS <- allcvalues <- x <- mytype <- c()
@@ -226,7 +226,7 @@
   res <- list(W=W, What=What,
               obs=x,
               KS=KS, CvM=CvM, AD=AS,
-              cvalues=allcvalues, variable=myvars,
+              cvalues=allcvalues, varnames=myvars,
               R=R, sd=Wsd, type=mytype, model="crr", type.test=type.test,assumption="proportional subdistribution hazards assumption")
   class(res) <- "scproc"
   res
