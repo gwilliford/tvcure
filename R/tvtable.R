@@ -49,21 +49,11 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
       if (qi == "pvalue") qivec2 <- round(model$g_zvalue, digits)
     }
 
-    browser()
+    # Add significance stars ---------------------------------------------------
 
-
-    # Add significance stars
     if (stars) {
-      bstar <- gtools::stars.pval(bpval)
-      for (j in 1:length(qivec)) {
-        qivec[j] <- capture.output(cat("(", qivec[j],  ")", bstar[j], sep = ""))
-      }
-      if (nc == 2) {
-        gstar <- gtools::stars.pval(gpval)
-        for (j in 1:length(qivec2)) {
-          qivec2[j] <- capture.output(cat("(", qivec2[j], ")", gstar[j], sep = ""))
-        }
-      }
+      beta = modelsummary:::make_stars(beta, bpval, stars)
+      if (nc == 2) gamma = modelsummary:::make_stars(gamma, gpval, stars)
     }
 
     # Create list of variable names in model
@@ -88,7 +78,7 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
       colnames(g)[1] <- "vn"
       tab <- merge(g, tab, by = "vn", sort = F, all = T)
       tabnames[[i]] <- c(bn, gn)
-      colnames(tab)[2:3] <- c("Incidence Coef.", "Hazard Coef.")
+      colnames(tab)[2:3] <- c("Risk Coef.", "Hazard Coef.")
     }
     colnames(tab)[1] <- "vn"
     assign(paste0("tab", i), tab)
@@ -148,8 +138,8 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
   cn <- colnames(tdf)
   ind <- startsWith(cn, "Hazard")
   cn <- replace(cn, ind, "Hazard")
-  ind2 <- startsWith(cn, "Incidence")
-  cn <- replace(cn, ind2, "Incidence")
+  ind2 <- startsWith(cn, "Risk")
+  cn <- replace(cn, ind2, "Risk")
   cn[1] <- ""
   colnames(tdf) <- NULL
   for (j in seq(2, nrow(tdf), 2)) {
