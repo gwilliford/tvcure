@@ -1,4 +1,7 @@
-tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3,
+#' @param stars Logical value indicating whether to include significance stars. By default, \* p < 0.1, \*\* p < 0.05, \*\*\* p < 0.01.
+#' @param siglevel If stars = T, significance levels can be changed from their defaults by passing a named numeric vector of symbols with their associated confidence levels. For example, "c('*' = 0.05)" produces output with a single star for coefficients that are significant at the 0.05 level. See \link{[modelsummary]{msummary}} for more details.
+tvtable <- function(..., qi = c("se", "pvalue", "zscore"), digits = 3,
+                    stars = T, siglevel = NULL,
                     modnames = NULL, varlist = NULL, footnote = NULL)
 {
   # Set up ---------------------------------------------------------------------
@@ -49,11 +52,12 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
       if (qi == "pvalue") qivec2 <- round(model$g_zvalue, digits)
     }
 
+    browser()
     # Add significance stars ---------------------------------------------------
-
     if (stars) {
-      beta = modelsummary:::make_stars(beta, bpval, stars)
-      if (nc == 2) gamma = modelsummary:::make_stars(gamma, gpval, stars)
+      if (is.null(siglevel)) siglevel = c(`*` = 0.1, `**` = 0.05, `***` = 0.01)
+      beta = modelsummary:::make_stars(beta, bpval, siglevel)
+      if (nc == 2) gamma = modelsummary:::make_stars(gamma, gpval, siglevel)
     }
 
     # Create list of variable names in model
