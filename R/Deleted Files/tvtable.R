@@ -1,8 +1,7 @@
 tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3,
                     modnames = NULL, varlist = NULL, footnote = NULL)
 {
-  # Set up
-  # if (format != "long") stop("Only one model may be specified if format is set to wide. /n")
+  # Set up ---------------------------------------------------------------------
   if (sum(names(varlist) == "") > 0) stop("Names must be supplied for all variables contained in varlist.")
   models <- list(...)
   len = length(models)
@@ -15,7 +14,7 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
   # Extract cell entries and variable names
   for (i in 1:length(models)) {
 
-    # Extract coefficients and qis
+    # Extract coefficients and qis ---------------------------------------------
     model <- models[[i]]
     if (class(model) == "coxph") {
       beta  <- round(coef(model), digits)
@@ -91,8 +90,8 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
     colnames(tab)[1] <- "vn"
     assign(paste0("tab", i), tab)
 
-  browser()
-  # Order by varlist
+
+  # Order by varlist -----------------------------------------------------------
   allnames <- unique(unlist(tabnames))
   if (is.null(varlist)) {
     varnames <- allnames
@@ -116,7 +115,8 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
     varlabs[1:length(dex)] <- dex
   }
 
-  # Create summary stats
+
+  # Create summary stats -------------------------------------------------------
   if (nc == 1) {
     svec = vector(length = 2)
     svec[1] <- nrow(model$y)
@@ -129,7 +129,8 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
   assign(paste0("svec", i), svec)
   }
 
-  # Combine tables
+
+  # Combine tables -------------------------------------------------------------
   tdf  <- matrix(varnames, ncol = 1)
   colnames(tdf)[1] <- "vn"
   # colnames(ttab)[1] <- names(tab[i])
