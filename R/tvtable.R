@@ -49,7 +49,10 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), stars = T, digits = 3
       if (qi == "pvalue") qivec2 <- round(model$g_zvalue, digits)
     }
 
-    # Stars
+    browser()
+
+
+    # Add significance stars
     if (stars) {
       bstar <- gtools::stars.pval(bpval)
       for (j in 1:length(qivec)) {
