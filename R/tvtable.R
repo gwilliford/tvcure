@@ -10,7 +10,9 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), digits = 3,
   len = length(models)
   `%notin%` <- Negate(`%in%`)
   class <- lapply(models, class)
-  if (sum(class %notin% c("tvcure", "coxph")) > 0) stop("Models must be of class coxph or tvcure.")
+  class = class[c("glm", "lm")] = "glm"
+  # browser()
+  if (sum(class %notin% c("tvcure", "coxph", "glm")) > 0) stop("Models must be of class tvcure, coxph, or glm.")
   qi <- match.arg(qi)
 
   tabnames <- list()
@@ -21,11 +23,17 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), digits = 3,
     model <- models[[i]]
     if (class(model) == "coxph") {
       beta  <- round(coef(model), digits)
-      bse   <- round(sqrt(diag(model$var)), digits)
+      bse   <- round(sqrt(diag(model$R)), digits)
       bz    <- round(beta/bse, digits)
       bpval <- round((1 - pnorm(abs(bz))) * 2, digits)
       bnames <- attr(terms(model), "term.labels")
-      # assign(paste0("tabnames", i), bnames)
+      nc = 1
+    } else if (class(model) == "glm") {
+      beta  <- round(coef(model), digits)
+      bse   <- round(summary(model)$coefficients[, 2], 3)
+      bz    <- round(beta/bse, digits)
+      bpval <- round((1 - pnorm(abs(bz))) * 2, digits)
+      bnames <- c("Intercept", attr(terms(model), "term.labels"))
       nc = 1
     } else {
       beta   <- round(model$beta, digits)
@@ -115,8 +123,10 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), digits = 3,
     # Create summary stats -------------------------------------------------------
     if (nc == 1) {
       svec = character(length = 2)
-      svec[1] <- nrow(model$y)
-      svec[2] <- model$nevent
+      if (class == "coxph") svec[1] <- nrow(model$y)
+      if (class == "glm")   svec[1] <- length(model$y)
+      if (class == "coxph") svec[2] <- model$nevent
+      if (class == "glm") svec[2] <- sum(model$y, na.rm = T)
     } else {
       svec = character(length = 4)
       svec[1] <- c(model$nobs, "")
