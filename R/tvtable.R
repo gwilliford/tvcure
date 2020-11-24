@@ -52,7 +52,6 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), digits = 3,
       if (qi == "pvalue") qivec2 <- round(model$g_zvalue, digits)
     }
 
-    browser()
     # Add significance stars ---------------------------------------------------
     if (stars) {
       if (is.null(siglevel)) siglevel = c(`*` = 0.1, `**` = 0.05, `***` = 0.01)
@@ -88,42 +87,42 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), digits = 3,
     assign(paste0("tab", i), tab)
 
 
-  # Order by varlist -----------------------------------------------------------
-  allnames <- unique(unlist(tabnames))
-  if (is.null(varlist)) {
-    varnames <- allnames
-    varlabs <- allnames
-  } else {
-    index <- match(varlist, allnames)
-    index2 <- !is.na(index)
-    index3 <- names(varlist[index2])
-    index <- index[!is.na(index)]
-    vn <- allnames[index]
-    if (length(vn) == 1) c(vn, "")
-    vn <- as.vector(rbind(vn, ""))
-    for (j in seq(2, length(vn), 2)) {
-      vn[j] <- as.vector(rbind(paste0("qi_", vn[j - 1])))
+    # Order by varlist -----------------------------------------------------------
+    allnames <- unique(unlist(tabnames))
+    if (is.null(varlist)) {
+      varnames <- allnames
+      varlabs <- allnames
+    } else {
+      index <- match(varlist, allnames)
+      index2 <- !is.na(index)
+      index3 <- names(varlist[index2])
+      index <- index[!is.na(index)]
+      vn <- allnames[index]
+      if (length(vn) == 1) c(vn, "")
+      vn <- as.vector(rbind(vn, ""))
+      for (j in seq(2, length(vn), 2)) {
+        vn[j] <- as.vector(rbind(paste0("qi_", vn[j - 1])))
+      }
+      nout <- allnames[allnames %notin% vn]
+      varnames <- c(vn, nout)
+
+      varlabs <- varnames
+      dex <- as.vector(rbind(index3, ""))
+      varlabs[1:length(dex)] <- dex
     }
-    nout <- allnames[allnames %notin% vn]
-    varnames <- c(vn, nout)
-
-    varlabs <- varnames
-    dex <- as.vector(rbind(index3, ""))
-    varlabs[1:length(dex)] <- dex
-  }
 
 
-  # Create summary stats -------------------------------------------------------
-  if (nc == 1) {
-    svec = vector(length = 2)
-    svec[1] <- nrow(model$y)
-    svec[2] <- model$nevent
-  } else {
-    svec = vector(length = 4)
-    svec[1] <- c(model$nobs, NA)
-    svec[2] <- c(model$nfail, NA)
-  }
-  assign(paste0("svec", i), svec)
+    # Create summary stats -------------------------------------------------------
+    if (nc == 1) {
+      svec = character(length = 2)
+      svec[1] <- nrow(model$y)
+      svec[2] <- model$nevent
+    } else {
+      svec = character(length = 4)
+      svec[1] <- c(model$nobs, "")
+      svec[2] <- c(model$nfail, "")
+    }
+    assign(paste0("svec", i), svec)
   }
 
 
@@ -170,7 +169,6 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), digits = 3,
   # mn <- c("", unlist(mn))
   # mn <- replace(mn, mn == "blank", "")
   # test <- c(1, 2, 3, 4)
-
 
   svec <- vector()
   for (i in 1:len) {
