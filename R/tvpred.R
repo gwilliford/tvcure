@@ -125,7 +125,6 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
     s0lo   = sort(apply(s0sim, 2, quantile, 0.05), decreasing = T)
     s0hi   = sort(apply(s0sim, 2, quantile, 0.95), decreasing = T)
 
-    browser()
     if (type != "basesurv") {
 
       # # turn newX and Z into row vector if only one observation

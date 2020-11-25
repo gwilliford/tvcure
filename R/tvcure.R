@@ -24,7 +24,8 @@ tvcure = function(survform, cureform, link = "logit",
     if (parallel == T & var == T) {
       clstatus = foreach::getDoParRegistered()
       if (clstatus == T) {
-        if (getDoParName() == "doSEQ") stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
+        if (getDoParName() == "doSEQ")
+          stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
       } else stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
     }
 
