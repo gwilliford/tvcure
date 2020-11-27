@@ -11,8 +11,9 @@ library(beepr)
 
 options(scipen = 999)
 
-# Parallel processing
-
+################################################################################
+# Basic Test Models
+################################################################################
 peaceterm = read.dta13("C:/Users/gwill/Dropbox/Research/Dissertation/Data Management/outputdata/ICOWPeaceTerminationData.dta")
 peaceterm = rename(peaceterm, "st" = "_st", "event" = "_d", "stop" = "_t", "start" = "_t0")
 
@@ -34,12 +35,6 @@ set_cure = tvcure(Surv(start, stop, event) ~ lpchcap + recmidwt + recnowt + recy
 ################################################################################
 # Test predictions with fitted values
 ################################################################################
-z1 = tvpred(set_cure, "basesurv")
-
-
-
-
-
 newX = apply(set_cure$X, 2, median)
 newX = rbind(newX, newX)
 newX[2, "bdymid"] = 1
@@ -85,7 +80,7 @@ resid_m   = tvresid(set_cure, type = "Martingale")
 resid_mm  = tvresid(set_cure, type = "M-Martingale")
 
 ################################################################################
-# Test PH survplots
+# Test residuals survplots
 ################################################################################
 
 newX = apply(set_cure$X, 2, median)
@@ -99,6 +94,26 @@ newZ[2, "demdy"] = 1
 phtest_plot(set_cure, newX, newZ)
 
 ################################################################################
-#
+# Test model with single variable in each equation
 ################################################################################
-cox-snell residuals
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+onevar = tvcure(Surv(start, stop, event) ~ lpchcap,
+                  cureform = ~ ltradedep_geomean,
+                  data = peaceterm,
+                  link = "probit",
+                  nboot = 10,
+                  brglm = T)
+newX3 = apply(onevar$X, 2, median)
+newZ3 = apply(onevar$Z, 2, median)
+
+onevar1 = tvpred(onevar, type = "basesurv", newX3, newZ3, CI = F)
+onevar2 = tvpred(onevar, type = "suncure", newX3, newZ3, CI = F)
+onevar3 = tvpred(onevar, type = "spop", newX3, newZ3, CI = F)
+onevar4 = tvpred(onevar, type = "uncureprob", newX3, newZ3, CI = F)
+
+onevar1 = tvpred(onevar, type = "basesurv", newX3, newZ3, CI = T)
+onevar2 = tvpred(onevar, type = "suncure", newX3, newZ3, CI = T)
+onevar3 = tvpred(onevar, type = "spop", newX3, newZ3, CI = T)
+onevar4 = tvpred(onevar, type = "uncureprob", newX3, newZ3, CI = T)
+
+
