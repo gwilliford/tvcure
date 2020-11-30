@@ -58,6 +58,29 @@ sch = function(model) {
   for (i in 1:ncx) {
     sch[, i] = xres[, i] - xres[, i + ncx]
   }
+  colnames(sch) = colnames(X)
+  sch = list(sch = sch, failtime = Time[ind])
+  sch
 }
 
-sch(set_cure)
+a = sch(set_cure)
+b = residuals(set_cure$uncuremod, type = "schoenfeld")
+
+plotsch = function(schres, variable, zeroline = T) {
+  y = schres$sch[, variable]
+  x = schres$failtime
+  lws = loess(y ~ x)
+  lws = predict(lws, se = T)
+  u = lws$fit + qt(0.975, lws$df) * lws$se
+  l = lws$fit - qt(0.975, lws$df) * lws$se
+  plot(y ~ x)
+  lines(lws$fit[order(lws$fit)], col = "blue")
+  lines(u[order(lws$fit)], lty = 2)
+  lines(l[order(lws$fit)], lty = 2)
+  if (zeroline == T) abline(h = 0, lty = 2, col = "dark gray")
+}
+plotsch(a, "recnowt")
+plotsch(a, "recyeswt")
+plotsch(a, "lpchcap")
+plotsch(a, "recmidwt")
+plotsch(a, "bdymid")
