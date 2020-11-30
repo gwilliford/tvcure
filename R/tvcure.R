@@ -110,7 +110,6 @@ tvcure = function(survform, cureform, link = "logit",
   gamma = emfit$gamma
   beta = emfit$beta
   Survival = emfit$Survival
-  Basehaz  = emfit$Basehaz
   cat("Coefficient estimation complete, estimating variance...\n")
 
 
@@ -150,7 +149,6 @@ if (var) {
   fit$bnames = bnames
   fit$w = emfit$w
   fit$Survival = emfit$Survival
-  fit$BaseHaz  = Basehaz
   fit$uncureprob = emfit$uncureprob
   # fit$ordBaseHaz = varfit$ordBasehaz
   fit$Time = Time

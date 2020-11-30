@@ -67,6 +67,6 @@
     }
 
     em <- list(incidence_fit = incidence_fit, gamma = gamma, beta = beta, latency_fit = coxit,
-               Survival = s, Basehaz = basehaz, uncureprob = uncureprob, w = w,
+               Survival = s, uncureprob = uncureprob, w = w,
                tau = convergence, emrun = i)
   }
