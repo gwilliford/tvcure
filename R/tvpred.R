@@ -37,7 +37,7 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
 
   # survival and hazard estimates
   s0 = as.matrix(model$Survival, ncol = 1)
-  # H0 = as.matrix(model$BaseHaz, ncol = 1)
+  H0 = as.matrix(model$BaseHaz, ncol = 1)
 
   # Summary
   nobs = nrow(s0)
@@ -77,8 +77,6 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
   newZ = as.matrix(newZ)
   nz = nrow(newZ)
 
-
-
   # Create predictions without CIs ---------------------------------------------
   if (CI == F) {
 
@@ -87,18 +85,12 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
 
     if (type != "basesurv") {
       # Uncureprob
-      if (nrow(newZ) == 1) {
-        if (link == "logit")  uncureprob = exp(gamma %*% newZ) / (1 + exp(gamma %*% newZ))
-        if (link == "probit") uncureprob = pnorm(gamma %*% newZ)
-      } else {
-        if (link == "logit")  uncureprob = exp(gamma %*% t(newZ)) / (1 + exp(gamma %*% t(newZ)))
-        if (link == "probit") uncureprob = pnorm(gamma %*% t(newZ))
-      }
+      if (link == "logit")  uncureprob = exp(gamma %*% t(newZ)) / (1 + exp(gamma %*% t(newZ)))
+      if (link == "probit") uncureprob = pnorm(gamma %*% t(newZ))
 
       # Suncure
       suncure = array(0, dim = c(nobs, nx))
       ebetaX = exp(model$beta %*% t(newX))
-      # else ebetaX = exp(model$beta %*% newX)
       for (i in 1:nx) {
         suncure[, i] = s0^ebetaX[i]
       }
@@ -141,17 +133,9 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
 
       # obtain simulated values of uncureprob
 
-      browser()
-      if (ncol(newZ) == 1) {
-        if (link == "logit") uncureprobsims = exp(Coef_smplg %*% newZ) /
-            (1 + exp(Coef_smplg %*% newZ))
-        if (link == "probit") uncureprobsims = pnorm(Coef_smplg %*% newZ)
-      } else {
-        if (link == "logit") uncureprobsims = exp(Coef_smplg %*% t(newZ)) /
-            (1 + exp(Coef_smplg %*% t(newZ)))
-        if (link == "probit") uncureprobsims = pnorm(Coef_smplg %*% t(newZ))
-
-      }
+      if (link == "logit")
+        uncureprobsims = exp(Coef_smplg %*% t(newZ)) / (1 + exp(Coef_smplg %*% t(newZ)))
+      if (link == "probit") uncureprobsims = pnorm(Coef_smplg %*% t(newZ))
 
       uncuremean = apply(uncureprobsims, 2, mean)
       uncurelo   = apply(uncureprobsims, 2, quantile, 0.05)
@@ -160,8 +144,7 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
       # Obtain simulated values of suncure and spop
 
       if (type == "suncure" | type == "spop") {
-        if (ncol(newX) == 1) ebetaXsim = exp(Coef_smplb %*% newX)
-        if (ncol(newX) != 1) ebetaXsim = exp(Coef_smplb %*% t(newX))
+        ebetaXsim   = exp(Coef_smplb %*% t(newX))
         suncuresims = array(NA, dim = c(nsims, nobs, nrow(newX)))
         spopsims    = array(NA, dim = c(nsims, nobs, nrow(newX)))
 
