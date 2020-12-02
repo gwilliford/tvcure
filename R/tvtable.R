@@ -5,30 +5,48 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), digits = 3,
                     modnames = NULL, varlist = NULL, footnote = NULL)
 {
   # Set up ---------------------------------------------------------------------
-  if (sum(names(varlist) == "") > 0) stop("Names must be supplied for all variables contained in varlist.")
   models <- list(...)
   len = length(models)
-  `%notin%` <- Negate(`%in%`)
-  class <- lapply(models, class)
-  class = class[c("glm", "lm")] = "glm"
-  # browser()
-  if (sum(class %notin% c("tvcure", "coxph", "glm")) > 0) stop("Models must be of class tvcure, coxph, or glm.")
+  tabnames <- list()
   qi <- match.arg(qi)
 
-  tabnames <- list()
+  `%notin%` <- Negate(`%in%`)
+browser()
+  class = character(length = length(models))
+  for (i in 1:length(models)) {
+    if (class(models[[i]])[1] == "glm")    class[i] = "glm"
+    if (class(models[[i]])[1] == "coxphf") class[i] = "coxphf"
+    if (class(models[[i]])[1] == "tvcure") class[i] = "tvcure"
+    if (class(models[[i]])[1] == "coxph")  class[i] = "coxph"
+  }
+
+  # Error checking -------------------------------------------------------------
+  if (sum(names(varlist) == "") > 0)
+    stop("Names must be supplied for all variables contained in varlist.")
+  if (sum(class %notin% c("tvcure", "coxph", "coxphf", "glm")) > 0)
+    stop("Models must be of class tvcure, coxph, coxphf, or glm.")
+
   # Extract cell entries and variable names
   for (i in 1:length(models)) {
 
     # Extract coefficients and qis ---------------------------------------------
     model <- models[[i]]
-    if (class(model) == "coxph") {
+    if (class[i] == "coxph") {
       beta  <- round(coef(model), digits)
-      bse   <- round(sqrt(diag(model$R)), digits)
+      bse   <- round(sqrt(diag(model)), digits)
       bz    <- round(beta/bse, digits)
       bpval <- round((1 - pnorm(abs(bz))) * 2, digits)
       bnames <- attr(terms(model), "term.labels")
       nc = 1
-    } else if (class(model) == "glm") {
+    } else if (class[i] == "coxphf") {
+      beta   = round(coef(model), digits)
+      bse    = diag(model$var)
+      bse    = round(sqrt(bse), digits)
+      bz     = round(beta/bse, digits)
+      bpval  = round(model$prob, digits)
+      bnames = names(model$coefficients)
+      nc = 1
+    } else if (class[i] == "glm") {
       beta  <- round(coef(model), digits)
       bse   <- round(summary(model)$coefficients[, 2], 3)
       bz    <- round(beta/bse, digits)
@@ -67,7 +85,7 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), digits = 3,
       if (nc == 2) gamma = modelsummary:::make_stars(gamma, gpval, siglevel)
     }
 
-    # Create list of variable names in model
+    # Create list of variable names in model -----------------------------------
     bn = as.vector(rbind(bnames, ""))
     for (j in seq(2, length(bn), 2)) {
       bn[j] <- as.vector(rbind(paste0("qi_", bn[j - 1])))
@@ -78,8 +96,8 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), digits = 3,
         gn[j] <- as.vector(rbind(paste0("qi_", gn[j - 1])))
       }
     }
-
-    # Create table
+browser()
+    # Create tables for each model ---------------------------------------------
     tab <- cbind(bn, as.vector(rbind(beta, qivec)))
     colnames(tab)[1] <- "vn"
     colnames(tab)[2] <- "Hazard Coef."
@@ -123,10 +141,11 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), digits = 3,
     # Create summary stats -------------------------------------------------------
     if (nc == 1) {
       svec = character(length = 2)
-      if (class == "coxph") svec[1] <- nrow(model$y)
-      if (class == "glm")   svec[1] <- length(model$y)
-      if (class == "coxph") svec[2] <- model$nevent
-      if (class == "glm") svec[2] <- sum(model$y, na.rm = T)
+      if (class[i] == "coxph") svec[1] <- nrow(model$y)
+      if (class[i] == "glm" | class[i] == "coxphf")   svec[1] <- length(model$y)
+      if (class[i] == "coxph") svec[2] <- model$nevent
+      if (class[i] == "glm") svec[2] <- sum(model$y, na.rm = T)
+      if (class[i] == "coxphf") svec[2] <- sum(model$y[, "status"])
     } else {
       svec = character(length = 4)
       svec[1] <- c(model$nobs, "")
