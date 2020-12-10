@@ -80,7 +80,6 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
   nz = nrow(newZ)
 
   # Create predictions without CIs ---------------------------------------------
-  browser()
   if (CI == F) {
 
     # Baseline hazard
@@ -107,7 +106,7 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
           spop[i, j] = uncureprob[j] * suncure[i, j] + (1 - uncureprob[j])
         }
       }
-      spop    = spop[order(spop[, 1], decreasing = T), ]
+      spop = spop[order(spop[, 1], decreasing = T), ]
     }
   }
 
@@ -129,6 +128,7 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
     s0lo   = sort(apply(s0sim, 2, quantile, 0.05), decreasing = T)
     s0hi   = sort(apply(s0sim, 2, quantile, 0.95), decreasing = T)
 
+    browser()
     if (type != "basesurv") {
 
       # # turn newX and Z into row vector if only one observation
@@ -136,7 +136,7 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
       # if (ncol(newZ) == 1) newZ = t(newZ)
 
       # Simulate uncureprob
-
+      if (nrow(newZ) == 2 & ncol(newZ) == 1) newZ = t(newZ)
       if (link == "logit")
         uncureprobsims = exp(Coef_smplg %*% t(newZ)) / (1 + exp(Coef_smplg %*% t(newZ)))
       if (link == "probit") uncureprobsims = pnorm(Coef_smplg %*% t(newZ))
