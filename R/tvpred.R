@@ -37,7 +37,7 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
 
   # survival and hazard estimates
   s0 = as.matrix(model$Survival, ncol = 1)
-  H0 = as.matrix(model$BaseHaz, ncol = 1)
+  # H0 = as.matrix(model$BaseHaz, ncol = 1)
 
   # Summary
   nobs = nrow(s0)
@@ -178,32 +178,36 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
 
   # Output ---------------------------------------------------------------------
   if (CI == F) {
-    if (type == "basesurv")   return(structure(list(s0 = s0, CI = CI, type = type),
+    if (type == "basesurv")   return(structure(list(s0 = s0,
+                                                    Time = Time, CI = CI, type = type),
                                                class = "tvpred"))
-    if (type == "suncure")    return(structure(list(suncure = suncure, Time = Time, CI = CI, type = type),
+    if (type == "suncure")    return(structure(list(suncure = suncure,
+                                                    Time = Time, CI = CI, type = type),
                                                class = "tvpred"))
-    if (type == "spop")       return(structure(list(spop = spop, Time = Time, CI = CI, type = type),
+    if (type == "spop")       return(structure(list(spop = spop,
+                                                    Time = Time, CI = CI, type = type),
                                                class = "tvpred"))
-    if (type == "uncureprob") return(structure(list(uncureprob = uncureprob, Time = Time, CI = CI, type = type),
+    if (type == "uncureprob") return(structure(list(uncureprob = uncureprob,
+                                                    Time = Time, CI = CI, type = type),
                                                class = "tvpred"))
   } else {
     if (type == "basesurv")   return(structure(list(
       s0mean = s0mean, s0lo = s0lo, s0hi = s0hi,
-      CI = CI, type = type),
-      class = "tvcure"))
+      Time = Time, CI = CI, type = type),
+      class = "tvpred"))
     if (type == "suncure")    return(structure(list(
       suncuremean = suncuremean,
       suncurelo = suncurelo, suncurehi = suncurehi,
       Time = Time, CI = CI, type = type),
-      class = "tvcure"))
+      class = "tvpred"))
     if (type == "spop")       return(structure(list(
       spopmean = spopmean,
       spoplo = spoplo, spophi = spophi,
       Time = Time, CI = CI, type = type),
-      class = "tvcure"))
+      class = "tvpred"))
     if (type == "uncureprob") return(structure(list(
       uncuremean = uncuremean, uncurelo = uncurelo, uncurehi = uncurehi,
       Time = Time, CI = CI, type = type),
-      class = "tvcure"))
+      class = "tvpred"))
   }
 }
