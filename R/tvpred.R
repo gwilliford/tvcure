@@ -2,7 +2,7 @@
 #'
 #' Computes various quantities, including the baseline survivor function, conditional survivor function, unconditional survivor function, and probability of being at risk. Output is typically passed to \link{plot.tvpred}.
 #' @param model A \link{tvcure} object.
-#' @param type A character vector indicating values to predict. Choices include the baseline survivor function (\"basesurv\"), the conditional survivor function for uncured individuals (\"suncure\"), the unconditional or population survivor function (\"spop\"), or the probability that an observation is at risk (\"uncureprob\").
+#' @param type A character vector indicating values to predict. Choices include the baseline survival function for uncured subjects (\"basesurv\"), the conditional survival function for uncured subjects (\"suncure\"), the unconditional or population survivor function (\"spop\"), or the probability that an observation is at risk (\"uncureprob\").
 #' @param newX An n x k matrix containing values of X to use, where n is the number of observations and k is the number of variables in the hazard equation. Must contain values for all variables in the hazard equation. Must be included unless type = \"basesurv\." Must be passed as a matrix even if it only contains 1 row.
 #' @param newZ An n x k matrix containing values of Z to use. Must contain values for all variables in the cure equation equation. Must be included unless type = \"basesurv\." Must be passed as a matrix even if it only contains 1 row.
 #' @param CI Logical value indicating whether confidence intervals should be estimated by simulation.
@@ -52,8 +52,10 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
     stop("Model must be a tvcure object")
   if (type != "basesurv" & (is.null(newX) | is.null(newZ)))
     stop("newX and newZ must be specified unless type = \"basesurv\"")
+  if (type == "basesurv" & (!is.null(newX) | !is.null(newZ)))
+    warning("newX and newZ will be ignored for type = \"basesurv\"")
   if (CI == T & model$options$var == F)
-    stop("Confidence intervals require estimates of coefficient variance. Set var = T in tvcure function.")
+    stop("Confidence intervals require estimates of coefficient variance. Run tvcure with option var = T.")
 
 
 
@@ -78,6 +80,7 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
   nz = nrow(newZ)
 
   # Create predictions without CIs ---------------------------------------------
+  browser()
   if (CI == F) {
 
     # Baseline hazard
@@ -95,6 +98,7 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
         suncure[, i] = s0^ebetaX[i]
       }
       suncure = suncure[order(suncure[, 1], decreasing = T), ]
+      suncure = as.matrix(suncure)
 
       # Spop
       spop = array(0, dim = c(nobs, nrow(newX)))
@@ -116,7 +120,7 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
     Coef_smplb = MASS::mvrnorm(n = nsims, mu = beta, Sigma = vcovb)
     Coef_smplg = MASS::mvrnorm(n = nsims, mu = gamma, Sigma =  vcovg)
 
-    # obtain simulated values of baseline hazard
+    # Simulate baseline survival function
     s0sim = matrix(nrow = nsims, ncol = nobs)
     for (j in 1:nsims) {
       s0sim[j, ] = as.vector(s0)^exp(Coef_smplb[j, ] %*% t(model$X))
@@ -131,7 +135,7 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
       # if (ncol(newX) == 1) newX = t(newX)
       # if (ncol(newZ) == 1) newZ = t(newZ)
 
-      # obtain simulated values of uncureprob
+      # Simulate uncureprob
 
       if (link == "logit")
         uncureprobsims = exp(Coef_smplg %*% t(newZ)) / (1 + exp(Coef_smplg %*% t(newZ)))
@@ -141,7 +145,7 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
       uncurelo   = apply(uncureprobsims, 2, quantile, 0.05)
       uncurehi   = apply(uncureprobsims, 2, quantile, 0.95)
 
-      # Obtain simulated values of suncure and spop
+      # Simulate suncure and spop
 
       if (type == "suncure" | type == "spop") {
         ebetaXsim   = exp(Coef_smplb %*% t(newX))
@@ -173,7 +177,6 @@ tvpred = function(model, type = c("basesurv", "spop", "suncure", "uncureprob"),
       }
     }
   }
-
 
 
   # Output ---------------------------------------------------------------------
