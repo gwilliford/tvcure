@@ -11,7 +11,7 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), digits = 3,
   qi <- match.arg(qi)
 
   `%notin%` <- Negate(`%in%`)
-browser()
+
   class = character(length = length(models))
   for (i in 1:length(models)) {
     if (class(models[[i]])[1] == "glm")    class[i] = "glm"
@@ -96,7 +96,7 @@ browser()
         gn[j] <- as.vector(rbind(paste0("qi_", gn[j - 1])))
       }
     }
-browser()
+
     # Create tables for each model ---------------------------------------------
     tab <- cbind(bn, as.vector(rbind(beta, qivec)))
     colnames(tab)[1] <- "vn"

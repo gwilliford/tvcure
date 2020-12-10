@@ -1,4 +1,4 @@
-#' Estimate cure models.
+#' Fit a semiparametric proportional hazards cure model
 #'
 #' @param formula
 #' @param cureform
@@ -12,84 +12,88 @@
 #' @param eps
 #' @param nboot Specifies the number of bootstrap samples to draw.
 #' @param parallel If true, bootstraps will be run in parallel. A progress bar displaying the number of completed boostraps will be displayed. This option requires the user to set up a \link{snow} object and register it using the \link{doSNOW} package (see example below).
+#'
+#' @return Fitted survival probabilities for each observation
 tvcure = function(survform, cureform, link = "logit",
                    data, na.action = na.omit, offset = NULL, subset = NULL,
                    var = T, nboot = 100,
                    parallel = T,
                    brglm = F,
-                   emmax = 1000, eps = 1e-07)
-{
-  # Preliminaries and error checking--------------------------------------------
-    # If parallel is true, ensure that snow cluster is registered
-    if (parallel == T & var == T) {
-      clstatus = foreach::getDoParRegistered()
-      if (clstatus == T) {
-        if (getDoParName() == "doSEQ")
-          stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
-      } else stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
-    }
+                   emmax = 1000, eps = 1e-07) {
 
-  # Data set up ----------------------------------------------------------------
-    call = match.call()
-    if (!is.null(subset)) {
-      data = subset(data, subset)
-    }
+# Preliminaries and error checking--------------------------------------------
+  # If parallel is true, ensure that snow cluster is registered
+  if (parallel == T & var == T) {
+    clstatus = foreach::getDoParRegistered()
+    if (clstatus == T) {
+      if (getDoParName() == "doSEQ")
+        stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
+    } else stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
+  }
+  if (link != "logit" | link != "probit")
+    stop ("Link function must be either logit or probit")
 
-    method = ifelse(brglm, "brglmFit", "glm.fit")
-    if (brglm) require(brglm2)
+# Data set up ----------------------------------------------------------------
+  call = match.call()
 
-    # Create data frame and apply missing data function
-    xvars = all.vars(survform)
-    zvars = all.vars(cureform)
-    avars = unique(c(xvars, zvars))
-    data  = na.action(data[, c(avars)])
-    nobs  = nrow(data)
+  method = ifelse(brglm, "brglmFit", "glm.fit")
+  if (brglm) require(brglm2)
 
-    # Create IV matrices
-    mf = model.frame(survform, data)
-    X = model.matrix(attr(mf, "terms"), mf)
-    if (ncol(X) == 2) {
-      X1 = X[, -1]
-      X1 = matrix(X1, ncol = 1)
-      colnames(X1) = colnames(X)[2]
-      X = X1
-    } else {
-      X = X[, -1]
-    }
-    bnames = colnames(X)
-    nbeta = ncol(X)
+  # Create data frame and apply missing data function
+  if (!is.null(subset)) {
+    data = subset(data, subset)
+  }
+  xvars = all.vars(survform)
+  zvars = all.vars(cureform)
+  avars = unique(c(xvars, zvars))
+  data  = na.action(data[, c(avars)])
+  nobs  = nrow(data)
 
-    mf2 = model.frame(cureform, data)
-    Z = model.matrix(attr(mf2, "terms"), mf2)
-    gnames = colnames(Z)
-    ngamma = ncol(Z)
+  # Create IV matrices
+  mf = model.frame(survform, data)
+  X = model.matrix(attr(mf, "terms"), mf)
+  if (ncol(X) == 2) {
+    X1 = X[, -1]
+    X1 = matrix(X1, ncol = 1)
+    colnames(X1) = colnames(X)[2]
+    X = X1
+  } else {
+    X = X[, -1]
+  }
+  bnames = colnames(X)
+  nbeta = ncol(X)
 
-    # Set up offset variables
-    if (!is.null(offset)) {
-      offset = all.vars(offset)
-      offset = data[, offset]
-    }
+  mf2 = model.frame(cureform, data)
+  Z = model.matrix(attr(mf2, "terms"), mf2)
+  gnames = colnames(Z)
+  ngamma = ncol(Z)
 
-    # Format dependent variable
-    Y = model.extract(mf, "response")
-    if (!inherits(Y, "Surv"))
-      stop("Response must be a survival object")
-    survtype = attr(Y, "type")
-    if (survtype == "right"){
-      Time = Y[, 1]
-      Status = Y[, 2]
-      survobj = Surv(Time, Status)
-    } else if (survtype == "counting") {
-      Start = Y[, 1]
-      Stop = Y[, 2]
-      Status = Y[, 3]
-      Time = Stop
-      survobj = Surv(Start, Stop, Status)
-    } else stop("tvcure only accepts survival objects of type \"right\" or \"counting\"")
+  # Set up offset variables
+  if (!is.null(offset)) {
+    offset = all.vars(offset)
+    offset = data[, offset]
+  }
 
-    cat("tvcure started at "); print(Sys.time()); ("Estimating coefficients...\n")
+  # Format dependent variable
+  Y = model.extract(mf, "response")
+  if (!inherits(Y, "Surv"))
+    stop("Response must be a survival object")
+  survtype = attr(Y, "type")
+  if (survtype == "right"){
+    Time = Y[, 1]
+    Status = Y[, 2]
+    survobj = Surv(Time, Status)
+  } else if (survtype == "counting") {
+    Start = Y[, 1]
+    Stop = Y[, 2]
+    Status = Y[, 3]
+    Time = Stop
+    survobj = Surv(Start, Stop, Status)
+  } else stop("tvcure only accepts survival objects of type \"right\" or \"counting\"")
 
-  # Obtain initial estimates------------------------------------------------------
+  cat("tvcure started at "); print(Sys.time()); ("Estimating coefficients...\n")
+
+# Obtain initial estimates------------------------------------------------------
   # w = rep(1, length(Time))
   # w[Status == 0] = seq(1, 0, along = w[Status == 0])
   w = Status
@@ -111,7 +115,6 @@ tvcure = function(survform, cureform, link = "logit",
   beta = emfit$beta
   Survival = emfit$Survival
   cat("Coefficient estimation complete, estimating variance...\n")
-
 
 # Bootstrap standard errors --------------------------------------------------
 if (var) {

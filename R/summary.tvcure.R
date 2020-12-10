@@ -23,9 +23,6 @@ summary.tvcure <- function(model) {
   print(bmat)  ; cat("", sep="\n\n")
   cat("n =", model$nobs, "with", model$nfail, "failures\n", sep = " ")
   cat("Model converged in", model$emrun, "iterations\n", sep = " ")
-  if (model$options$var == T) cat("Variance estimates based on", model$bootcomp, "successful boostrap replications\n", sep = " ")
-
-  object = list(model$call, gmat, bmat)
-  class(object) = "summary.tvcure"
-  object
+  if (model$options$var == T) cat("Variance estimates based on", model$bootcomp,
+                                  "successful boostrap replications\n", sep = " ")
 }

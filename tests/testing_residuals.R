@@ -20,6 +20,7 @@ summary(mc)
 summary(tv)
 sm$beta
 sm$logistfit$coefficients
+
 ################################################################################
 # Calculate residuals
 ################################################################################
@@ -47,6 +48,18 @@ summary(tv_mm$residuals)
 
 #
 prop.coxph(tv)
+
+################################################################################
+# Testing Schoenfeld residuals
+################################################################################
+a = sch(set_cure)
+b = residuals(set_cure$uncuremod, type = "schoenfeld")
+
+plotsch(a, "recnowt")
+plotsch(a, "recyeswt")
+plotsch(a, "lpchcap")
+plotsch(a, "recmidwt")
+plotsch(a, "bdymid")
 
 ################################################################################
 # Plot residuals

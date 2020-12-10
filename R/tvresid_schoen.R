@@ -1,4 +1,5 @@
-
+#' @return sch A matrix of Schoenfeld residuals for each variable. Sorted by failure time.
+#' @return failtime A vector of ordered failure times
 sch = function(model) {
   X = model$X
   beta = model$beta
@@ -37,24 +38,19 @@ sch = function(model) {
   sch
 }
 
-a = sch(set_cure)
-b = residuals(set_cure$uncuremod, type = "schoenfeld")
-
 plotsch = function(schres, variable, zeroline = T) {
+  variable = variable
   y = schres$sch[, variable]
   x = schres$failtime
-  lws = loess(y ~ x)
+  lws = lm(y ~ x)
+  j = order(x)
+  #lws = loess(y ~ x)
   lws = predict(lws, se = T)
-  u = lws$fit + qt(0.975, lws$df) * lws$se
-  l = lws$fit - qt(0.975, lws$df) * lws$se
+  u = lws$fit[j] + qt(0.975, lws$df) * lws$se
+  l = lws$fit[j] - qt(0.975, lws$df) * lws$se
   plot(y ~ x)
   lines(lws$fit[order(lws$fit)], col = "blue")
   lines(u[order(lws$fit)], lty = 2)
   lines(l[order(lws$fit)], lty = 2)
-  if (zeroline == T) abline(h = 0, lty = 2, col = "dark gray")
+  if (zeroline) abline(h = 0, lty = 2, col = "dark gray")
 }
-plotsch(a, "recnowt")
-plotsch(a, "recyeswt")
-plotsch(a, "lpchcap")
-plotsch(a, "recmidwt")
-plotsch(a, "bdymid")
