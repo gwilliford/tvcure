@@ -60,29 +60,31 @@ newZ[2, "demdy"] = 1
 newX2 = t(as.matrix(apply(set_cure$X, 2, median)))
 newZ2 = t(as.matrix(apply(set_cure$Z, 2, median)))
 
+with(peaceterm, plot(survfit(Surv(start, stop, event) ~ 1)))
+
 ##### Test basesurv
 a1 = prediction4(set_cure, type = "basesurv", variable = "contdir", values = c(0, 1), CI = F)
 a2 = prediction4(set_cure, type = "basesurv", variable = "contdir", values = c(0, 1), CI = T)
-a3 = prediction4(set_cure, type = "basesurv", variable = "contdir", values = c(0), CI = F)
-a4 = prediction4(set_cure, type = "basesurv", variable = "contdir", values = c(0), CI = T)
+a3 = prediction4(set_cure, type = "basesurv", variable = "contdir", values = 0, CI = F)
+a4 = prediction4(set_cure, type = "basesurv", variable = "contdir", values = 0, CI = T)
 
 ##### Test suncure
 b1 = prediction4(set_cure, type = "suncure", variable = "bdymid", values = c(0, 1), CI = F)
 b2 = prediction4(set_cure, type = "suncure", variable = "bdymid", values = c(0, 1), CI = T)
-b3 = prediction4(set_cure, type = "suncure", variable = "bdymid", values = c(0), CI = F)
-b4 = prediction4(set_cure, type = "suncure", variable = "bdymid", values = c(0), CI = T)
+b3 = prediction4(set_cure, type = "suncure", variable = "bdymid", values = 0, CI = F)
+b4 = prediction4(set_cure, type = "suncure", variable = "bdymid", values = 0, CI = T)
 
 ##### Test spop
 d1 = prediction4(set_cure, type = "spop", variable = "bdymid", values = c(0, 1), CI = F)
 d2 = prediction4(set_cure, type = "spop", variable = "bdymid", values = c(0, 1), CI = T)
-d3 = prediction4(set_cure, type = "spop", variable = "bdymid", values = c(0), CI = F)
-d4 = prediction4(set_cure, type = "spop", variable = "bdymid", values = c(0), CI = T)
+d3 = prediction4(set_cure, type = "spop", variable = "bdymid", values = 0, CI = F)
+d4 = prediction4(set_cure, type = "spop", variable = "bdymid", values = 0, CI = T)
 
 ##### Test uncureprob
 e1 = prediction4(set_cure, type = "uncureprob", variable = "riveriss", values = c(0, 1), CI = F)
 e2 = prediction4(set_cure, type = "uncureprob", variable = "riveriss", values = c(0, 1), CI = T)
-e3 = prediction4(set_cure, type = "uncureprob", variable = "riveriss", values = c(0), CI = F)
-e4 = prediction4(set_cure, type = "uncureprob", variable = "riveriss", values = c(0), CI = T)
+e3 = prediction4(set_cure, type = "uncureprob", variable = "riveriss", values = 0, CI = F)
+e4 = prediction4(set_cure, type = "uncureprob", variable = "riveriss", values = 0, CI = T)
 
 ################################################################################
 # Test predictions with single variable in each equation and single row in X/Zmat
