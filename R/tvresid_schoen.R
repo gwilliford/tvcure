@@ -12,11 +12,11 @@ sch = function(model) {
   xbar = matrix(nrow = length(death_point), ncol = ncol(X))
   sch  = matrix(nrow = sum(Status), ncol = ncol(X))
 
-  for (k in 1:ncol(X)) {
-    for (i in 1:length(death_point)) {
-      subs = X[Time >= death_point[i], ]
-      coxexp = exp((beta) %*% t(subs))
-      ht = basehaz[i] * drop(coxexp)
+  for (i in 1:length(death_point)) {
+    subs = X[Time >= death_point[i], ]
+    coxexp = exp((beta) %*% t(subs))
+    ht = basehaz[i] * drop(coxexp)
+    for (k in 1:ncol(X)) {
       xvec = subs[, k]
       xbar[i, k] = sum(xvec[i] * ht[i]) / sum(ht[i])
      # xres = cbind(Time[Status == 1], X[Status == 1, ])
@@ -34,6 +34,7 @@ sch = function(model) {
     sch[, i] = xres[, i] - xres[, i + ncx]
   }
   colnames(sch) = colnames(X)
+  browser()
   sch = list(sch = sch, failtime = Time[ind])
   sch
 }
@@ -42,7 +43,7 @@ plotsch = function(schres, variable, zeroline = T) {
   variable = variable
   y = schres$sch[, variable]
   x = schres$failtime
-  lws = lm(y ~ x)
+  lws = loess(y ~ x, span = 20)
   j = order(x)
   #lws = loess(y ~ x)
   lws = predict(lws, se = T)
