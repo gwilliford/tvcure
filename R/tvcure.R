@@ -30,8 +30,8 @@ tvcure = function(survform, cureform, link = "logit",
         stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
     } else stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
   }
-  if (link != "logit" | link != "probit")
-    stop ("Link function must be either logit or probit")
+  # if (link != "logit" | link != "probit")
+  #   stop ("Link function must be either logit or probit")
 
 # Data set up ----------------------------------------------------------------
   call = match.call()
