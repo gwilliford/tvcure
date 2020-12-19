@@ -18,7 +18,7 @@ sch = function(model) {
     ht = basehaz[i] * drop(coxexp)
     for (k in 1:ncol(X)) {
       xvec = subs[, k]
-      xbar[i, k] = sum(xvec[i] * ht[i]) / sum(ht[i])
+      xbar[i, k] = sum(xvec * ht) / sum(ht)
      # xres = cbind(Time[Status == 1], X[Status == 1, ])
     }
   }
@@ -34,24 +34,41 @@ sch = function(model) {
     sch[, i] = xres[, i] - xres[, i + ncx]
   }
   colnames(sch) = colnames(X)
-  browser()
+
   sch = list(sch = sch, failtime = Time[ind])
   sch
 }
 
-plotsch = function(schres, variable, zeroline = T) {
+plotsch = function(schres, variable, zeroline = T, ...) {
   variable = variable
-  y = schres$sch[, variable]
   x = schres$failtime
-  lws = loess(y ~ x, span = 20)
-  j = order(x)
-  #lws = loess(y ~ x)
-  lws = predict(lws, se = T)
-  u = lws$fit[j] + qt(0.975, lws$df) * lws$se
-  l = lws$fit[j] - qt(0.975, lws$df) * lws$se
-  plot(y ~ x)
-  lines(lws$fit[order(lws$fit)], col = "blue")
-  lines(u[order(lws$fit)], lty = 2)
-  lines(l[order(lws$fit)], lty = 2)
+  y = schres$sch[, variable]
+  plot(y ~ x, xlab = "Time", ylab = paste0("Beta(t) for ", variable), ...)
+
+  # lws = lowess(y ~ x)
+  # lines(lws$y ~ lws$x)
+
+  # browser()
+  # plot(y ~ x, )
+  # lines(lws$y)
+  #
+  # lws = loess(y ~ x, xlab = variable, degree = 1)
+  # lws = predict(lws, se = T)
+  # u = lws$fit[j] + qt(0.975, lws$df) * lws$se
+  # l = lws$fit[j] - qt(0.975, lws$df) * lws$se
+  # lines(lws$fitted ~ x, col = 2)
+  # lines(lws$fitted[order(x)] ~ x, col = 2)
+
+  a = spatialEco::loess.ci(y, x)
+  lines(a$loess[order(x)])
+  lines(a$uci[order(x)], lty = 2)
+  lines(a$lci[order(x)], lty = 2)
+
+  # # plot(y ~ x, xlab = Time)
+  # lines(lws$fit[order(lws$fit)], col = "blue")
+  # # lines(u[order(lws$fit)], lty = 2)
+  # # lines(l[order(lws$fit)], lty = 2)
+
   if (zeroline) abline(h = 0, lty = 2, col = "dark gray")
 }
+
