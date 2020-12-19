@@ -33,7 +33,7 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), digits = 3,
     model <- models[[i]]
     if (class[i] == "coxph") {
       beta  <- round(coef(model), digits)
-      bse   <- round(sqrt(diag(model)), digits)
+      bse   <- round(sqrt(diag(model$var)), digits)
       bz    <- round(beta/bse, digits)
       bpval <- round((1 - pnorm(abs(bz))) * 2, digits)
       bnames <- attr(terms(model), "term.labels")
@@ -69,13 +69,13 @@ tvtable <- function(..., qi = c("se", "pvalue", "zscore"), digits = 3,
       nc = 2
     }
 
-    if (qi == "se")     qivec <- round(bse,   digits)
-    if (qi == "zscore") qivec <- round(bz,    digits)
-    if (qi == "pvalue") qivec <- round(bpval, digits)
+    if (qi == "se")     qivec <- paste0("(", round(bse,   digits), ")")
+    if (qi == "zscore") qivec <- paste0("(", round(bz,    digits), ")")
+    if (qi == "pvalue") qivec <- paste0("(", round(bpval, digits), ")")
     if (nc == 2) {
-      if (qi == "se")     qivec2 <- round(model$g_sd,     digits)
-      if (qi == "zscore") qivec2 <- round(model$g_pvalue, digits)
-      if (qi == "pvalue") qivec2 <- round(model$g_zvalue, digits)
+      if (qi == "se")     qivec2 <- paste0("(", round(model$g_sd,     digits), ")")
+      if (qi == "zscore") qivec2 <- paste0("(", round(model$g_pvalue, digits), ")")
+      if (qi == "pvalue") qivec2 <- paste0("(", round(model$g_zvalue, digits), ")")
     }
 
     # Add significance stars ---------------------------------------------------
