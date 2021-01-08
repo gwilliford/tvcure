@@ -1,10 +1,11 @@
+# NewZ must include an intercept. Automatically included with model matrix
 predict_tvcure_noci = function(model, insamp = T, newX = NULL, newZ = NULL) {
 
   if (!inherits(model, "tvcure")) stop("Model must be a tvcure object")
   s0 = as.matrix(model$Survival, ncol = 1)
   nobs = nrow(s0)
-  beta = model$beta
-  gamma = model$gamma
+  beta = as.matrix(model$beta)
+  gamma = as.matrix(model$gamma)
   link = model$link
 
   # In sample predictions ------------------------------------------------------
@@ -14,7 +15,8 @@ predict_tvcure_noci = function(model, insamp = T, newX = NULL, newZ = NULL) {
     if (link == "logit")  uncureprob = exp(model$Z %*% gamma) / (1 + exp(model$Z %*% gamma))
     if (link == "probit") uncureprob = pnorm(model$Z %*% gamma)
     suncure = array(0, dim = c(nobs, nx))
-    ebetaX = exp(model$X %*% beta)
+    lp = model$X %*% beta
+    ebetaX = exp(lp)
     suncure = s0^ebetaX
     spop = uncureprob * suncure + (1 - suncure)
   } else {
@@ -26,6 +28,7 @@ predict_tvcure_noci = function(model, insamp = T, newX = NULL, newZ = NULL) {
       # if (!is.null(variable) & !is.null(values))
       #   if (variable %in% bnames) newX[, variable] = values
     }
+    newX = as.matrix(newX)
     nx = nrow(newX)
 
     if (is.null(newZ)) {
@@ -35,15 +38,17 @@ predict_tvcure_noci = function(model, insamp = T, newX = NULL, newZ = NULL) {
       # colnames(newZ) = gnames
       # if (!is.null(variable) & !is.null(values))
       #   if (variable %in% gnames) newZ[, variable] = values
+      newZ = cbind()
     }
-    nx = nrow(newX)
-    browser()
+    newZ = as.matrix(newZ)
+    nz = nrow(newX)
 
     if (link == "logit")  uncureprob = exp(newZ %*% gamma) / (1 + exp(newZ %*% gamma))
     if (link == "probit") uncureprob = pnorm(newZ %*% gamma)
 
     suncure = array(0, dim = c(nobs, nx))
-    ebetaX = exp(model$beta %*% t(newX))
+    lp = model$beta %*% t(newX)
+    ebetaX = exp(lp)
     for (i in 1:nx) {
       suncure[, i] = s0^ebetaX[i]
     }
@@ -59,5 +64,6 @@ predict_tvcure_noci = function(model, insamp = T, newX = NULL, newZ = NULL) {
   suncure  = suncure[order(suncure[, 1], decreasing = T), ]
   spop     = spop[order(spop[, 1], decreasing = T), ]
   failtime = model$Time[order(model$Time)]
-  list(basesurv = s0, suncure = suncure, spop = spop, uncureprob = uncureprob, failtime = failtime)
+  list(basesurv = s0, suncure = suncure, spop = spop, lp = lp,
+       uncureprob = uncureprob, failtime = failtime, newX = newX, newZ = newZ)
 }
