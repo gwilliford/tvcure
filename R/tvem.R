@@ -57,7 +57,6 @@
         gamma <- update_cureg
         beta<- update_beta
         s <- update_s
-        basehaz <- update_a$basehaz
         if (link == "logit")
           uncureprob <- matrix(exp((gamma) %*% t(Z))/(1 + exp((gamma) %*% t(Z))), ncol = 1)
         if (link == "probit")
@@ -66,7 +65,15 @@
       }
     }
 
-    em <- list(incidence_fit = incidence_fit, gamma = gamma, beta = beta, latency_fit = coxit,
+    browser()
+    h0 = update_a$h0
+    ls = log(update_s)
+    ls[is.infinite(ls)] = log(.0001)
+    loglik = sum(w * log(uncureprob) + (1 - w) * log(1 - uncureprob)) +
+      sum(w * Status * log(h0) + w * ls)
+
+
+    list(incidence_fit = incidence_fit, gamma = gamma, beta = beta, latency_fit = coxit,
                Survival = s, uncureprob = uncureprob, w = w,
-               tau = convergence, emrun = i)
+               tau = convergence, emrun = i, loglik = loglik)
   }
