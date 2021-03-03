@@ -10,6 +10,10 @@ tvsurv <- function(Time, Status, X, beta, w) {
     temp1 <- event[i]
     lambda[i] <- temp1/temp
   }
+  h0 = lambda[Time[order(Time)]]
+  h0[(is.na(h0))] = lambda[length(lambda)]
+  h0 = h0[Time]
+
   HHazard <- numeric()
   for (i in 1:length(Time)) {
     HHazard[i] <- sum(as.numeric(Time[i] >= death_point) * lambda)
@@ -19,5 +23,5 @@ tvsurv <- function(Time, Status, X, beta, w) {
        HHazard[i] <- 0
   }
   survival <- exp(-HHazard)
-  list(survival = survival, basehaz = HHazard)
+  list(survival = survival, H0 = HHazard, h0 = h0)
 }
