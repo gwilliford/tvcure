@@ -1,5 +1,7 @@
+#' Summary method for tvcure models
+#' Summarizes the output of tvcure models
+#' @param model A model of class tvcure
 summary.tvcure <- function(model) {
-  o <- model
   if (model$options$var == T) {
     gmat <- cbind(model$gamma, model$g_sd, model$g_zvalue, model$g_pvalue)
     bmat <- cbind(model$beta, model$b_sd, model$b_zvalue, model$b_pvalue)
