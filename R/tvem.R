@@ -1,3 +1,4 @@
+#' Expectation maximization algorithm for tvcure
   tvem <- function(Time, Status, X, Z, w, offset, gamma, beta,
                    link, emmax, eps, brglm, survobj, survtype, method){
 

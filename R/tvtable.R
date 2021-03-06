@@ -1,8 +1,18 @@
+#' Create tables for tvcure and related models
+#' Outputs a table as a data frame that can be passed to
+#\link{[xtable]{xtable}}
+#' @param ... One or more models to include in the table. Models may be of class tvcure, coxph, coxphf, or glm.
+#' @param qi The quantity of interest to be presented below the coefficients. Can be one of "se" for standard errors, "zscore", or "pvalue".
+#' @param varlist An optional named list containing variable names for each variable. Variables will be presented in the order of the list.
+#' @param digits The number of digits to which quantities are rounded
 #' @param stars Logical value indicating whether to include significance stars. By default, \* p < 0.1, \*\* p < 0.05, \*\*\* p < 0.01.
-#' @param siglevel If stars = T, significance levels can be changed from their defaults by passing a named numeric vector of symbols with their associated confidence levels. For example, "c('*' = 0.05)" produces output with a single star for coefficients that are significant at the 0.05 level. See \link{[modelsummary]{msummary}} for more details.
-tvtable <- function(..., qi = c("se", "pvalue", "zscore"), digits = 3,
-                    stars = T, siglevel = NULL,
-                    modnames = NULL, varlist = NULL, footnote = NULL)
+#' @param siglevel If stars = T, specifies significance levels and their associated symbols.
+#See \link{[modelsummary]{msummary}} for more details.
+
+
+
+tvtable <- function(..., qi = c("se", "zscore", "pvalue"), varlist = NULL,
+                    digits = 3, stars = T, siglevel = NULL)
 {
   # Set up ---------------------------------------------------------------------
   models <- list(...)

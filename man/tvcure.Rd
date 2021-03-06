@@ -2,33 +2,51 @@
 % Please edit documentation in R/tvcure.R
 \name{tvcure}
 \alias{tvcure}
-\title{Estimate cure models.}
+\title{Fit a proportional hazards cure model}
 \usage{
 tvcure(
   survform,
   cureform,
-  link = "logit",
   data,
+  subset = NULL,
   na.action = na.omit,
   offset = NULL,
-  subset = NULL,
+  link = "logit",
+  brglm = T,
   var = T,
   nboot = 100,
   parallel = T,
-  brglm = F,
   emmax = 1000,
   eps = 1e-07
 )
 }
 \arguments{
-\item{var}{If}
+\item{survform}{The coefficients in the cure equation are parameterized in terms of the probability of being susceptible. Positive coefficients indicate that a variable is associated with a higher susceptibility to experiencing the event of interest (i.e., a lower probability of being cured).}
 
-\item{nboot}{Specifies the number of bootstrap samples to draw.}
+\item{cureform}{A formula for the cure function. Must begin with a tilde followed by variables to include in the equation}
 
-\item{parallel}{If true, bootstraps will be run in parallel. A progress bar displaying the number of completed boostraps will be displayed. This option requires the user to set up a \link{snow} object and register it using the \link{doSNOW} package (see example below).}
+\item{data}{A data frame containing the data to be used in estimation.}
+
+\item{na.action}{Specifies how missing data should be handled}
+
+\item{offset}{Specify an offset variable}
+
+\item{link}{Link function for the cure equation. Either "logit" or "probit".}
+
+\item{brglm}{Logical value indicating whether bias-reduced logistic regression should be used to estimate the cure equation}
+
+\item{var}{Logical value indicating whether standard errors should be estimated.}
+
+\item{nboot}{The number of bootstrap samples to draw for estimating standard errors.}
+
+\item{parallel}{Logical value indicating whether bootstrap replications should be run using parallel processing. This option requires the user to set up a  object and register it using the  package.}
 
 \item{emmax}{Specifies the maximum number of iterations for the EM algorithm.}
+
+\item{eps}{Convergence criterion}
+
+\item{A}{formula for the hazard function. Must have a Surv object on the right-hand side of type "right" or "counting".}
 }
 \description{
-Estimate cure models.
+The coefficients in the cure equation are parameterized in terms of the probability of being susceptible to an event. Positive coefficients indicate that a variable is associated with higher susceptibility to experiencing the event of interest (i.e., a lower probability of being cured).
 }
