@@ -19,6 +19,7 @@ predict_tvcure_noci = function(model, insamp = T, newX = NULL, newZ = NULL) {
     ebetaX = exp(lp)
     suncure = s0^ebetaX
     spop = uncureprob * suncure + (1 - suncure)
+    # survival <- exp(-HHazard)
   } else {
     if (is.null(newX)) {
       newX = matrix(apply(model$X, 2, median), nrow = 1, ncol = ncol(model$X))
