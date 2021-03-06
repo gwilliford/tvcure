@@ -1,3 +1,5 @@
+#' Estimate baseline survival function
+
 tvsurv <- function(Time, Status, X, beta, w) {
   death_point <- sort(unique(subset(Time, Status == 1)))
   coxexp <- exp((beta) %*% t(X))
