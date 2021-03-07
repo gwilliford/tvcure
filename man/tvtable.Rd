@@ -2,8 +2,7 @@
 % Please edit documentation in R/tvtable.R
 \name{tvtable}
 \alias{tvtable}
-\title{Create tables for tvcure and related models
-Outputs a table as a data frame that can be passed to}
+\title{Create tables for tvcure and related models}
 \usage{
 tvtable(
   ...,
@@ -25,9 +24,8 @@ tvtable(
 
 \item{stars}{Logical value indicating whether to include significance stars. By default, \* p < 0.1, \*\* p < 0.05, \*\*\* p < 0.01.}
 
-\item{siglevel}{If stars = T, specifies significance levels and their associated symbols.}
+\item{siglevel}{If stars = T, specifies significance levels and their associated symbols. See \code{\link[modelsummary]{msummary}} for details}
 }
 \description{
-Create tables for tvcure and related models
-Outputs a table as a data frame that can be passed to
+Returns a table stored as a matrix that can be passed to \link[xtable]{name}.
 }

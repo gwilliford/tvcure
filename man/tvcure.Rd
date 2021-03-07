@@ -21,7 +21,7 @@ tvcure(
 )
 }
 \arguments{
-\item{survform}{The coefficients in the cure equation are parameterized in terms of the probability of being susceptible. Positive coefficients indicate that a variable is associated with a higher susceptibility to experiencing the event of interest (i.e., a lower probability of being cured).}
+\item{survform}{A formula for the hazard function. Must have a Surv object on the right-hand side of type "right" or "counting".}
 
 \item{cureform}{A formula for the cure function. Must begin with a tilde followed by variables to include in the equation}
 
@@ -31,22 +31,80 @@ tvcure(
 
 \item{offset}{Specify an offset variable}
 
-\item{link}{Link function for the cure equation. Either "logit" or "probit".}
+\item{link}{Link function for the cure equation. Must be either "logit" or "probit".}
 
-\item{brglm}{Logical value indicating whether bias-reduced logistic regression should be used to estimate the cure equation}
+\item{brglm}{Logical value indicating whether bias-reduced logistic regression should be used to estimate the cure equation. See \link[brglm2]{name}}
 
 \item{var}{Logical value indicating whether standard errors should be estimated.}
 
 \item{nboot}{The number of bootstrap samples to draw for estimating standard errors.}
 
-\item{parallel}{Logical value indicating whether bootstrap replications should be run using parallel processing. This option requires the user to set up a  object and register it using the  package.}
+\item{parallel}{Logical value indicating whether bootstrap replications should be run using parallel processing. This option requires the user to set up a \code{\link[snow]{snow}} object and register it using the \code{\link[doSNOW]{doSNOW}} package.}
 
 \item{emmax}{Specifies the maximum number of iterations for the EM algorithm.}
 
-\item{eps}{Convergence criterion}
+\item{eps}{Convergence criterion
 
-\item{A}{formula for the hazard function. Must have a Surv object on the right-hand side of type "right" or "counting".}
+#' @return gamma Cure equation coefficients. See details}
+}
+\value{
+beta	Hazard equation coefficients
+
+Z Model matrix for cure variables
+
+X Model matrix for hazard variables
+
+var Logical value for whether variance was estimated
+
+vcovg If var = T, variance-covariance matrix for gamma coefficients
+
+vcovb If var = T, variance-covariance matrix for beta coefficients
+
+g_var If var = T, variance of gamma coefficients
+
+g_sd If var = T, standard deviation of gamma coefficients
+
+g_zvalue If var = T, z-value for gamma coefficients
+
+g_pvalue If var = T, p-value for gamma coefficients
+
+b_var If var = T, variance of beta coefficients
+
+b_sd If var = T, standard deviation of beta coefficients
+
+b_zvalue If var = T, z-value for gamma coefficients
+
+b_pvalue If var = T, p-value for gamma coefficients
+
+nboot If var = T, number of bootstrap replications performed
+
+call Function call
+
+gnames Names of variables in cure equation
+
+bnames Names of variables in hazard equation
+
+Survival
+
+uncureprob
+
+Time
+
+Status
+
+link Link function used
+
+nobs Total number of observations
+
+nfail Number of failures that occur
+
+emrun Number of iterations until algorithm converged
+
+loglik Log-likelihood
 }
 \description{
+Here is a description
+}
+\details{
 The coefficients in the cure equation are parameterized in terms of the probability of being susceptible to an event. Positive coefficients indicate that a variable is associated with higher susceptibility to experiencing the event of interest (i.e., a lower probability of being cured).
 }
