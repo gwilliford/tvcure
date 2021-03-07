@@ -9,13 +9,10 @@ License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 Imports: survival,
-    coxphf,
-    logistf,
     gtools,
     brglm
 Suggests: testthat
 Depends: survival,
-    logistf,
     snow,
     doSNOW,
     foreach
