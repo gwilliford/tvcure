@@ -1,19 +1,23 @@
 #https://stat.ethz.ch/pipermail/r-help//2013-January/344429.html
-#' Prediction method for tvcure objects
-#' ##' Computes and plots predicted survival curves and cure probabilities.
+#' @title Prediction method for tvcure objects
+#'
+#' @description Computes and plots predicted survival curves and cure probabilities.
+#'
+#' @details Computes  probability of being susceptible
+#'
 #' @param model A model of class tvcure
-#' @param variable A character string indicating a variable to plot
+#' @param variable
 #' @param values
 #' @param newX
 #' @param newZ
 #' @param CI Logical value indicating whether predictions and confidence intervals should be estimated using maximum simulated likelihood
 #' @param nsims The number of simulated coefficient values to estimate when computing confidence intervals.
 #' @param Logical value indicating whether graphs should be printed in black and white.
-#' @param xlab A label for the x-axis.
-#' @param ylab A label for the y-axis.
-#' @param legendtitle
+#' @param xlab A label for the x-axis
+#' @param ylab A label for the y-axis
+#' @param legendtitle Title for the plot legend
 #' @param internals A logical value indicating whether the predictions should be returned. If FALSE, only the graph will be returned.
-
+#' @export
 predict.tvcure <- function(model, type = c("basesurv", "suncure", "spop", "uncureprob"),
                         variable = NULL, values = NULL, newX = NULL, newZ = NULL,
                         CI = T, nsims = 1000, bw = F,
