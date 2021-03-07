@@ -1,30 +1,28 @@
-#' Fit a proportional hazards cure model
+#' @title Fit a proportional hazards cure model
 #'
-#' Here is a description
+#' @description Fit a proportional hazards cure model using the expectation-maximization algorithm detailed in Peng and Dear (2000) and Sy and Taylor (2000). Time-varying covariates may be incorporated using a "counting" type survival object in the formula.
 #'
-#' The coefficients in the cure equation are parameterized in terms of the probability of being susceptible to an event. Positive coefficients indicate that a variable is associated with higher susceptibility to experiencing the event of interest (i.e., a lower probability of being cured).
+#' @details The coefficients in the cure equation are parameterized in terms of the probability of being susceptible to an event. Positive coefficients indicate that a variable is associated with higher susceptibility to experiencing the event of interest (i.e., a lower probability of being cured).
+#'
 #' @param survform A formula for the hazard function. Must have a Surv object on the right-hand side of type "right" or "counting".
 #' @param cureform A formula for the cure function. Must begin with a tilde followed by variables to include in the equation
 #' @param data A data frame containing the data to be used in estimation.
 #' @param na.action Specifies how missing data should be handled
 #' @param offset Specify an offset variable
-#' @param link Link function for the cure equation. Either "logit" or "probit".
-#' @param brglm Logical value indicating whether bias-reduced logistic regression should be used to estimate the cure equation
+#' @param link Link function for the cure equation. Must be either "logit" or "probit".
+#' @param brglm Logical value indicating whether bias-reduced logistic regression should be used to estimate the cure equation using \code{\link[brglm2]{brglm2}}
 #' @param var Logical value indicating whether standard errors should be estimated.
 #' @param nboot The number of bootstrap samples to draw for estimating standard errors.
-#' @param parallel Logical value indicating whether bootstrap replications should be run using parallel processing. This option requires the user to set up a  object and register it using the  package.
+#' @param parallel Logical value indicating whether bootstrap replications should be run using parallel processing. This option requires the user to set up a \code{\link[snow]{snow}} object and register it using the \code{\link[doSNOW]{doSNOW}} package.
 #' @param emmax Specifies the maximum number of iterations for the EM algorithm.
 #' @param eps Convergence criterion
-# \link{[doSNOW]{doSNOW}}
-# \link{[snow]{snow}}
-# \link{na.action}
+#' @
+#' @export
 tvcure = function(survform, cureform, data, subset = NULL,
                    na.action = na.omit, offset = NULL,
                    link = "logit", brglm = T,
                    var = T, nboot = 100, parallel = T,
                    emmax = 1000, eps = 1e-07) {
-
-
 
 # Preliminaries and error checking--------------------------------------------
   # If parallel is true, ensure that snow cluster is registered
@@ -35,8 +33,8 @@ tvcure = function(survform, cureform, data, subset = NULL,
         stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
     } else stop("Please register a snow cluster object to use parallel functionality or set parallel = F.")
   }
-  # if (link != "logit" | link != "probit")
-  #   stop ("Link function must be either logit or probit")
+  if (link != "logit" & link != "probit")
+    stop("Link must be equal to \"logit\" or \"probit\"")
 
 # Data set up ----------------------------------------------------------------
   call = match.call()
@@ -131,13 +129,14 @@ tvcure = function(survform, cureform, data, subset = NULL,
 # Final fit details ------------------------------------------------------------
   fit = list()
   class(fit) = "tvcure"
-  fit$uncuremod = uncuremod
-  fit$curemod$incidence_fit = emfit$incidence_fit
-  fit$curemod$latency_fit = emfit$latency_fit
+  # fit$uncuremod = uncuremod
+  # fit$curemod$incidence_fit = emfit$incidence_fit
+  # fit$curemod$latency_fit = emfit$latency_fit
   fit$gamma = gamma
   fit$beta = beta
   fit$X = X
   fit$Z = Z
+  fit$var = var
   if (var) {
     fit$vcovg = varout$vcovg
     fit$vcovb = varout$vcovb
@@ -149,25 +148,21 @@ tvcure = function(survform, cureform, data, subset = NULL,
     fit$b_sd = varout$b_sd
     fit$b_zvalue = fit$beta/fit$b_sd
     fit$b_pvalue = (1 - pnorm(abs(fit$b_zvalue))) * 2
-    fit$bootcomp = varout$bootcomp
+    fit$nboot = varout$nboot
   }
   fit$call = call
   fit$gnames = gnames
   fit$gnames[1] = "Intercept"
   fit$bnames = bnames
-  fit$w = emfit$w
+  # fit$w = emfit$w
   fit$Survival = emfit$Survival
   fit$uncureprob = emfit$uncureprob
-  # fit$ordBaseHaz = varfit$ordBasehaz
   fit$Time = Time
   fit$Status = Status
   fit$link  = link
-  fit$nfail = sum(Status)
   fit$nobs  = nobs
-  fit$nboot = nboot
-  fit$emmax = emmax
+  fit$nfail = sum(Status)
   fit$emrun = emfit$emrun
-  fit$options$var = var
   fit$loglik = emfit$loglik
   summary.tvcure(fit)
   return(fit)
