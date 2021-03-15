@@ -2,6 +2,7 @@ tvboot <- function(nboot, nbeta, ngamma, survtype, Time, Start, Stop, Status, X,
                    Z, w, gnames, bnames, offset, gamma, beta, link, emmax,
                    eps, brglm, survobj, n, parallel, method) {
 
+  require(foreach)
   # Progress Bar
     pb <- txtProgressBar(max = nboot, style = 3)
     progress <- function(n) setTxtProgressBar(pb, n)
