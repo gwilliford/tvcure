@@ -16,7 +16,9 @@
 #' @param parallel Logical value indicating whether bootstrap replications should be run using parallel processing. This option requires the user to set up a \code{\link[snow]{snow}} object and register it using the \code{\link[doSNOW]{doSNOW}} package.
 #' @param emmax Specifies the maximum number of iterations for the EM algorithm.
 #' @param eps Convergence criterion
-#' @
+#' @references Yingwei Peng and Keith B.G. Dear. 2000. ``A Nonparametric Mixture Model for Cure Rate Estimation.'' Biometrics, 56(1), 237-243.
+#' @references Sy, Judy P. and Jeremy M.G. Taylor. 2000. ``Estimation in a Cox proportional hazards cure model.'' Biometrics, 56(1), 227-236.
+#' @references Code for this package was based in part on \code{\link[smcure]{smcure}}
 #' @export
 tvcure = function(survform, cureform, data, subset = NULL,
                    na.action = na.omit, offset = NULL,
