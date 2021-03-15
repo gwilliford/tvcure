@@ -1,5 +1,5 @@
-#' Summary method for tvcure models
-#' Summarizes the output of tvcure models
+#' @title Summary method for tvcure models
+#' @description Summarizes the output of tvcure models
 #' @param model A model of class tvcure
 #' @export
 summary.tvcure <- function(model) {
