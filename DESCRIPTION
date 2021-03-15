@@ -1,16 +1,16 @@
 Package: tvcure
 Type: Package
-Title: Estimate Semiparametric Cure Models with Time-Varying Data
+Title: Estimate Proportional Hazards Cure Models with Time-Varying Data
 Version: 0.0.0.9000
-Author: person("George","Williford",email="gwilliford@gmail.com",role=c("aut","cre"))
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Authors@R: person("George","Williford",email="gwilliford@gmail.com",role=c("aut","cre"))
+Description: Package to estimate the semiparametric proportional hazards mixture cure model. Allows for the incorporation of time-varying covariates.
+License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
-Imports: survival,
-    gtools,
-    brglm
+Imports: brglm2, 
+    	modelsummary, 
+	foreach, 
+	ggplot2
 Suggests: testthat
 Depends: survival,
     snow,
