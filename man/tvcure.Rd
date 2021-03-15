@@ -33,7 +33,7 @@ tvcure(
 
 \item{link}{Link function for the cure equation. Must be either "logit" or "probit".}
 
-\item{brglm}{Logical value indicating whether bias-reduced logistic regression should be used to estimate the cure equation. See \link[brglm2]{name}}
+\item{brglm}{Logical value indicating whether bias-reduced logistic regression should be used to estimate the cure equation using \code{\link[brglm2]{brglm2}}}
 
 \item{var}{Logical value indicating whether standard errors should be estimated.}
 
@@ -43,68 +43,18 @@ tvcure(
 
 \item{emmax}{Specifies the maximum number of iterations for the EM algorithm.}
 
-\item{eps}{Convergence criterion
-
-#' @return gamma Cure equation coefficients. See details}
-}
-\value{
-beta	Hazard equation coefficients
-
-Z Model matrix for cure variables
-
-X Model matrix for hazard variables
-
-var Logical value for whether variance was estimated
-
-vcovg If var = T, variance-covariance matrix for gamma coefficients
-
-vcovb If var = T, variance-covariance matrix for beta coefficients
-
-g_var If var = T, variance of gamma coefficients
-
-g_sd If var = T, standard deviation of gamma coefficients
-
-g_zvalue If var = T, z-value for gamma coefficients
-
-g_pvalue If var = T, p-value for gamma coefficients
-
-b_var If var = T, variance of beta coefficients
-
-b_sd If var = T, standard deviation of beta coefficients
-
-b_zvalue If var = T, z-value for gamma coefficients
-
-b_pvalue If var = T, p-value for gamma coefficients
-
-nboot If var = T, number of bootstrap replications performed
-
-call Function call
-
-gnames Names of variables in cure equation
-
-bnames Names of variables in hazard equation
-
-Survival
-
-uncureprob
-
-Time
-
-Status
-
-link Link function used
-
-nobs Total number of observations
-
-nfail Number of failures that occur
-
-emrun Number of iterations until algorithm converged
-
-loglik Log-likelihood
+\item{eps}{Convergence criterion}
 }
 \description{
-Here is a description
+Fit a proportional hazards cure model using the expectation-maximization algorithm detailed in Peng and Dear (2000) and Sy and Taylor (2000). Time-varying covariates may be incorporated using a "counting" type survival object in the formula.
 }
 \details{
 The coefficients in the cure equation are parameterized in terms of the probability of being susceptible to an event. Positive coefficients indicate that a variable is associated with higher susceptibility to experiencing the event of interest (i.e., a lower probability of being cured).
+}
+\references{
+Yingwei Peng and Keith B.G. Dear. 2000. ``A Nonparametric Mixture Model for Cure Rate Estimation.'' Biometrics, 56(1), 237-243.
+
+Sy, Judy P. and Jeremy M.G. Taylor. 2000. ``Estimation in a Cox proportional hazards cure model.'' Biometrics, 56(1), 227-236.
+
+Code for this package was based in part on \code{\link[smcure]{smcure}}
 }

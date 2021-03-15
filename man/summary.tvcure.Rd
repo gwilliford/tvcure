@@ -2,8 +2,7 @@
 % Please edit documentation in R/summary.tvcure.R
 \name{summary.tvcure}
 \alias{summary.tvcure}
-\title{Summary method for tvcure models
-Summarizes the output of tvcure models}
+\title{Summary method for tvcure models}
 \usage{
 \method{summary}{tvcure}(model)
 }
@@ -11,6 +10,5 @@ Summarizes the output of tvcure models}
 \item{model}{A model of class tvcure}
 }
 \description{
-Summary method for tvcure models
 Summarizes the output of tvcure models
 }

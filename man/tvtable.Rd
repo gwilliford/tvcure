@@ -22,10 +22,10 @@ tvtable(
 
 \item{digits}{The number of digits to which quantities are rounded}
 
-\item{stars}{Logical value indicating whether to include significance stars. By default, \* p < 0.1, \*\* p < 0.05, \*\*\* p < 0.01.}
+\item{stars}{Logical value indicating whether to include significance stars. By default, * p < 0.1, ** p < 0.05, *** p < 0.01.}
 
 \item{siglevel}{If stars = T, specifies significance levels and their associated symbols. See \code{\link[modelsummary]{msummary}} for details}
 }
 \description{
-Returns a table stored as a matrix that can be passed to \link[xtable]{name}.
+Returns a table stored as a matrix that can be passed to \link[xtable]{xtable}. Currently only supports models with variance estimates
 }
