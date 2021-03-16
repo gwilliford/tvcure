@@ -1,8 +1,11 @@
 # tvcure
 
+  <!-- badges: start -->
 
+  [![R-CMD-check](https://github.com/gwilliford/tvcure/workflows/R-CMD-check/badge.svg)](https://github.com/gwilliford/tvcure/actions)
 
-# Overview
+  [![R-CMD-check](https://github.com/gwilliford/tvcure/workflows/R-CMD-check/badge.svg)](https://github.com/gwilliford/tvcure/actions)
+  <!-- badges: end -->
 
-tvcure is a package for estimating proportional hazards cure models with time-varying covariates. Unlike similar packages, tvcure allows users to use the counting process data structure.
+tvcure is an R package for estimating proportional hazards cure models with time-varying covariates using the counting process data structure.
 
